@@ -6,7 +6,9 @@ use lightyear::prelude::{client::ClientPlugins, server::ServerPlugins};
 use serde::Deserialize;
 
 use crate::{
-    client::GameClientPlugin, render::GameSharedRenderPlugin, server::GameServerPlugin,
+    client::GameClientPlugin,
+    render::GameSharedRenderPlugin,
+    server::{DedicatedServerPlugin, GameServerPlugin},
     shared::GameSharedPlugin,
 };
 
@@ -64,6 +66,7 @@ pub fn build_game_server_app(app: &mut App, render: bool) {
     }
     add_lightyear_server_plugins(app, TICKRATE);
     add_game_server_plugin(app);
+    app.add_plugins(DedicatedServerPlugin);
 }
 
 pub fn add_lightyear_client_plugin(app: &mut App, tickrate: f64) {

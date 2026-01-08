@@ -1,6 +1,8 @@
 use std::net::{Ipv4Addr, SocketAddr};
 
-use crate::shared::{SHARED_SETTINGS, SINGLE_PLAYER_SERVER_PORT, SharedNetworkingSettings};
+use crate::shared::{
+    SERVER_PORT, SHARED_SETTINGS, SINGLE_PLAYER_SERVER_PORT, SharedNetworkingSettings,
+};
 use bevy::{
     ecs::{lifecycle::HookContext, world::DeferredWorld},
     prelude::*,
@@ -10,7 +12,7 @@ use lightyear::{
     netcode::NetcodeServer,
     prelude::{
         LocalAddr,
-        server::{NetcodeConfig, ServerUdpIo},
+        server::{NetcodeConfig, ServerUdpIo, Start},
     },
 };
 use serde::{Deserialize, Serialize};
@@ -75,4 +77,28 @@ impl GameServer {
             ..default()
         })
     }
+}
+
+/// Only to be used when we're launching a dedicated server. This moves along some of the game state so that the server is in a place where its ready to
+/// accept connections
+pub struct DedicatedServerPlugin;
+
+impl Plugin for DedicatedServerPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(Startup, server_startup);
+    }
+}
+
+/// A startup system that creates the game server in a dedicated scenario.
+/// In the future, this should be something that can be created and called back to
+fn server_startup(mut commands: Commands) {
+    let server = GameServer {
+        conditioner: None,
+        transport: ServerTransports::Udp {
+            local_port: SERVER_PORT,
+        },
+        shared: SHARED_SETTINGS,
+    };
+    let server_ent = commands.spawn(server).id();
+    commands.trigger(Start { entity: server_ent });
 }

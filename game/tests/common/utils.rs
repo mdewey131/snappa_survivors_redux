@@ -6,3 +6,9 @@ pub fn setup_test_client() -> App {
     build_game_client_app(&mut app, None, false);
     app
 }
+
+pub fn setup_dedicated_server() -> App {
+    let mut app = App::new();
+    build_game_server_app(&mut app, false);
+    app
+}
