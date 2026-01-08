@@ -1,0 +1,24 @@
+[package]
+name = "snappa_surviviors"
+version = "0.1.0"
+edition = "2024"
+
+
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 3
+
+
+[features]
+
+
+
+
+[dependencies]
+avian2d = "0.4.1"
+bevy = "0.17.3"
+bevy_enhanced_input = "0.20.1"
+clap = {version = "4.5.54", features = ['derive']}
+lightyear = "0.25.5"
