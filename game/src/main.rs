@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use clap::Parser;
-use snappa_surviviors::build::Cli;
+use snappa_survivors::build::Cli;
 
 fn main() {
     let cli = Cli::parse();

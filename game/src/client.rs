@@ -1,19 +1,20 @@
+use crate::shared::{
+    SERVER_ADDR, SERVER_PORT, SHARED_SETTINGS, SINGLE_PLAYER_SERVER_PORT, SharedNetworkingSettings,
+};
 use bevy::{
-    ecs::{
-        lifecycle::HookContext,
-        world::DeferredWorld,
-    },
-    prelude::*
+    ecs::{lifecycle::HookContext, world::DeferredWorld},
+    prelude::*,
 };
+use lightyear::netcode::NetcodeClient;
 use lightyear::{
-    link::RecvLinkConditioner, prelude::{client::NetcodeConfig, *}
+    link::RecvLinkConditioner,
+    prelude::{client::NetcodeConfig, *},
 };
-use lightyear::netcode::{NetcodeClient};
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
-use crate::shared::{SERVER_PORT, SHARED_SETTINGS, SERVER_ADDR, SharedNetworkingSettings};
 
-const SINGLE_PLAYER_ADDR: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), SERVER_PORT);
+const SINGLE_PLAYER_ADDR: SocketAddr =
+    SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), SINGLE_PLAYER_SERVER_PORT);
 const SINGLE_PLAYER_CLIENT_PORT: u16 = 0;
 
 pub struct GameClientPlugin;
@@ -46,9 +47,9 @@ pub struct GameClient {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-enum GameClientTransports {
+pub enum GameClientTransports {
     Udp,
-    Steam
+    Steam,
 }
 
 impl GameClient {
@@ -58,7 +59,7 @@ impl GameClient {
         server_addr: SINGLE_PLAYER_ADDR,
         conditioner: None,
         transport: GameClientTransports::Udp,
-        shared: SHARED_SETTINGS
+        shared: SHARED_SETTINGS,
     };
 
     fn on_insert(mut world: DeferredWorld, context: HookContext) {
@@ -66,7 +67,7 @@ impl GameClient {
         world.commands().queue(move |world: &mut World| -> Result {
             let mut entity_mut = world.entity_mut(entity);
             let settings = entity_mut.take::<GameClient>().unwrap();
-            let client_addr = SocketAddr::new(Ipv4Addr::UNSPECIFIED.into(), settings.client_port)
+            let client_addr = SocketAddr::new(Ipv4Addr::UNSPECIFIED.into(), settings.client_port);
             entity_mut.insert((
                 Client::default(),
                 Link::new(settings.conditioner.clone()),
@@ -74,7 +75,7 @@ impl GameClient {
                 PeerAddr(settings.server_addr),
                 ReplicationReceiver::default(),
                 PredictionManager::default(),
-                Name::from("Client")
+                Name::from("Client"),
             ));
 
             // Depending on the transport type, do a different thing here
@@ -82,7 +83,7 @@ impl GameClient {
                 GameClientTransports::Udp => {
                     let netcode = settings.add_netcode_client()?;
                     entity_mut.insert(netcode);
-                },
+                }
                 GameClientTransports::Steam => {
                     todo!()
                 }
@@ -96,7 +97,7 @@ impl GameClient {
             server_addr: self.server_addr,
             client_id: self.client_id,
             private_key: self.shared.private_key,
-            protocol_id: self.shared.protocol_id
+            protocol_id: self.shared.protocol_id,
         };
         let netcode_config = NetcodeConfig {
             // The server should time out clients when their connection is closed
@@ -104,6 +105,7 @@ impl GameClient {
             token_expire_secs: -1,
             ..default()
         };
-        NetcodeClient::new(auth, netcode_config).map_err(|_e| BevyError::from("Netcode Client not initialized!"))
+        NetcodeClient::new(auth, netcode_config)
+            .map_err(|_e| BevyError::from("Netcode Client not initialized!"))
     }
 }

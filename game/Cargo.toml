@@ -1,5 +1,5 @@
 [package]
-name = "snappa_surviviors"
+name = "snappa_survivors"
 version = "0.1.0"
 edition = "2024"
 
@@ -18,7 +18,8 @@ inspector = []
 lightyear = [
     "lightyear/avian2d",
     "lightyear/replication",
-    "lightyear/netcode"
+    "lightyear/netcode",
+    "lightyear/udp"
 ]
 
 

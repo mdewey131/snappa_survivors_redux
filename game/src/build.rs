@@ -5,7 +5,10 @@ use clap::{Parser, Subcommand};
 use lightyear::prelude::{client::ClientPlugins, server::ServerPlugins};
 use serde::Deserialize;
 
-use crate::{client::GameClientPlugin, render::GameSharedRenderPlugin, shared::GameSharedPlugin};
+use crate::{
+    client::GameClientPlugin, render::GameSharedRenderPlugin, server::GameServerPlugin,
+    shared::GameSharedPlugin,
+};
 
 const TICKRATE: f64 = 1.0 / 64.0;
 /// Responsible for constructing the app when we launch the game via command line arguments
@@ -48,6 +51,8 @@ pub fn build_game_client_app(app: &mut App, c_id: Option<u64>, render: bool) {
     // This first
     add_lightyear_client_plugin(app, TICKRATE);
     add_game_client_plugin(app);
+    // We want the ability to add a server to the client, because that's how single player will work
+    add_game_server_plugin(app);
 }
 
 pub fn build_game_server_app(app: &mut App, render: bool) {
@@ -58,6 +63,7 @@ pub fn build_game_server_app(app: &mut App, render: bool) {
         add_headless_app_plugins(app);
     }
     add_lightyear_server_plugins(app, TICKRATE);
+    add_game_server_plugin(app);
 }
 
 pub fn add_lightyear_client_plugin(app: &mut App, tickrate: f64) {
@@ -74,6 +80,10 @@ pub fn add_lightyear_server_plugins(app: &mut App, tickrate: f64) {
 
 pub fn add_game_client_plugin(app: &mut App) {
     app.add_plugins(GameClientPlugin);
+}
+
+pub fn add_game_server_plugin(app: &mut App) {
+    app.add_plugins(GameServerPlugin);
 }
 
 pub fn add_shared_game_renderer(app: &mut App) {

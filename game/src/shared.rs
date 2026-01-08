@@ -1,4 +1,4 @@
-use std::net::{Ipv4Addr, SocketAddr};
+use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 
 use avian2d::prelude::*;
 use bevy::prelude::*;
@@ -12,9 +12,10 @@ pub const SHARED_SETTINGS: SharedNetworkingSettings = SharedNetworkingSettings {
     ],
 };
 pub const SERVER_PORT: u16 = 5888;
+pub const SINGLE_PLAYER_SERVER_PORT: u16 = 5888;
 /// 0 means that the OS will assign any available port
 pub const CLIENT_PORT: u16 = 0;
-pub const SERVER_ADDR: SocketAddr = SocketAddr::new(Ipv4Addr::V4(Ipv4Addr::LOCALHOST), SERVER_PORT);
+pub const SERVER_ADDR: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), SERVER_PORT);
 
 /// Has all shared logic for the game, separate from rendering concerns
 pub struct GameSharedPlugin;
