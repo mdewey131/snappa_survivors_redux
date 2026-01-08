@@ -4,6 +4,11 @@ use avian2d::prelude::*;
 use bevy::prelude::*;
 use lightyear::prelude::*;
 
+mod combat;
+mod states;
+use combat::CombatPlugin;
+use states::SharedStatesPlugin;
+
 pub const SHARED_SETTINGS: SharedNetworkingSettings = SharedNetworkingSettings {
     protocol_id: 0,
     private_key: [
@@ -22,7 +27,7 @@ pub struct GameSharedPlugin;
 
 impl Plugin for GameSharedPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(GameProtocolPlugin);
+        app.add_plugins((GameProtocolPlugin, CombatPlugin, SharedStatesPlugin));
     }
 }
 
