@@ -12,13 +12,23 @@ opt-level = 3
 
 
 [features]
-
-
+default = ["lightyear"]
+dev = ["inspector"]
+inspector = []
+lightyear = [
+    "lightyear/avian2d",
+    "lightyear/replication",
+    "lightyear/netcode"
+]
 
 
 [dependencies]
 avian2d = "0.4.1"
 bevy = "0.17.3"
+bevy-inspector-egui = "0.35.0"
+bevy_egui = "0.38.1"
 bevy_enhanced_input = "0.20.1"
 clap = {version = "4.5.54", features = ['derive']}
 lightyear = "0.25.5"
+ron = "0.12.0"
+serde = "1.0.228"
