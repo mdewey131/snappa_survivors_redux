@@ -6,7 +6,7 @@ use lightyear::prelude::{client::ClientPlugins, server::ServerPlugins};
 use serde::Deserialize;
 
 use crate::{
-    client::GameClientPlugin,
+    client::{ClientRenderPlugin, GameClientPlugin},
     render::GameSharedRenderPlugin,
     server::{DedicatedServerPlugin, GameServerPlugin},
     shared::GameSharedPlugin,
@@ -47,11 +47,15 @@ pub fn build_game_client_app(app: &mut App, c_id: Option<u64>, render: bool) {
     if render {
         add_bevy_default_app_plugins(app, "Client".into());
         add_shared_game_renderer(app);
+        add_game_client_renderer(app);
     } else {
         add_headless_app_plugins(app);
     }
     // This first
     add_lightyear_client_plugin(app, TICKRATE);
+    // per lightyear docs: add in protocol before spawning in client
+    add_shared_game_plugin(app);
+
     add_game_client_plugin(app);
     // We want the ability to add a server to the client, because that's how single player will work
     add_game_server_plugin(app);
@@ -64,7 +68,10 @@ pub fn build_game_server_app(app: &mut App, render: bool) {
     } else {
         add_headless_app_plugins(app);
     }
+    // This first
     add_lightyear_server_plugins(app, TICKRATE);
+    // per lightyear docs: add in protocol before spawning in client
+    add_shared_game_plugin(app);
     add_game_server_plugin(app);
     app.add_plugins(DedicatedServerPlugin);
 }
@@ -83,6 +90,10 @@ pub fn add_lightyear_server_plugins(app: &mut App, tickrate: f64) {
 
 pub fn add_game_client_plugin(app: &mut App) {
     app.add_plugins(GameClientPlugin);
+}
+
+pub fn add_game_client_renderer(app: &mut App) {
+    app.add_plugins(ClientRenderPlugin);
 }
 
 pub fn add_game_server_plugin(app: &mut App) {

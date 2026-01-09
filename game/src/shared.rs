@@ -4,9 +4,14 @@ use avian2d::prelude::*;
 use bevy::prelude::*;
 use lightyear::prelude::*;
 
-mod combat;
-mod states;
+pub mod combat;
+pub mod despawn_timer;
+pub mod game_kinds;
+pub mod states;
+
 use combat::CombatPlugin;
+use despawn_timer::DespawnTimerPlugin;
+use game_kinds::GameKindsPlugin;
 use states::SharedStatesPlugin;
 
 pub const SHARED_SETTINGS: SharedNetworkingSettings = SharedNetworkingSettings {
@@ -27,7 +32,13 @@ pub struct GameSharedPlugin;
 
 impl Plugin for GameSharedPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins((GameProtocolPlugin, CombatPlugin, SharedStatesPlugin));
+        app.add_plugins((
+            CombatPlugin,
+            DespawnTimerPlugin,
+            GameProtocolPlugin,
+            GameKindsPlugin,
+            SharedStatesPlugin,
+        ));
     }
 }
 

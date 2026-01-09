@@ -13,7 +13,7 @@ opt-level = 3
 
 [features]
 default = ["lightyear"]
-dev = ["inspector"]
+dev = ["inspector", "no_splash"]
 inspector = []
 lightyear = [
     "lightyear/avian2d",
@@ -21,6 +21,7 @@ lightyear = [
     "lightyear/netcode",
     "lightyear/udp"
 ]
+no_splash = []
 
 
 [dependencies]
