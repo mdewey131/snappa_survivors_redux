@@ -109,5 +109,6 @@ impl GameClient {
             .expect("Should always only be a single client");
 
         world.trigger(Connect { entity: client });
+        info!("Attempting connection to server");
     }
 }

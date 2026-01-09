@@ -3,7 +3,7 @@ use lightyear::{
     connection::client::ClientState,
     prelude::{Client, Connect, server::Start},
 };
-use snappa_survivors::{client::GameClient, server::GameServer};
+use snappa_survivors::{client::game_client::GameClient, server::GameServer};
 #[test]
 fn multi_player_connection() -> Result<(), String> {
     // Spawn a server and the client on this app

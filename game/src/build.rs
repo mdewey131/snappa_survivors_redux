@@ -53,6 +53,7 @@ pub fn build_game_client_app(app: &mut App, c_id: Option<u64>, render: bool) {
     }
     // This first
     add_lightyear_client_plugin(app, TICKRATE);
+    add_lightyear_server_plugin(app, TICKRATE);
     // per lightyear docs: add in protocol before spawning in client
     add_shared_game_plugin(app);
 
@@ -69,7 +70,7 @@ pub fn build_game_server_app(app: &mut App, render: bool) {
         add_headless_app_plugins(app);
     }
     // This first
-    add_lightyear_server_plugins(app, TICKRATE);
+    add_lightyear_server_plugin(app, TICKRATE);
     // per lightyear docs: add in protocol before spawning in client
     add_shared_game_plugin(app);
     add_game_server_plugin(app);
@@ -82,7 +83,7 @@ pub fn add_lightyear_client_plugin(app: &mut App, tickrate: f64) {
     });
 }
 
-pub fn add_lightyear_server_plugins(app: &mut App, tickrate: f64) {
+pub fn add_lightyear_server_plugin(app: &mut App, tickrate: f64) {
     app.add_plugins(ServerPlugins {
         tick_duration: Duration::from_secs_f64(tickrate),
     });
