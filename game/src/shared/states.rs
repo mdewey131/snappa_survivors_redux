@@ -21,7 +21,7 @@ pub enum AppState {
     GameSplash,
     MainMenu,
     MultiplayerServerSelection,
-    AwaitServerConnection,
+    EstablishServerConnection,
     Lobby,
     LoadingLevel,
     InGame,

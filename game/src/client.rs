@@ -1,16 +1,23 @@
 use crate::{
-    client::main_menu::MainMenuPlugin,
-    shared::{game_kinds::CurrentGameKind, states::AppState},
+    client::{game_client::GameClient, main_menu::MainMenuPlugin},
+    server::GameServer,
+    shared::{
+        game_kinds::{CurrentGameKind, GameKinds},
+        states::AppState,
+    },
 };
 use bevy::prelude::*;
 
+pub mod client_states;
 pub mod game_client;
 pub mod main_menu;
+use client_states::ClientStatesPlugin;
 
 pub struct GameClientPlugin;
 impl Plugin for GameClientPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, move_to_first_app_state);
+        app.add_plugins(ClientStatesPlugin)
+            .add_systems(Startup, move_to_first_app_state);
     }
 }
 
@@ -37,9 +44,17 @@ fn move_to_first_app_state(mut state: ResMut<NextState<AppState>>) {
     }
 }
 
+/// When we make the move to single player, we need to spawn both a game client and a game server.
+/// The state AppState::AwaitingServerConnection will be the thing that actually attempts to make
+/// the connection to the server, and that state will be responsible for figuring out when its time
+/// to move to the lobby
 pub fn transition_to_single_player(
     mut commands: Commands,
     mut game_choice: ResMut<CurrentGameKind>,
+    mut state: ResMut<NextState<AppState>>,
 ) {
-    
+    commands.spawn(GameClient::SINGLE_PLAYER);
+    commands.spawn(GameServer::SINGLE_PLAYER);
+    game_choice.0 = Some(GameKinds::SinglePlayer);
+    state.set(AppState::EstablishServerConnection);
 }
