@@ -12,7 +12,6 @@ pub mod client_states;
 pub mod game_client;
 pub mod main_menu;
 use client_states::ClientStatesPlugin;
-use lightyear::prelude::server::Start;
 
 pub struct GameClientPlugin;
 impl Plugin for GameClientPlugin {

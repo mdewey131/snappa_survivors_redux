@@ -75,7 +75,7 @@ impl GameClient {
             match settings.transport {
                 GameClientTransports::Udp => {
                     let netcode = settings.add_netcode_client()?;
-                    entity_mut.insert(netcode);
+                    entity_mut.insert((netcode, UdpIo::default()));
                 }
                 GameClientTransports::Steam => {
                     todo!()

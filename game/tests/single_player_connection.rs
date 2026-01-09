@@ -1,30 +1,40 @@
-mod common;
+use bevy::prelude::*;
 use lightyear::{
     connection::client::ClientState,
     prelude::{Client, Connect, server::Start},
 };
-use snappa_survivors::{client::GameClient, server::GameServer};
+use snappa_survivors::{
+    client::{game_client::GameClient, transition_to_single_player},
+    server::GameServer,
+};
+
+mod common;
+use common::tick_app;
+
 #[test]
 fn single_player_connection() -> Result<(), String> {
     // Spawn a server and the client on this app
     let mut app = common::setup_test_client();
+    let sys = app.world_mut().register_system(transition_to_single_player);
 
-    let client = app.world_mut().spawn(GameClient::SINGLE_PLAYER).id();
-    let server = app.world_mut().spawn(GameServer::SINGLE_PLAYER).id();
+    app.world_mut().run_system(sys).expect("This should work!");
+    // Run a few updates just to make sure this takes
+    for updates in (0..30) {
+        tick_app(&mut app, 1.0 / 64.0);
+    }
 
-    app.world_mut().commands().trigger(Start { entity: server });
+    let mut q_client = app.world_mut().query::<&Client>();
+    let client_comp = q_client
+        .single(app.world_mut())
+        .expect("There should be exactly one client");
 
-    app.update();
-    app.world_mut()
-        .commands()
-        .trigger(Connect { entity: client });
-
-    app.update();
-    let client_comp = app.world().get::<Client>(client).unwrap();
     match client_comp.state {
-        ClientState::Disconnected | ClientState::Disconnecting => {
-            Err(String::from("Not connected"))
+        ClientState::Disconnected | ClientState::Disconnecting | ClientState::Connecting => {
+            Err(format!(
+                "Not connected. Actual client state: {:?}",
+                client_comp.state,
+            ))
         }
-        ClientState::Connected | ClientState::Connecting => Ok(()),
+        ClientState::Connected => Ok(()),
     }
 }

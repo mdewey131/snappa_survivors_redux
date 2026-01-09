@@ -1,7 +1,8 @@
 use std::net::{Ipv4Addr, SocketAddr};
 
 use crate::shared::{
-    SERVER_PORT, SHARED_SETTINGS, SINGLE_PLAYER_SERVER_PORT, SharedNetworkingSettings,
+    SEND_INTERVAL, SERVER_PORT, SHARED_SETTINGS, SINGLE_PLAYER_SERVER_PORT,
+    SharedNetworkingSettings,
 };
 use bevy::{
     ecs::{lifecycle::HookContext, world::DeferredWorld},
@@ -11,7 +12,7 @@ use lightyear::{
     link::RecvLinkConditioner,
     netcode::NetcodeServer,
     prelude::{
-        LocalAddr,
+        LinkOf, LocalAddr, ReplicationSender,
         server::{NetcodeConfig, ServerUdpIo, Start},
     },
 };
@@ -20,7 +21,7 @@ use serde::{Deserialize, Serialize};
 pub struct GameServerPlugin;
 impl Plugin for GameServerPlugin {
     fn build(&self, app: &mut App) {
-        app;
+        app.add_observer(handle_new_client);
     }
 }
 
@@ -101,4 +102,14 @@ fn server_startup(mut commands: Commands) {
     };
     let server_ent = commands.spawn(server).id();
     commands.trigger(Start { entity: server_ent });
+}
+
+pub fn handle_new_client(trigger: On<Add, LinkOf>, mut commands: Commands) {
+    commands
+        .entity(trigger.entity)
+        .insert(ReplicationSender::new(
+            SEND_INTERVAL,
+            lightyear::prelude::SendUpdatesMode::SinceLastAck,
+            false,
+        ));
 }
