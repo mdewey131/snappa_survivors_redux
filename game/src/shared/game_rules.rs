@@ -95,12 +95,17 @@ pub struct ChangeGameRuleMessage<F: GameRuleField> {
     to: F,
 }
 
+/// It's unlikely that this will really need to resolve the issues
+/// related to the fact that there could be multiple receivers. But
+/// that's a good thing to check
 fn receive_game_change_message<F: GameRuleField>(
     mut rules: ResMut<GameRules>,
-    mut q_receiver: Single<&mut MessageReceiver<ChangeGameRuleMessage<F>>>,
+    mut q_receiver: Query<&mut MessageReceiver<ChangeGameRuleMessage<F>>>,
 ) {
-    for mess in (*q_receiver).receive() {
-        mess.to.set_field(rules.as_mut());
+    for mut rec in &mut q_receiver {
+        for mess in rec.receive() {
+            mess.to.set_field(rules.as_mut());
+        }
     }
 }
 

@@ -1,4 +1,5 @@
 use bevy::{prelude::*, time::TimeUpdateStrategy};
+use lightyear::prelude::Server;
 use snappa_survivors::{
     build::{build_game_client_app, build_game_server_app},
     client::game_client::{GameClient, GameClientConfig},
@@ -47,7 +48,7 @@ pub fn setup_multiplayer_connected_apps() -> (App, App) {
     server_app.update();
     let sys = client_app.register_system(snappa_survivors::client::transition_to_multi_player);
     // This works for now, but you probably will want a way to configure other settings in the future so that this can work more better
-    let config = GameClientConfig::SINGLE_PLAYER;
+    let config = GameClientConfig::new_with_random_c_id();
 
     let _ = client_app.world_mut().run_system_with(sys, config);
 
@@ -55,5 +56,11 @@ pub fn setup_multiplayer_connected_apps() -> (App, App) {
         tick_app(&mut client_app, 1.0 / 64.0);
         tick_app(&mut server_app, 1.0 / 64.0);
     }
+    let mut q_client_server = client_app
+        .world_mut()
+        .query_filtered::<Entity, With<Server>>();
+    let n = q_client_server.iter(client_app.world_mut()).next();
+    assert!(n.is_none());
+
     (server_app, client_app)
 }

@@ -58,7 +58,7 @@ pub fn transition_to_single_player(
     mut game_choice: ResMut<CurrentGameKind>,
     mut state: ResMut<NextState<AppState>>,
 ) {
-    commands.spawn(GameClient::SINGLE_PLAYER);
+    commands.spawn((GameClient::SINGLE_PLAYER));
     commands.spawn(GameServer::SINGLE_PLAYER);
     game_choice.0 = Some(GameKinds::SinglePlayer);
     state.set(AppState::EstablishServerConnection);

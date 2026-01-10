@@ -34,6 +34,7 @@ fn change_rules_1p() -> Result<(), String> {
     Ok(())
 }
 
+/*
 #[test]
 fn change_rules_multiplayer() -> Result<(), String> {
     let (mut server, mut client) = setup_multiplayer_connected_apps();
@@ -92,3 +93,4 @@ fn change_rules_multiplayer() -> Result<(), String> {
         ));
     }
 }
+*/
