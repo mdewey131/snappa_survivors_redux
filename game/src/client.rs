@@ -1,5 +1,9 @@
 use crate::{
-    client::{game_client::GameClient, main_menu::MainMenuPlugin},
+    client::{
+        game_client::{GameClient, GameClientConfig},
+        main_menu::MainMenuPlugin,
+        mp_selection_menu::MPSelectionMenuPlugin,
+    },
     server::GameServer,
     shared::{
         game_kinds::{CurrentGameKind, GameKinds},
@@ -11,6 +15,7 @@ use bevy::prelude::*;
 pub mod client_states;
 pub mod game_client;
 pub mod main_menu;
+pub mod mp_selection_menu;
 use client_states::ClientStatesPlugin;
 
 pub struct GameClientPlugin;
@@ -29,7 +34,7 @@ pub struct ClientRenderPlugin;
 
 impl Plugin for ClientRenderPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(MainMenuPlugin);
+        app.add_plugins((MainMenuPlugin, MPSelectionMenuPlugin));
     }
 }
 
@@ -56,5 +61,16 @@ pub fn transition_to_single_player(
     commands.spawn(GameClient::SINGLE_PLAYER);
     commands.spawn(GameServer::SINGLE_PLAYER);
     game_choice.0 = Some(GameKinds::SinglePlayer);
+    state.set(AppState::EstablishServerConnection);
+}
+
+pub fn transition_to_multi_player(
+    config: In<GameClientConfig>,
+    mut commands: Commands,
+    mut game_choice: ResMut<CurrentGameKind>,
+    mut state: ResMut<NextState<AppState>>,
+) {
+    commands.spawn(GameClient { config: config.0 });
+    game_choice.0 = Some(GameKinds::MultiPlayer);
     state.set(AppState::EstablishServerConnection);
 }

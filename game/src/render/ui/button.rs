@@ -77,6 +77,7 @@ pub enum GameButtonImage {
 
 /// We want the buttons in the game to have a specific styling, so we make this type
 /// to describe how you can calibrate the buttons within our confines (at least, that's the idea)
+#[derive(Default)]
 pub struct GameButtonStyle {
     pub image: GameButtonImage,
     pub node: Node,

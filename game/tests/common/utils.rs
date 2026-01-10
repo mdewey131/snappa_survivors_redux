@@ -2,7 +2,7 @@ use bevy::{prelude::*, time::TimeUpdateStrategy};
 use lightyear::prelude::Connect;
 use snappa_survivors::{
     build::{build_game_client_app, build_game_server_app},
-    client::game_client::GameClient,
+    client::game_client::{GameClient, GameClientConfig},
     shared::{game_kinds::CurrentGameKind, states::AppState},
 };
 use std::time::Duration;
@@ -47,14 +47,11 @@ pub fn setup_multiplayer_connected_apps() -> (App, App) {
 
     client_app.update();
     server_app.update();
+    let sys = client_app.register_system(snappa_survivors::client::transition_to_multi_player);
     // This works for now, but you probably will want a way to configure other settings in the future so that this can work more better
-    client_app.world_mut().spawn(GameClient::SINGLE_PLAYER);
+    let config = GameClientConfig::SINGLE_PLAYER;
 
-    // TODO This should be consolidated into one function when we do multiplayer connection. For later
-    let mut game_kind = client_app.world_mut().resource_mut::<CurrentGameKind>();
-    game_kind.0 = Some(snappa_survivors::shared::game_kinds::GameKinds::MultiPlayer);
-    let mut c_state = client_app.world_mut().resource_mut::<NextState<AppState>>();
-    c_state.set(AppState::EstablishServerConnection);
+    let _ = client_app.world_mut().run_system_with(sys, config);
 
     for _update in (0..30) {
         tick_app(&mut client_app, 1.0 / 64.0);

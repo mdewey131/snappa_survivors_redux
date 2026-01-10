@@ -26,6 +26,10 @@ const SINGLE_PLAYER_CLIENT_PORT: u16 = 0;
 #[derive(Component)]
 #[component(immutable, on_insert = GameClient::on_insert)]
 pub struct GameClient {
+    pub config: GameClientConfig,
+}
+
+pub struct GameClientConfig {
     // The ID of the client
     pub client_id: u64,
     // The client port to listen on for updates
@@ -45,7 +49,7 @@ pub enum GameClientTransports {
     Steam,
 }
 
-impl GameClient {
+impl GameClientConfig {
     pub const SINGLE_PLAYER: Self = Self {
         client_id: 0,
         client_port: SINGLE_PLAYER_CLIENT_PORT,
@@ -54,27 +58,34 @@ impl GameClient {
         transport: GameClientTransports::Udp,
         shared: SHARED_SETTINGS,
     };
+}
+
+impl GameClient {
+    pub const SINGLE_PLAYER: Self = Self {
+        config: GameClientConfig::SINGLE_PLAYER,
+    };
 
     fn on_insert(mut world: DeferredWorld, context: HookContext) {
         let entity = context.entity;
         world.commands().queue(move |world: &mut World| -> Result {
             let mut entity_mut = world.entity_mut(entity);
-            let settings = entity_mut.take::<GameClient>().unwrap();
-            let client_addr = SocketAddr::new(Ipv4Addr::UNSPECIFIED.into(), settings.client_port);
+            let client = entity_mut.take::<GameClient>().unwrap();
+            let client_addr =
+                SocketAddr::new(Ipv4Addr::UNSPECIFIED.into(), client.config.client_port);
             entity_mut.insert((
                 Client::default(),
-                Link::new(settings.conditioner.clone()),
+                Link::new(client.config.conditioner.clone()),
                 LocalAddr(client_addr),
-                PeerAddr(settings.server_addr),
+                PeerAddr(client.config.server_addr),
                 ReplicationReceiver::default(),
                 PredictionManager::default(),
                 Name::from("Client"),
             ));
 
             // Depending on the transport type, do a different thing here
-            match settings.transport {
+            match client.config.transport {
                 GameClientTransports::Udp => {
-                    let netcode = settings.add_netcode_client()?;
+                    let netcode = client.add_netcode_client()?;
                     entity_mut.insert((netcode, UdpIo::default()));
                 }
                 GameClientTransports::Steam => {
@@ -87,10 +98,10 @@ impl GameClient {
 
     fn add_netcode_client(&self) -> Result<NetcodeClient, BevyError> {
         let auth = Authentication::Manual {
-            server_addr: self.server_addr,
-            client_id: self.client_id,
-            private_key: self.shared.private_key,
-            protocol_id: self.shared.protocol_id,
+            server_addr: self.config.server_addr,
+            client_id: self.config.client_id,
+            private_key: self.config.shared.private_key,
+            protocol_id: self.config.shared.protocol_id,
         };
         let netcode_config = NetcodeConfig {
             // The server should time out clients when their connection is closed

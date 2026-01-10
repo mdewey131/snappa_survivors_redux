@@ -53,6 +53,9 @@ fn node_mm_button_well() -> Node {
 pub struct ButtonSinglePlayerGame;
 
 #[derive(Component, Debug, Clone, Copy)]
+pub struct ButtonMultiPlayerGame;
+
+#[derive(Component, Debug, Clone, Copy)]
 pub struct OpenSettingsButton;
 
 pub struct MainMenuPlugin;
@@ -67,10 +70,12 @@ impl Plugin for MainMenuPlugin {
 
 fn register_buttons(world: &mut World) {
     let start_1player_sys = world.register_system(super::transition_to_single_player);
+    let mp_menu = world.register_system(move_to_multiplayer_menu);
     //let open_settings_sys = world.register_system(open_settings);
     let mut button_systems = world.resource_mut::<ButtonSystems>();
 
     (*button_systems).insert("start_1_player".into(), start_1player_sys);
+    (*button_systems).insert("mp_menu".into(), mp_menu);
     //(*button_systems).insert("open_settings".into(), open_settings_sys);
 }
 
@@ -104,13 +109,24 @@ fn spawn_main_menu(mut commands: Commands, assets: Res<AssetServer>, systems: Re
         GameButton::new(GameButtonOnRelease::TriggerSystem(*start_game_sys));
     let start_button_style = GameButtonStyle::new(GameButtonImage::default())
         .with_color(Color::srgb(1.0, 0.0, 0.0))
-        .with_text("Start Game".into());
+        .with_text("Single Player".into());
 
     let st_btn_ent = start_1_player_button.spawn(&mut commands, &assets, start_button_style);
 
     commands
         .entity(st_btn_ent)
         .insert((ButtonSinglePlayerGame, ChildOf(button_well)));
+
+    let mp_system = systems.get("mp_menu").unwrap();
+    let mp_menu_button = GameButton::new(GameButtonOnRelease::TriggerSystem(*mp_system));
+    let mp_btn_style = GameButtonStyle::new(GameButtonImage::default())
+        .with_color(Color::srgb(1.0, 0.0, 0.0))
+        .with_text("Multiplayer".into());
+    let mp_btn_ent = mp_menu_button.spawn(&mut commands, &assets, mp_btn_style);
+
+    commands
+        .entity(mp_btn_ent)
+        .insert((ButtonMultiPlayerGame, ChildOf(button_well)));
 
     /*
     let open_settings_sys = systems.get("open_settings").unwrap();
@@ -130,4 +146,8 @@ fn despawn_main_menu(mut commands: Commands, menu: Single<Entity, With<MainMenuS
     commands.entity(*menu).insert((DespawnTimer::new(0.5),));
 
     ScreenTransition::new(&mut commands);
+}
+
+fn move_to_multiplayer_menu(mut state: ResMut<NextState<AppState>>) {
+    state.set(AppState::MultiplayerServerSelection)
 }
