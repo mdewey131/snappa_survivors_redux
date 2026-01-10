@@ -11,12 +11,14 @@ pub mod combat;
 pub mod despawn_timer;
 pub mod game_kinds;
 pub mod game_rules;
+pub mod lobby;
 pub mod states;
 
 use combat::CombatPlugin;
 use despawn_timer::DespawnTimerPlugin;
 use game_kinds::GameKindsPlugin;
 use game_rules::SharedGameRulesPlugin;
+use lobby::LobbyProtocolPlugin;
 use states::SharedStatesPlugin;
 
 pub const SHARED_SETTINGS: SharedNetworkingSettings = SharedNetworkingSettings {
