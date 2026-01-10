@@ -1,9 +1,7 @@
 use bevy::{prelude::*, time::TimeUpdateStrategy};
-use lightyear::prelude::Connect;
 use snappa_survivors::{
     build::{build_game_client_app, build_game_server_app},
     client::game_client::{GameClient, GameClientConfig},
-    shared::{game_kinds::CurrentGameKind, states::AppState},
 };
 use std::time::Duration;
 

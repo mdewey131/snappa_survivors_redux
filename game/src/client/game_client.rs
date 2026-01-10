@@ -10,6 +10,7 @@ use lightyear::{
     netcode::NetcodeClient,
     prelude::{client::NetcodeConfig, *},
 };
+use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 
@@ -58,6 +59,19 @@ impl GameClientConfig {
         transport: GameClientTransports::Udp,
         shared: SHARED_SETTINGS,
     };
+
+    pub fn new_with_random_c_id() -> Self {
+        let mut rng = rand::rng();
+        let client_id = rng.random_range((0..u64::MAX));
+        Self {
+            client_id,
+            client_port: SINGLE_PLAYER_CLIENT_PORT,
+            server_addr: SINGLE_PLAYER_ADDR,
+            conditioner: None,
+            transport: GameClientTransports::Udp,
+            shared: SHARED_SETTINGS,
+        }
+    }
 }
 
 impl GameClient {

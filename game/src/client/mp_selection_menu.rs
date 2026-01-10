@@ -49,6 +49,6 @@ fn trigger_connection(
     q_callback: Query<&CallbackWithInput<In<GameClientConfig>>, With<GameButton>>,
 ) {
     if let Ok(cb) = q_callback.get(t.entity) {
-        commands.run_system_with(cb.0, GameClientConfig::SINGLE_PLAYER);
+        commands.run_system_with(cb.0, GameClientConfig::new_with_random_c_id());
     }
 }
