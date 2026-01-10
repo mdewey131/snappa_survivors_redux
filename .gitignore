@@ -1,4 +1,5 @@
 game/target/*
 game/Cargo.lock
-game/assets/*.png
-game/assets/*.aseprite
+
+*.aseprite
+*.png

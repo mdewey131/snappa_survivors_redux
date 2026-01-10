@@ -5,13 +5,17 @@ use std::{
 
 use avian2d::prelude::*;
 use bevy::prelude::*;
-use lightyear::prelude::*;
+use lightyear::{
+    avian2d::plugin::{AvianReplicationMode, LightyearAvianPlugin},
+    prelude::*,
+};
 
 pub mod combat;
 pub mod despawn_timer;
 pub mod game_kinds;
 pub mod game_rules;
 pub mod lobby;
+pub mod players;
 pub mod states;
 
 use combat::CombatPlugin;
@@ -20,6 +24,8 @@ use game_kinds::GameKindsPlugin;
 use game_rules::SharedGameRulesPlugin;
 use lobby::LobbyProtocolPlugin;
 use states::SharedStatesPlugin;
+
+use crate::shared::players::PlayerProtocolPlugin;
 
 pub const SHARED_SETTINGS: SharedNetworkingSettings = SharedNetworkingSettings {
     protocol_id: 0,
@@ -48,18 +54,42 @@ impl Plugin for GameSharedPlugin {
             SharedStatesPlugin,
             SharedGameRulesPlugin,
         ));
+
+        app.add_plugins((
+            LightyearAvianPlugin {
+                replication_mode: AvianReplicationMode::Position,
+                ..default()
+            },
+            PhysicsPlugins::new(FixedPostUpdate)
+                .with_length_unit(1.0)
+                .build()
+                .disable::<ColliderTransformPlugin>()
+                // Lightyear handles this
+                .disable::<PhysicsTransformPlugin>()
+                .disable::<PhysicsInterpolationPlugin>()
+                // Disable this per https://discord.com/channels/691052431525675048/1189344685546811564/1450484188867330129
+                // basically, this doesn't play well with rollbacks at all, and causes issues down the line
+                .disable::<IslandPlugin>()
+                .disable::<IslandSleepingPlugin>(),
+        ));
     }
 }
 
 struct GameProtocolPlugin;
 impl Plugin for GameProtocolPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(LobbyProtocolPlugin)
+        app.add_plugins((LobbyProtocolPlugin, PlayerProtocolPlugin))
             .add_channel::<GameMainChannel>(ChannelSettings {
                 mode: ChannelMode::OrderedReliable(ReliableSettings::default()),
                 ..default()
             })
             .add_direction(NetworkDirection::Bidirectional);
+
+        app.register_component::<Position>()
+            .add_prediction()
+            .add_should_rollback(position_should_rollback)
+            .add_linear_interpolation()
+            .add_linear_correction_fn();
     }
 }
 
@@ -74,3 +104,7 @@ pub struct SharedNetworkingSettings {
 
 #[derive(Debug)]
 pub struct GameMainChannel;
+
+fn position_should_rollback(this: &Position, that: &Position) -> bool {
+    (this.0 - that.0).length() >= 0.01
+}

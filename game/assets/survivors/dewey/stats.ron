@@ -1,0 +1,100 @@
+([
+    (
+        stat: (
+            kind: Health,
+            cat: Current,
+        ),
+        value: 50.0,
+    ),
+    (
+        stat: (
+            kind: Health,
+            cat: Base,
+        ),
+        value: 50.0,
+    ),
+    (
+        stat: (
+            kind: Health,
+            cat: Max,
+        ),
+        value: 50.0,
+    ),
+    (
+        stat: (
+            kind: Damage,
+            cat: Base,
+        ),
+        value: 1.0,
+    ),
+    (
+        stat: (
+            kind: Damage,
+            cat: Current,
+        ),
+        value: 1.0,
+    ),
+    (
+        stat: (
+            kind: Damage,
+            cat: Max,
+        ),
+        value: 2.0,
+    ),
+    (
+        stat: (
+            kind: CooldownRate,
+            cat: Current,
+        ),
+        value: 1.0,
+    ),
+    (
+        stat: (
+            kind: CooldownRate,
+            cat: Base,
+        ),
+        value: 1.0,
+    ),
+    (
+        stat: (
+            kind: CooldownRate,
+            cat: Min,
+        ),
+        value: 0.4,
+    ),
+    (
+        stat: (
+            kind: MoveSpeed,
+            cat: Current,
+        ),
+        value: 200.0,
+    ),
+    (
+        stat: (
+            kind: MoveSpeed,
+            cat: Base,
+        ),
+        value: 200.0,
+    ),
+    (
+        stat: (
+            kind: MoveSpeed,
+            cat: Max,
+        ),
+        value: 500.0,
+    ),
+    (
+        stat: (
+            kind: PickupRadius,
+            cat: Base,
+        ),
+        value: 80.0,
+    ),
+    (
+        stat: (
+            kind: PickupRadius,
+            cat: Current,
+        ),
+        value: 80.0,
+    ),
+])

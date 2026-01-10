@@ -5,6 +5,7 @@ use crate::{
         main_menu::MainMenuPlugin,
         mp_selection_menu::MPSelectionMenuPlugin,
     },
+    render::player::PlayerRenderPlugin,
     server::GameServer,
     shared::{
         game_kinds::{CurrentGameKind, GameKinds},
@@ -12,6 +13,7 @@ use crate::{
     },
 };
 use bevy::prelude::*;
+use lightyear::prelude::Predicted;
 
 pub mod client_states;
 pub mod game_client;
@@ -36,7 +38,11 @@ pub struct ClientRenderPlugin;
 
 impl Plugin for ClientRenderPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins((MainMenuPlugin, MPSelectionMenuPlugin));
+        app.add_plugins((
+            MainMenuPlugin,
+            MPSelectionMenuPlugin,
+            PlayerRenderPlugin::<Predicted>::new(),
+        ));
     }
 }
 

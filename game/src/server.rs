@@ -1,8 +1,11 @@
 use std::net::{Ipv4Addr, SocketAddr};
 
-use crate::shared::{
-    SEND_INTERVAL, SERVER_PORT, SHARED_SETTINGS, SINGLE_PLAYER_SERVER_PORT,
-    SharedNetworkingSettings, game_rules::ServerGameRulesPlugin, states::AppState,
+use crate::{
+    render::player::PlayerRenderPlugin,
+    shared::{
+        SEND_INTERVAL, SERVER_PORT, SHARED_SETTINGS, SINGLE_PLAYER_SERVER_PORT,
+        SharedNetworkingSettings, game_rules::ServerGameRulesPlugin, states::AppState,
+    },
 };
 use bevy::{
     ecs::{lifecycle::HookContext, world::DeferredWorld},
@@ -12,7 +15,7 @@ use lightyear::{
     link::RecvLinkConditioner,
     netcode::NetcodeServer,
     prelude::{
-        LinkOf, LocalAddr, ReplicationSender,
+        LinkOf, LocalAddr, Replicate, ReplicationSender,
         server::{NetcodeConfig, ServerUdpIo, Start},
     },
 };
@@ -96,6 +99,15 @@ pub struct DedicatedServerPlugin;
 impl Plugin for DedicatedServerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, server_startup);
+    }
+}
+
+/// In cases where we have a dedicated server and for visual inspection, we're going to want to have some bare amount of rendering that
+/// is special for just this server
+pub struct DedicatedServerRendererPlugin;
+impl Plugin for DedicatedServerRendererPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_plugins(PlayerRenderPlugin::<Replicate>::new());
     }
 }
 

@@ -3,8 +3,10 @@ use bevy_egui::EguiPlugin;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
 pub mod menus;
+pub mod player;
 pub mod ui;
 use menus::lobby::LobbyMenuPlugin;
+use player::PlayerRenderPlugin;
 use ui::SharedUIPlugin;
 
 pub struct GameSharedRenderPlugin;

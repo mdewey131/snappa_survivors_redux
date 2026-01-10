@@ -8,7 +8,7 @@ use serde::Deserialize;
 use crate::{
     client::{ClientRenderPlugin, GameClientPlugin},
     render::GameSharedRenderPlugin,
-    server::{DedicatedServerPlugin, GameServerPlugin},
+    server::{DedicatedServerPlugin, DedicatedServerRendererPlugin, GameServerPlugin},
     shared::GameSharedPlugin,
 };
 
@@ -66,6 +66,7 @@ pub fn build_game_server_app(app: &mut App, render: bool) {
     if render {
         add_bevy_default_app_plugins(app, "Server".into());
         add_shared_game_renderer(app);
+        app.add_plugins(DedicatedServerRendererPlugin);
     } else {
         add_headless_app_plugins(app);
     }
