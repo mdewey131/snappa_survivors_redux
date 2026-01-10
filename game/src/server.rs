@@ -17,12 +17,20 @@ use lightyear::{
     },
 };
 use serde::{Deserialize, Serialize};
+mod loading;
+use loading::ServerLoadingPlugin;
+mod lobby;
+use lobby::ServerLobbyPlugin;
 
 pub struct GameServerPlugin;
 impl Plugin for GameServerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(ServerGameRulesPlugin)
-            .add_observer(handle_new_client);
+        app.add_plugins((
+            ServerGameRulesPlugin,
+            ServerLobbyPlugin,
+            ServerLoadingPlugin,
+        ))
+        .add_observer(handle_new_client);
     }
 }
 

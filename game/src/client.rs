@@ -1,6 +1,7 @@
 use crate::{
     client::{
         game_client::{GameClient, GameClientConfig},
+        load_game::ClientGameLoadingPlugin,
         main_menu::MainMenuPlugin,
         mp_selection_menu::MPSelectionMenuPlugin,
     },
@@ -14,6 +15,7 @@ use bevy::prelude::*;
 
 pub mod client_states;
 pub mod game_client;
+pub mod load_game;
 pub mod main_menu;
 pub mod mp_selection_menu;
 use client_states::ClientStatesPlugin;
@@ -21,7 +23,7 @@ use client_states::ClientStatesPlugin;
 pub struct GameClientPlugin;
 impl Plugin for GameClientPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(ClientStatesPlugin)
+        app.add_plugins((ClientStatesPlugin, ClientGameLoadingPlugin))
             .add_systems(Startup, move_to_first_app_state);
     }
 }

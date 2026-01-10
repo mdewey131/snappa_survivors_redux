@@ -54,11 +54,12 @@ impl Plugin for GameSharedPlugin {
 struct GameProtocolPlugin;
 impl Plugin for GameProtocolPlugin {
     fn build(&self, app: &mut App) {
-        app.add_channel::<GameMainChannel>(ChannelSettings {
-            mode: ChannelMode::OrderedReliable(ReliableSettings::default()),
-            ..default()
-        })
-        .add_direction(NetworkDirection::Bidirectional);
+        app.add_plugins(LobbyProtocolPlugin)
+            .add_channel::<GameMainChannel>(ChannelSettings {
+                mode: ChannelMode::OrderedReliable(ReliableSettings::default()),
+                ..default()
+            })
+            .add_direction(NetworkDirection::Bidirectional);
     }
 }
 
