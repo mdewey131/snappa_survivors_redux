@@ -3,21 +3,16 @@ use lightyear::{
     connection::client::ClientState,
     prelude::{Client, Connect, server::Start},
 };
-use snappa_survivors::{
-    client::{game_client::GameClient, transition_to_single_player},
-    server::GameServer,
-};
 
 mod common;
-use common::tick_app;
+use common::{move_to_single_player, tick_app};
 
 #[test]
 fn single_player_connection() -> Result<(), String> {
     // Spawn a server and the client on this app
     let mut app = common::setup_test_client();
-    let sys = app.world_mut().register_system(transition_to_single_player);
 
-    app.world_mut().run_system(sys).expect("This should work!");
+    move_to_single_player(&mut app);
     // Run a few updates just to make sure this takes
     for updates in (0..30) {
         tick_app(&mut app, 1.0 / 64.0);

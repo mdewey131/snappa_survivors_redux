@@ -13,7 +13,11 @@ opt-level = 3
 
 [features]
 default = ["lightyear"]
-dev = ["inspector", "no_splash"]
+dev = [
+    "inspector",
+    "no_splash",
+    "bevy/reflect_auto_register"
+]
 inspector = []
 lightyear = [
     "lightyear/avian2d",

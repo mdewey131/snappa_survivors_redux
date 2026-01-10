@@ -2,7 +2,7 @@ use std::net::{Ipv4Addr, SocketAddr};
 
 use crate::shared::{
     SEND_INTERVAL, SERVER_PORT, SHARED_SETTINGS, SINGLE_PLAYER_SERVER_PORT,
-    SharedNetworkingSettings,
+    SharedNetworkingSettings, game_rules::ServerGameRulesPlugin, states::AppState,
 };
 use bevy::{
     ecs::{lifecycle::HookContext, world::DeferredWorld},
@@ -21,7 +21,8 @@ use serde::{Deserialize, Serialize};
 pub struct GameServerPlugin;
 impl Plugin for GameServerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_observer(handle_new_client);
+        app.add_plugins(ServerGameRulesPlugin)
+            .add_observer(handle_new_client);
     }
 }
 
@@ -92,7 +93,7 @@ impl Plugin for DedicatedServerPlugin {
 
 /// A startup system that creates the game server in a dedicated scenario.
 /// In the future, this should be something that can be created and called back to
-fn server_startup(mut commands: Commands) {
+fn server_startup(mut commands: Commands, mut state: ResMut<NextState<AppState>>) {
     let server = GameServer {
         conditioner: None,
         transport: ServerTransports::Udp {
@@ -102,6 +103,7 @@ fn server_startup(mut commands: Commands) {
     };
     let server_ent = commands.spawn(server).id();
     commands.trigger(Start { entity: server_ent });
+    state.set(AppState::Lobby);
 }
 
 pub fn handle_new_client(trigger: On<Add, LinkOf>, mut commands: Commands) {

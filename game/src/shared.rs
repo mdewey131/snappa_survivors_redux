@@ -10,11 +10,13 @@ use lightyear::prelude::*;
 pub mod combat;
 pub mod despawn_timer;
 pub mod game_kinds;
+pub mod game_rules;
 pub mod states;
 
 use combat::CombatPlugin;
 use despawn_timer::DespawnTimerPlugin;
 use game_kinds::GameKindsPlugin;
+use game_rules::SharedGameRulesPlugin;
 use states::SharedStatesPlugin;
 
 pub const SHARED_SETTINGS: SharedNetworkingSettings = SharedNetworkingSettings {
@@ -42,6 +44,7 @@ impl Plugin for GameSharedPlugin {
             GameProtocolPlugin,
             GameKindsPlugin,
             SharedStatesPlugin,
+            SharedGameRulesPlugin,
         ));
     }
 }
@@ -49,7 +52,11 @@ impl Plugin for GameSharedPlugin {
 struct GameProtocolPlugin;
 impl Plugin for GameProtocolPlugin {
     fn build(&self, app: &mut App) {
-        app;
+        app.add_channel::<GameMainChannel>(ChannelSettings {
+            mode: ChannelMode::OrderedReliable(ReliableSettings::default()),
+            ..default()
+        })
+        .add_direction(NetworkDirection::Bidirectional);
     }
 }
 
@@ -61,3 +68,6 @@ pub struct SharedNetworkingSettings {
     /// a 32-byte array to authenticate via the Netcode.io protocol
     pub private_key: [u8; 32],
 }
+
+#[derive(Debug)]
+pub struct GameMainChannel;

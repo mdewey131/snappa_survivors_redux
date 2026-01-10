@@ -3,7 +3,7 @@ use bevy::prelude::*;
 #[derive(Debug, Clone, Copy)]
 pub enum GameKinds {
     SinglePlayer,
-    MutliPlayer,
+    MultiPlayer,
 }
 
 #[derive(Resource, Debug, Clone, Copy, Default)]
