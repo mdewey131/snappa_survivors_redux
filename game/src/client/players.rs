@@ -1,7 +1,7 @@
 use avian2d::prelude::*;
 use bevy::prelude::*;
 use bevy_enhanced_input::prelude::*;
-use lightyear::prelude::{Controlled, Predicted, input::bei::InputMarker};
+use lightyear::prelude::{Controlled, Predicted, Replicate, input::bei::InputMarker};
 
 use crate::shared::{
     colliders::CommonColliderBundle,
@@ -25,13 +25,15 @@ fn handle_predicted_player_spawn(
 ) {
     if let Ok((cont, p)) = q_pred.get(trigger.entity) {
         if cont {
-            commands
-                .entity(trigger.entity)
-                .insert(InputMarker::<Movement>::default());
             commands.spawn((
                 ActionOf::<Player>::new(trigger.entity),
                 Action::<Movement>::new(),
                 Bindings::spawn(Cardinal::wasd_keys()),
+                // This isn't in the example, but
+                // it seems that you need this so that the
+                // replication works in a single player scenario. It doesn't appear
+                // to affect MP too much
+                Replicate::to_server(),
             ));
         }
         // regardless, add the collider components
