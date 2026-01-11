@@ -8,25 +8,33 @@ use crate::{
     render::player::PlayerRenderPlugin,
     server::GameServer,
     shared::{
+        SEND_INTERVAL,
         game_kinds::{CurrentGameKind, GameKinds},
         states::AppState,
     },
 };
 use bevy::prelude::*;
-use lightyear::prelude::Predicted;
+use lightyear::prelude::{Client, Predicted, ReplicationSender, Timeline};
 
 pub mod client_states;
 pub mod game_client;
 pub mod load_game;
 pub mod main_menu;
 pub mod mp_selection_menu;
+pub mod players;
 use client_states::ClientStatesPlugin;
+use players::ClientPlayerPlugin;
 
 pub struct GameClientPlugin;
 impl Plugin for GameClientPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins((ClientStatesPlugin, ClientGameLoadingPlugin))
-            .add_systems(Startup, move_to_first_app_state);
+        app.add_plugins((
+            ClientStatesPlugin,
+            ClientGameLoadingPlugin,
+            ClientPlayerPlugin,
+        ))
+        .add_systems(Startup, move_to_first_app_state)
+        .add_observer(add_input_delay_on_client_add);
     }
 }
 
@@ -81,4 +89,24 @@ pub fn transition_to_multi_player(
     commands.spawn(GameClient { config: config.0 });
     game_choice.0 = Some(GameKinds::MultiPlayer);
     state.set(AppState::EstablishServerConnection);
+}
+
+fn add_input_delay_on_client_add(trigger: On<Add, Client>, mut commands: Commands) {
+    use lightyear::prelude::{
+        Input,
+        client::{InputDelayConfig, InputTimeline},
+    };
+    let input = Input::default().with_input_delay(InputDelayConfig::fixed_input_delay(10));
+
+    commands.entity(trigger.entity).insert((
+        ReplicationSender::new(
+            SEND_INTERVAL,
+            lightyear::prelude::SendUpdatesMode::SinceLastAck,
+            false,
+        ),
+        InputTimeline(Timeline {
+            context: input,
+            ..default()
+        }),
+    ));
 }

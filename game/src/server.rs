@@ -15,15 +15,18 @@ use lightyear::{
     link::RecvLinkConditioner,
     netcode::NetcodeServer,
     prelude::{
-        LinkOf, LocalAddr, Replicate, ReplicationSender,
+        LinkOf, LocalAddr, Replicate, ReplicationReceiver, ReplicationSender,
         server::{NetcodeConfig, ServerUdpIo, Start},
     },
 };
 use serde::{Deserialize, Serialize};
 mod loading;
-use loading::ServerLoadingPlugin;
 mod lobby;
+mod players;
+
+use loading::ServerLoadingPlugin;
 use lobby::ServerLobbyPlugin;
+use players::ServerPlayerPlugin;
 
 pub struct GameServerPlugin;
 impl Plugin for GameServerPlugin {
@@ -32,6 +35,7 @@ impl Plugin for GameServerPlugin {
             ServerGameRulesPlugin,
             ServerLobbyPlugin,
             ServerLoadingPlugin,
+            ServerPlayerPlugin,
         ))
         .add_observer(handle_new_client);
     }
@@ -127,11 +131,12 @@ fn server_startup(mut commands: Commands, mut state: ResMut<NextState<AppState>>
 }
 
 pub fn handle_new_client(trigger: On<Add, LinkOf>, mut commands: Commands) {
-    commands
-        .entity(trigger.entity)
-        .insert(ReplicationSender::new(
+    commands.entity(trigger.entity).insert((
+        ReplicationSender::new(
             SEND_INTERVAL,
             lightyear::prelude::SendUpdatesMode::SinceLastAck,
             false,
-        ));
+        ),
+        ReplicationReceiver::default(),
+    ));
 }

@@ -10,22 +10,26 @@ use lightyear::{
     prelude::*,
 };
 
+pub mod colliders;
 pub mod combat;
 pub mod despawn_timer;
 pub mod game_kinds;
 pub mod game_rules;
+pub mod inputs;
 pub mod lobby;
 pub mod players;
 pub mod states;
 
+use colliders::*;
 use combat::CombatPlugin;
 use despawn_timer::DespawnTimerPlugin;
 use game_kinds::GameKindsPlugin;
 use game_rules::SharedGameRulesPlugin;
+use inputs::GameInputProtocolPlugin;
 use lobby::LobbyProtocolPlugin;
 use states::SharedStatesPlugin;
 
-use crate::shared::players::PlayerProtocolPlugin;
+use crate::shared::players::{Player, PlayerProtocolPlugin};
 
 pub const SHARED_SETTINGS: SharedNetworkingSettings = SharedNetworkingSettings {
     protocol_id: 0,
@@ -71,19 +75,24 @@ impl Plugin for GameSharedPlugin {
                 // basically, this doesn't play well with rollbacks at all, and causes issues down the line
                 .disable::<IslandPlugin>()
                 .disable::<IslandSleepingPlugin>(),
-        ));
+        ))
+        .insert_resource(Gravity::ZERO);
     }
 }
 
 struct GameProtocolPlugin;
 impl Plugin for GameProtocolPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins((LobbyProtocolPlugin, PlayerProtocolPlugin))
-            .add_channel::<GameMainChannel>(ChannelSettings {
-                mode: ChannelMode::OrderedReliable(ReliableSettings::default()),
-                ..default()
-            })
-            .add_direction(NetworkDirection::Bidirectional);
+        app.add_plugins((
+            LobbyProtocolPlugin,
+            PlayerProtocolPlugin,
+            GameInputProtocolPlugin,
+        ))
+        .add_channel::<GameMainChannel>(ChannelSettings {
+            mode: ChannelMode::OrderedReliable(ReliableSettings::default()),
+            ..default()
+        })
+        .add_direction(NetworkDirection::Bidirectional);
 
         app.register_component::<Position>()
             .add_prediction()

@@ -32,7 +32,8 @@ lightyear = [
     "lightyear/avian2d",
     "lightyear/replication",
     "lightyear/netcode",
-    "lightyear/udp"
+    "lightyear/udp",
+    "lightyear/input_bei"
 ]
 no_splash = []
 

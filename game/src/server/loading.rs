@@ -1,7 +1,9 @@
 use crate::shared::{players::Player, states::*};
 use avian2d::prelude::Position;
 use bevy::prelude::*;
-use lightyear::prelude::{Client, LinkOf, NetworkTarget, PredictionTarget, RemoteId, Replicate};
+use lightyear::prelude::{
+    Client, ControlledBy, Lifetime, LinkOf, NetworkTarget, PredictionTarget, RemoteId, Replicate,
+};
 use rand::Rng;
 
 pub struct ServerLoadingPlugin;
@@ -15,8 +17,11 @@ impl Plugin for ServerLoadingPlugin {
     }
 }
 
-fn spawn_player_characters(mut commands: Commands, q_clients: Query<(&RemoteId), With<LinkOf>>) {
-    for remote in &q_clients {
+fn spawn_player_characters(
+    mut commands: Commands,
+    q_clients: Query<(Entity, &RemoteId), With<LinkOf>>,
+) {
+    for (ent, remote) in &q_clients {
         let mut rng = rand::rng();
         let pos = (rng.random_range(-50.0..50.0), rng.random_range(-50.0..50.0));
         commands.spawn((
@@ -24,6 +29,10 @@ fn spawn_player_characters(mut commands: Commands, q_clients: Query<(&RemoteId),
             Position(Vec2::new(pos.0, pos.1)),
             Replicate::to_clients(NetworkTarget::All),
             PredictionTarget::to_clients(NetworkTarget::All),
+            ControlledBy {
+                owner: ent,
+                lifetime: Lifetime::default(),
+            },
         ));
     }
 }
