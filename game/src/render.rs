@@ -2,6 +2,7 @@ use bevy::{prelude::*, render::RenderSystems};
 use bevy_egui::EguiPlugin;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
+pub mod animation;
 pub mod camera;
 pub mod map;
 pub mod menus;

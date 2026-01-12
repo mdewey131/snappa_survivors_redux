@@ -1,9 +1,12 @@
 use std::marker::PhantomData;
 
 use avian2d::prelude::Position;
-use bevy::prelude::*;
+use bevy::{prelude::*, render::RenderSystems};
 
-use crate::{render::RenderYtoZ, shared::players::Player};
+use crate::{
+    render::{RenderYtoZ, animation::*},
+    shared::players::Player,
+};
 
 /// Handles the rendering of the player.
 ///
@@ -22,19 +25,42 @@ impl<C: Component> PlayerRenderPlugin<C> {
 
 impl<C: Component> Plugin for PlayerRenderPlugin<C> {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, on_player_add::<C>);
+        app.add_systems(
+            Update,
+            (
+                on_player_add::<C>,
+                (animate::<Player>, update_facing_direction::<Player>)
+                    .chain()
+                    .before(RenderSystems::ExtractCommands),
+            ),
+        );
     }
 }
 
 pub fn on_player_add<C: Component>(
     mut commands: Commands,
     assets: Res<AssetServer>,
+    mut layouts: ResMut<Assets<TextureAtlasLayout>>,
     q_player: Query<(Entity, &Position), (Added<Player>, With<C>)>,
 ) {
     for (e, pos) in &q_player {
-        let handle: Handle<Image> = assets.load("survivors/dewey/sprite.png");
+        let handle: Handle<Image> = assets.load("survivors/dewey/sprite_2-Sheet.png");
+        let layout = TextureAtlasLayout::from_grid(UVec2::splat(32), 4, 4, None, None);
+        let tex_atlas = layouts.add(layout);
+        let animation = AnimationConfig::new(0, 3, 4);
+
+        let facing = AnimationFacing::default();
         commands.entity(e).insert((
-            Sprite::from_image(handle),
+            Sprite {
+                image: handle,
+                texture_atlas: Some(TextureAtlas {
+                    layout: tex_atlas.clone(),
+                    index: 0,
+                }),
+                ..default()
+            },
+            facing,
+            animation,
             Transform::from_translation(pos.0.extend(pos.0.y)),
             RenderYtoZ,
         ));
