@@ -34,7 +34,7 @@ fn load_map_chunks(mut commands: Commands, _rules: Res<GameRules>, assets: Res<A
     // Making the map somewhat huge to start
     let tiles = Vec2::new(64.0, 64.0);
     let texture_size = Vec2::new(128.0, 128.0);
-    let map = commands.spawn(MapBackground).id();
+    let map = commands.spawn((MapBackground, Transform::default())).id();
 
     let (total_size_x, total_size_y) = (tiles.x * texture_size.x, tiles.y * texture_size.y);
     for x in (0..tiles.x as u32) {
@@ -48,6 +48,8 @@ fn load_map_chunks(mut commands: Commands, _rules: Res<GameRules>, assets: Res<A
                     -1000.0,
                 )),
                 ChunkOf(map),
+                // this is for bevy inspector egui reasons
+                ChildOf(map),
             ));
         }
     }

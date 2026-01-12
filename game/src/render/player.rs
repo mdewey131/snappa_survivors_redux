@@ -49,7 +49,10 @@ pub fn on_player_add<C: Component>(
         let tex_atlas = layouts.add(layout);
         let animation = AnimationConfig::new(0, 3, 4);
 
-        let facing = AnimationFacing::default();
+        let facing = AnimationFacing {
+            tex_width: 4,
+            ..default()
+        };
         commands.entity(e).insert((
             Sprite {
                 image: handle,
