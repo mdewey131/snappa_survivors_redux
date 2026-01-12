@@ -48,10 +48,12 @@ fn shared_player_movement(mut velo: Mut<LinearVelocity>, input: Vec2) {
 }
 
 pub fn player_movement<C: Component>(
-    t: On<Fire<Movement>>,
-    mut q_lv: Query<&mut LinearVelocity, With<C>>,
+    q_mv_action: Query<(&ActionValue, &ActionOf<Player>), With<Action<Movement>>>,
+    mut q_lv: Query<&mut LinearVelocity, (With<C>, With<Player>)>,
 ) {
-    if let Ok(mut lv) = q_lv.get_mut(t.context) {
-        shared_player_movement(lv, t.value);
+    for (val, a_of) in &q_mv_action {
+        if let Ok(mut lv) = q_lv.get_mut(a_of.entity()) {
+            shared_player_movement(lv, val.as_axis2d());
+        }
     }
 }

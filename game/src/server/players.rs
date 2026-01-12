@@ -3,6 +3,7 @@ use lightyear::prelude::Replicate;
 
 use crate::shared::{
     colliders::CommonColliderBundle,
+    combat::CombatSystemSet,
     players::{Player, player_movement},
 };
 
@@ -10,8 +11,11 @@ pub struct ServerPlayerPlugin;
 
 impl Plugin for ServerPlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_observer(player_movement::<Replicate>)
-            .add_observer(handle_player_spawn);
+        app.add_systems(
+            FixedUpdate,
+            (player_movement::<Replicate>).in_set(CombatSystemSet::Combat),
+        )
+        .add_observer(handle_player_spawn);
     }
 }
 

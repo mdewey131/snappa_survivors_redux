@@ -5,6 +5,7 @@ use lightyear::prelude::{Controlled, Predicted, Replicate, input::bei::InputMark
 
 use crate::shared::{
     colliders::CommonColliderBundle,
+    combat::CombatSystemSet,
     inputs::Movement,
     players::{Player, player_movement},
 };
@@ -13,8 +14,11 @@ pub struct ClientPlayerPlugin;
 
 impl Plugin for ClientPlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_observer(player_movement::<Predicted>)
-            .add_observer(handle_predicted_player_spawn);
+        app.add_systems(
+            FixedUpdate,
+            (player_movement::<Predicted>).in_set(CombatSystemSet::Combat),
+        )
+        .add_observer(handle_predicted_player_spawn);
     }
 }
 

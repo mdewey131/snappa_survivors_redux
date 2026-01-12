@@ -16,12 +16,14 @@ use crate::{
 use bevy::prelude::*;
 use lightyear::prelude::{Client, Predicted, ReplicationSender, Timeline};
 
+pub mod camera;
 pub mod client_states;
 pub mod game_client;
 pub mod load_game;
 pub mod main_menu;
 pub mod mp_selection_menu;
 pub mod players;
+use camera::GameCameraClientPlugin;
 use client_states::ClientStatesPlugin;
 use players::ClientPlayerPlugin;
 
@@ -47,6 +49,7 @@ pub struct ClientRenderPlugin;
 impl Plugin for ClientRenderPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((
+            GameCameraClientPlugin,
             MainMenuPlugin,
             MPSelectionMenuPlugin,
             PlayerRenderPlugin::<Predicted>::new(),

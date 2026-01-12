@@ -1,9 +1,9 @@
 use std::marker::PhantomData;
 
-use bevy::{ecs::query::QueryFilter, prelude::*};
-use lightyear::prelude::Predicted;
+use avian2d::prelude::Position;
+use bevy::prelude::*;
 
-use crate::shared::{game_kinds::CurrentGameKind, players::Player};
+use crate::{render::RenderYtoZ, shared::players::Player};
 
 /// Handles the rendering of the player.
 ///
@@ -29,10 +29,14 @@ impl<C: Component> Plugin for PlayerRenderPlugin<C> {
 pub fn on_player_add<C: Component>(
     mut commands: Commands,
     assets: Res<AssetServer>,
-    q_player: Query<Entity, (Added<Player>, With<C>)>,
+    q_player: Query<(Entity, &Position), (Added<Player>, With<C>)>,
 ) {
-    for e in &q_player {
+    for (e, pos) in &q_player {
         let handle: Handle<Image> = assets.load("survivors/dewey/sprite.png");
-        commands.entity(e).insert(Sprite::from_image(handle));
+        commands.entity(e).insert((
+            Sprite::from_image(handle),
+            Transform::from_translation(pos.0.extend(pos.0.y)),
+            RenderYtoZ,
+        ));
     }
 }
