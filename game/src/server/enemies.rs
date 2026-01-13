@@ -15,7 +15,16 @@ impl Plugin for ServerEnemyPlugin {
         app.add_systems(
             FixedUpdate,
             (
-                spawn_enemy.run_if(on_timer(Duration::from_secs(20))),
+                // This use of the check of whether or not the server resource exists
+                // is a bit of a hack. In theory, the way that this should work is we
+                // should be checking whether or not the game mode is in multiplayer,
+                // and if so then the client shouldn't be running this. But, because it's
+                // in the client since that gets the server plugin, this causes problems as
+                // written without the check
+                spawn_enemy.run_if(
+                    on_timer(Duration::from_secs(20))
+                        .and(|c_server: Option<Single<&Server>>| c_server.is_some()),
+                ),
                 enemy_state_machine::<With<Replicate>, With<Replicate>>,
             )
                 .run_if(in_state(InGameState::InGame))
