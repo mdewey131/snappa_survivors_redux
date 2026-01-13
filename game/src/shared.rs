@@ -13,6 +13,7 @@ use lightyear::{
 pub mod colliders;
 pub mod combat;
 pub mod despawn_timer;
+pub mod enemies;
 pub mod game_kinds;
 pub mod game_rules;
 pub mod inputs;
@@ -23,6 +24,7 @@ pub mod states;
 use colliders::*;
 use combat::CombatPlugin;
 use despawn_timer::DespawnTimerPlugin;
+use enemies::EnemyProtocolPlugin;
 use game_kinds::GameKindsPlugin;
 use game_rules::SharedGameRulesPlugin;
 use inputs::GameInputProtocolPlugin;
@@ -84,6 +86,7 @@ struct GameProtocolPlugin;
 impl Plugin for GameProtocolPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((
+            EnemyProtocolPlugin,
             LobbyProtocolPlugin,
             PlayerProtocolPlugin,
             GameInputProtocolPlugin,

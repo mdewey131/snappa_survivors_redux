@@ -5,7 +5,7 @@ use crate::{
         main_menu::MainMenuPlugin,
         mp_selection_menu::MPSelectionMenuPlugin,
     },
-    render::player::PlayerRenderPlugin,
+    render::{enemies::EnemyRenderPlugin, player::PlayerRenderPlugin},
     server::GameServer,
     shared::{
         SEND_INTERVAL,
@@ -18,6 +18,7 @@ use lightyear::prelude::{Client, Predicted, ReplicationSender, Timeline};
 
 pub mod camera;
 pub mod client_states;
+pub mod enemies;
 pub mod game_client;
 pub mod load_game;
 pub mod main_menu;
@@ -25,12 +26,14 @@ pub mod mp_selection_menu;
 pub mod players;
 use camera::GameCameraClientPlugin;
 use client_states::ClientStatesPlugin;
+use enemies::ClientEnemyPlugin;
 use players::ClientPlayerPlugin;
 
 pub struct GameClientPlugin;
 impl Plugin for GameClientPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((
+            ClientEnemyPlugin,
             ClientStatesPlugin,
             ClientGameLoadingPlugin,
             ClientPlayerPlugin,
@@ -50,6 +53,7 @@ impl Plugin for ClientRenderPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((
             GameCameraClientPlugin,
+            EnemyRenderPlugin::<Predicted>::new(),
             MainMenuPlugin,
             MPSelectionMenuPlugin,
             PlayerRenderPlugin::<Predicted>::new(),

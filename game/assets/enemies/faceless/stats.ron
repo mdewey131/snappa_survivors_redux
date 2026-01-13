@@ -1,0 +1,37 @@
+([
+    (
+        stat: (
+            kind: Health,
+            cat: Base,
+        ),
+        value: 10.0,
+    ),
+    (
+        stat: (
+            kind: Health,
+            cat: Current,
+        ),
+        value: 10.0,
+    ),
+    (
+        stat: (
+            kind: Health,
+            cat: Max,
+        ),
+        value: 10.0,
+    ),
+    (
+        stat: (
+            kind: Damage,
+            cat: Base,
+        ),
+        value: 5.0,
+    ),
+    (
+        stat: (
+            kind: Damage,
+            cat: Current,
+        ),
+        value: 5.0,
+    ),
+])

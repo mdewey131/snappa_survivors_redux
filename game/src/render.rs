@@ -4,6 +4,7 @@ use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
 pub mod animation;
 pub mod camera;
+pub mod enemies;
 pub mod map;
 pub mod menus;
 pub mod player;

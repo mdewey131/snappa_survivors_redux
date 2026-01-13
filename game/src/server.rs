@@ -1,7 +1,7 @@
 use std::net::{Ipv4Addr, SocketAddr};
 
 use crate::{
-    render::player::PlayerRenderPlugin,
+    render::{enemies::EnemyRenderPlugin, player::PlayerRenderPlugin},
     shared::{
         SEND_INTERVAL, SERVER_PORT, SHARED_SETTINGS, SINGLE_PLAYER_SERVER_PORT,
         SharedNetworkingSettings, game_rules::ServerGameRulesPlugin, states::AppState,
@@ -20,10 +20,12 @@ use lightyear::{
     },
 };
 use serde::{Deserialize, Serialize};
+mod enemies;
 mod loading;
 mod lobby;
 mod players;
 
+use enemies::ServerEnemyPlugin;
 use loading::ServerLoadingPlugin;
 use lobby::ServerLobbyPlugin;
 use players::ServerPlayerPlugin;
@@ -33,6 +35,7 @@ impl Plugin for GameServerPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((
             ServerGameRulesPlugin,
+            ServerEnemyPlugin,
             ServerLobbyPlugin,
             ServerLoadingPlugin,
             ServerPlayerPlugin,
@@ -111,7 +114,10 @@ impl Plugin for DedicatedServerPlugin {
 pub struct DedicatedServerRendererPlugin;
 impl Plugin for DedicatedServerRendererPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(PlayerRenderPlugin::<Replicate>::new());
+        app.add_plugins((
+            PlayerRenderPlugin::<Replicate>::new(),
+            EnemyRenderPlugin::<Replicate>::new(),
+        ));
     }
 }
 

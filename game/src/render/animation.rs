@@ -189,10 +189,6 @@ pub fn update_facing_direction<C: Component>(
             let min = (facing.tex_width as usize * facing.tex_rows[facing.c_dir.to_index()]);
             let max = min + (facing.tex_width as usize) - 1;
             let new = min + diff;
-            info!(
-                "current index: {c_idx}, first: {}, diff: {c_idx}, last: {}, min: {min}, max: {max}, new: {new}",
-                config.first_sprite_index, config.last_sprite_index
-            );
             tex.index = new;
             config.first_sprite_index = min;
             config.last_sprite_index = max;
