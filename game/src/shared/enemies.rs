@@ -85,3 +85,15 @@ pub fn enemy_state_machine<EnemyQF: QueryFilter, PlayerQF: QueryFilter>(
         }
     }
 }
+
+pub fn add_enemy_colliders<QF: QueryFilter>(
+    trigger: On<Add, Enemy>,
+    mut commands: Commands,
+    q_to_attach: Query<&Enemy, QF>,
+) {
+    if let Ok(e) = q_to_attach.get(trigger.entity) {
+        commands
+            .entity(trigger.entity)
+            .insert(CommonColliderBundle::from(*e));
+    }
+}

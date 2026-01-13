@@ -2,6 +2,7 @@ use std::net::{Ipv4Addr, SocketAddr};
 
 use crate::{
     render::{enemies::EnemyRenderPlugin, player::PlayerRenderPlugin},
+    server::enemies::DedicatedServerEnemyPlugin,
     shared::{
         SEND_INTERVAL, SERVER_PORT, SHARED_SETTINGS, SINGLE_PLAYER_SERVER_PORT,
         SharedNetworkingSettings, game_rules::ServerGameRulesPlugin, states::AppState,
@@ -105,7 +106,8 @@ pub struct DedicatedServerPlugin;
 
 impl Plugin for DedicatedServerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, server_startup);
+        app.add_plugins((DedicatedServerEnemyPlugin))
+            .add_systems(Startup, server_startup);
     }
 }
 

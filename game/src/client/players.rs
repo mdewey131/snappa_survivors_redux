@@ -1,7 +1,7 @@
 use avian2d::prelude::*;
 use bevy::prelude::*;
 use bevy_enhanced_input::prelude::*;
-use lightyear::prelude::{Controlled, Predicted, Replicate, input::bei::InputMarker};
+use lightyear::prelude::{Controlled, Predicted, Replicate};
 
 use crate::shared::{
     colliders::CommonColliderBundle,

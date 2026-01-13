@@ -24,6 +24,13 @@ impl Plugin for ServerEnemyPlugin {
     }
 }
 
+pub struct DedicatedServerEnemyPlugin;
+impl Plugin for DedicatedServerEnemyPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_observer(add_enemy_colliders::<With<Replicate>>);
+    }
+}
+
 fn spawn_enemy(mut commands: Commands) {
     let enemy = Enemy {
         kind: EnemyKind::FacelessMan,

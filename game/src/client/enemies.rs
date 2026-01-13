@@ -11,7 +11,8 @@ impl Plugin for ClientEnemyPlugin {
             (enemy_state_machine::<With<Predicted>, With<Predicted>>)
                 .in_set(CombatSystemSet::Combat),
         )
-        .add_observer(on_predicted_enemy_spawn);
+        .add_observer(on_predicted_enemy_spawn)
+        .add_observer(add_enemy_colliders::<With<Predicted>>);
     }
 }
 
@@ -29,8 +30,5 @@ fn on_predicted_enemy_spawn(
             }
             _ => {}
         }
-        commands
-            .entity(trigger.entity)
-            .insert(CommonColliderBundle::from(*e));
     }
 }
