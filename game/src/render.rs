@@ -1,3 +1,5 @@
+#[cfg(feature = "avian_debug")]
+use avian2d::prelude::*;
 use bevy::{prelude::*, render::RenderSystems};
 use bevy_egui::EguiPlugin;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
@@ -22,6 +24,9 @@ impl Plugin for GameSharedRenderPlugin {
         app.add_plugins((SharedUIPlugin, LobbyMenuPlugin, MapRenderPlugin));
         #[cfg(feature = "inspector")]
         app.add_plugins((EguiPlugin::default(), WorldInspectorPlugin::new()));
+        #[cfg(feature = "avian_debug")]
+        app.add_plugins(PhysicsDebugPlugin::default());
+
         app.add_systems(Startup, startup)
             .add_systems(PostUpdate, render_y_to_z.before(RenderSystems::Prepare));
     }

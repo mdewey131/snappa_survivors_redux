@@ -14,9 +14,10 @@ opt-level = 3
 [features]
 default = ["lightyear", "avian"]
 dev = [
+    "avian_debug",
     "inspector",
     "no_splash",
-    "bevy/reflect_auto_register"
+    "bevy/reflect_auto_register",
 ]
 avian = [
     'lightyear/avian2d',
@@ -26,6 +27,9 @@ avian = [
     "avian2d/serialize",
     "avian2d/default-collider",
     "avian2d/parry-f32",
+]
+avian_debug = [
+"avian2d/debug-plugin",
 ]
 inspector = []
 lightyear = [

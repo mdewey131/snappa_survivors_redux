@@ -43,6 +43,6 @@ fn handle_predicted_player_spawn(
         // regardless, add the collider components
         commands
             .entity(trigger.entity)
-            .insert(CommonColliderBundle::from(*p));
+            .insert(CommonColliderBundle::player(true));
     }
 }

@@ -14,18 +14,6 @@ pub struct Enemy {
     pub state: EnemyState,
 }
 
-impl From<Enemy> for CommonColliderBundle {
-    fn from(value: Enemy) -> Self {
-        Self::new(
-            RigidBody::Dynamic,
-            Collider::capsule(20.0, 30.0),
-            1.0,
-            [ColliderTypes::Enemy].into(),
-            [ColliderTypes::Enemy, ColliderTypes::Player].into(),
-        )
-    }
-}
-
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Reflect)]
 pub enum EnemyKind {
     FacelessMan,
@@ -83,17 +71,5 @@ pub fn enemy_state_machine<EnemyQF: QueryFilter, PlayerQF: QueryFilter>(
             EnemyState::MovingTo(p_pos) => {}
             EnemyState::Dying => {}
         }
-    }
-}
-
-pub fn add_enemy_colliders<QF: QueryFilter>(
-    trigger: On<Add, Enemy>,
-    mut commands: Commands,
-    q_to_attach: Query<&Enemy, QF>,
-) {
-    if let Ok(e) = q_to_attach.get(trigger.entity) {
-        commands
-            .entity(trigger.entity)
-            .insert(CommonColliderBundle::from(*e));
     }
 }

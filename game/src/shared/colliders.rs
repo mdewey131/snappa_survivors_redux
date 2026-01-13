@@ -1,3 +1,5 @@
+use std::marker::PhantomData;
+
 use avian2d::prelude::*;
 use bevy::prelude::*;
 /// The common set of things that every entity with a RigidBody in this game must have
@@ -12,6 +14,49 @@ pub struct CommonColliderBundle {
 }
 
 impl CommonColliderBundle {
+    pub fn enemy(predicted: bool) -> Self {
+        let networking_col_type = if predicted {
+            ColliderTypes::Predicted
+        } else {
+            ColliderTypes::Replicated
+        };
+        let mems = [ColliderTypes::Enemy, networking_col_type];
+        let filters = [
+            ColliderTypes::Player,
+            ColliderTypes::Enemy,
+            networking_col_type,
+        ];
+        Self::new(
+            RigidBody::Dynamic,
+            Collider::capsule(20.0, 30.0),
+            1.0,
+            mems.into(),
+            filters.into(),
+        )
+    }
+
+    pub fn player(predicted: bool) -> Self {
+        let networking_col_type = if predicted {
+            ColliderTypes::Predicted
+        } else {
+            ColliderTypes::Replicated
+        };
+        let mems = [ColliderTypes::Player, networking_col_type];
+        let filters = [
+            ColliderTypes::Enemy,
+            networking_col_type,
+            ColliderTypes::StaticPickup,
+            ColliderTypes::RemotePickup,
+        ];
+        Self::new(
+            RigidBody::Dynamic,
+            Collider::capsule(20.0, 30.0),
+            1.0,
+            mems.into(),
+            filters.into(),
+        )
+    }
+
     pub fn new(
         r: RigidBody,
         c: Collider,
@@ -33,7 +78,7 @@ impl CommonColliderBundle {
 /// Each collider that an entity takes will be a child
 /// each of those children will have specified collider sizes
 /// and individual filters
-#[derive(PhysicsLayer, Default)]
+#[derive(PhysicsLayer, Default, Clone, Copy, Debug)]
 pub enum ColliderTypes {
     #[default]
     Player,
@@ -46,4 +91,10 @@ pub enum ColliderTypes {
     //Can be picked up by pickup radius
     RemotePickup,
     PlayerRevive,
+    // These two added layers will be used to distinguish between
+    // different networking types, because in single player mode,
+    // we want to make sure that a replicated enemy won't block
+    // a predicted player
+    Replicated,
+    Predicted,
 }

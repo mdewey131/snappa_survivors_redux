@@ -24,13 +24,6 @@ impl Plugin for ServerEnemyPlugin {
     }
 }
 
-pub struct DedicatedServerEnemyPlugin;
-impl Plugin for DedicatedServerEnemyPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_observer(add_enemy_colliders::<With<Replicate>>);
-    }
-}
-
 fn spawn_enemy(mut commands: Commands) {
     let enemy = Enemy {
         kind: EnemyKind::FacelessMan,
@@ -39,7 +32,7 @@ fn spawn_enemy(mut commands: Commands) {
     let mut rng = rand::rng();
     let pos = (rng.random_range(-50.0..50.0), rng.random_range(-50.0..50.0));
     commands.spawn((
-        CommonColliderBundle::from(enemy),
+        CommonColliderBundle::enemy(false),
         enemy,
         Position(Vec2::new(pos.0, pos.1)),
         EnemySpawnTimer::default(),
