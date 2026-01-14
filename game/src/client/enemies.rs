@@ -16,26 +16,25 @@ impl Plugin for ClientEnemyPlugin {
             >)
                 .in_set(CombatSystemSet::Combat),
         )
-        .add_observer(on_predicted_enemy_spawn);
+        .add_systems(FixedPreUpdate, (add_missing_enemy_components));
     }
 }
 
-fn on_predicted_enemy_spawn(
-    trigger: On<Add, Enemy>,
+/// These add the components, for a spawn timer and colliders
+/// this cannot be run off of a trigger, because SinglePlayer is also added off of a trigger
+fn add_missing_enemy_components(
     mut commands: Commands,
-    q_to_attach: Query<&Enemy, With<Predicted>>,
+    q_to_attach: Query<(Entity, &Enemy), (Added<Enemy>, Or<(With<Predicted>, With<SinglePlayer>)>)>,
 ) {
-    if let Ok(e) = q_to_attach.get(trigger.entity) {
-        match e.state {
+    for (ent, en) in &q_to_attach {
+        match en.state {
             EnemyState::Spawning => {
-                commands
-                    .entity(trigger.entity)
-                    .insert((EnemySpawnTimer::default()));
+                commands.entity(ent).insert((EnemySpawnTimer::default()));
             }
             _ => {}
         }
         commands
-            .entity(trigger.entity)
+            .entity(ent)
             .insert(CommonColliderBundle::enemy(true));
     }
 }

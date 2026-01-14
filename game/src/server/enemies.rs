@@ -5,7 +5,8 @@ use rand::Rng;
 use std::time::Duration;
 
 use crate::shared::{
-    colliders::CommonColliderBundle, combat::CombatSystemSet, enemies::*, states::InGameState,
+    colliders::CommonColliderBundle, combat::CombatSystemSet, enemies::*,
+    game_kinds::is_single_player, states::InGameState,
 };
 
 pub struct ServerEnemyPlugin;
@@ -21,14 +22,21 @@ impl Plugin for ServerEnemyPlugin {
                 // and if so then the client shouldn't be running this. But, because it's
                 // in the client since that gets the server plugin, this causes problems as
                 // written without the check
-                spawn_enemy.run_if(
-                    on_timer(Duration::from_secs(20))
-                        .and(|c_server: Option<Single<&Server>>| c_server.is_some()),
-                ),
+                spawn_enemy.run_if(on_timer(Duration::from_secs(20)).and(is_single_player)),
                 enemy_state_machine::<With<Replicate>, With<Replicate>>,
             )
                 .run_if(in_state(InGameState::InGame))
                 .in_set(CombatSystemSet::Combat),
+        );
+    }
+}
+
+pub struct DedicatedServerEnemyPlugin;
+impl Plugin for DedicatedServerEnemyPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(
+            FixedUpdate,
+            spawn_enemy.run_if(on_timer(Duration::from_secs(20)).and(is_single_player)),
         );
     }
 }

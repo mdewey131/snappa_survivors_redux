@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use avian2d::prelude::Position;
-use bevy::{prelude::*, render::RenderSystems};
+use bevy::{ecs::query::QueryFilter, prelude::*, render::RenderSystems};
 use bevy_enhanced_input::prelude::*;
 
 use crate::{
@@ -15,21 +15,21 @@ use crate::{
 /// a dedicated server might want to render according to
 /// the replicated component, but the client only wants
 /// to render on the basis of predicted
-pub struct PlayerRenderPlugin<C> {
-    _mark: PhantomData<C>,
+pub struct PlayerRenderPlugin<QF> {
+    _mark: PhantomData<QF>,
 }
-impl<C: Component> PlayerRenderPlugin<C> {
+impl<QF: QueryFilter> PlayerRenderPlugin<QF> {
     pub fn new() -> Self {
         Self { _mark: PhantomData }
     }
 }
 
-impl<C: Component> Plugin for PlayerRenderPlugin<C> {
+impl<QF: QueryFilter> Plugin for PlayerRenderPlugin<QF> {
     fn build(&self, app: &mut App) {
         app.add_systems(
             Update,
             (
-                on_player_add::<C>,
+                on_player_add::<QF>,
                 (animate::<Player>, update_player_facing_direction)
                     .chain()
                     .before(RenderSystems::ExtractCommands),
@@ -38,11 +38,11 @@ impl<C: Component> Plugin for PlayerRenderPlugin<C> {
     }
 }
 
-pub fn on_player_add<C: Component>(
+pub fn on_player_add<QF: QueryFilter>(
     mut commands: Commands,
     assets: Res<AssetServer>,
     mut layouts: ResMut<Assets<TextureAtlasLayout>>,
-    q_player: Query<(Entity, &Position), (Added<Player>, With<C>)>,
+    q_player: Query<(Entity, &Position), (Added<Player>, QF)>,
 ) {
     for (e, pos) in &q_player {
         let handle: Handle<Image> = assets.load("survivors/dewey/sprite_2-Sheet.png");

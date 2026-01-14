@@ -41,13 +41,6 @@ pub struct SinglePlayerObserver<C: Component> {
     _mark: PhantomData<C>,
 }
 
-fn is_single_player(r: Res<CurrentGameKind>) -> bool {
-    if let Some(k) = r.0 {
-        matches!(GameKinds::SinglePlayer, k)
-    } else {
-        false
-    }
-}
 fn add_single_player_observer<C: Component>(mut commands: Commands) {
     commands.spawn((
         SinglePlayerObserver { _mark: PhantomData },

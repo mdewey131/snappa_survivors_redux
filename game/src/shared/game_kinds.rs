@@ -21,3 +21,11 @@ impl Plugin for GameKindsPlugin {
         app.init_resource::<CurrentGameKind>();
     }
 }
+
+pub fn is_single_player(r: Res<CurrentGameKind>) -> bool {
+    if let Some(k) = r.0 {
+        matches!(GameKinds::SinglePlayer, k)
+    } else {
+        false
+    }
+}
