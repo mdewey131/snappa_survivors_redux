@@ -1,4 +1,6 @@
-use crate::shared::{colliders::CommonColliderBundle, combat::CombatSystemSet, enemies::*};
+use crate::shared::{
+    colliders::CommonColliderBundle, combat::CombatSystemSet, enemies::*, game_kinds::SinglePlayer,
+};
 use bevy::prelude::*;
 use lightyear::prelude::*;
 
@@ -8,7 +10,10 @@ impl Plugin for ClientEnemyPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             FixedUpdate,
-            (enemy_state_machine::<With<Predicted>, With<Predicted>>)
+            (enemy_state_machine::<
+                Or<(With<Predicted>, With<SinglePlayer>)>,
+                Or<(With<Predicted>, With<SinglePlayer>)>,
+            >)
                 .in_set(CombatSystemSet::Combat),
         )
         .add_observer(on_predicted_enemy_spawn);
