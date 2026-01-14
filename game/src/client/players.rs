@@ -27,7 +27,7 @@ impl Plugin for ClientPlayerPlugin {
 fn handle_predicted_player_spawn(
     trigger: On<Add, Player>,
     mut commands: Commands,
-    q_pred: Query<(Has<Controlled>, &Player), With<Predicted>>,
+    q_pred: Query<(Has<Controlled>, &Player), Or<(With<SinglePlayer>, With<Predicted>)>>,
 ) {
     if let Ok((cont, p)) = q_pred.get(trigger.entity) {
         if cont {
