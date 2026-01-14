@@ -16,6 +16,7 @@ pub struct SharedGameRulesPlugin;
 
 impl Plugin for SharedGameRulesPlugin {
     fn build(&self, app: &mut App) {
+        app.add_systems(OnEnter(AppState::Lobby), add_game_rules_resource);
         app.register_message::<ChangeGameRuleMessage<MapKind>>()
             .add_direction(NetworkDirection::ClientToServer);
 
@@ -24,19 +25,8 @@ impl Plugin for SharedGameRulesPlugin {
     }
 }
 
-pub struct ServerGameRulesPlugin;
-impl Plugin for ServerGameRulesPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(AppState::Lobby), add_game_rules_resource)
-            .add_systems(
-                Update,
-                (
-                    receive_game_change_message::<Difficulty>,
-                    receive_game_change_message::<MapKind>,
-                )
-                    .run_if(in_state(AppState::Lobby)),
-            );
-    }
+pub fn add_game_rules_resource(mut commands: Commands) {
+    commands.insert_resource(GameRules::default())
 }
 
 /// The central component for how a game gets set up.
@@ -89,7 +79,7 @@ pub trait GameRuleField: lightyear::prelude::Message + Copy {
     fn set_field(&self, rules: &mut GameRules);
 }
 
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+#[derive(Message, Clone, Copy, Debug, Serialize, Deserialize)]
 /// Sent from the client to the server in the lobby
 pub struct ChangeGameRuleMessage<F: GameRuleField> {
     to: F,
@@ -98,7 +88,7 @@ pub struct ChangeGameRuleMessage<F: GameRuleField> {
 /// It's unlikely that this will really need to resolve the issues
 /// related to the fact that there could be multiple receivers. But
 /// that's a good thing to check
-fn receive_game_change_message<F: GameRuleField>(
+pub fn receive_game_change_message<F: GameRuleField>(
     mut rules: ResMut<GameRules>,
     mut q_receiver: Query<&mut MessageReceiver<ChangeGameRuleMessage<F>>>,
 ) {
@@ -116,13 +106,11 @@ fn receive_game_change_message<F: GameRuleField>(
 pub fn send_game_change_message_callback<F: GameRuleField>(
     state_in: In<F>,
     mut local_rules: ResMut<GameRules>,
-    mut q_sender: Single<&mut MessageSender<ChangeGameRuleMessage<F>>>,
+    mut q_sender: Option<Single<&mut MessageSender<ChangeGameRuleMessage<F>>>>,
 ) {
     state_in.0.set_field(local_rules.as_mut());
     let mess = ChangeGameRuleMessage { to: state_in.0 };
-    (*q_sender).send::<GameMainChannel>(mess);
-}
-
-fn add_game_rules_resource(mut commands: Commands) {
-    commands.insert_resource(GameRules::default())
+    if let Some(ref mut sender) = q_sender {
+        sender.send::<GameMainChannel>(mess);
+    }
 }

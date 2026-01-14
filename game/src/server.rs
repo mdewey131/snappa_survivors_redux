@@ -3,11 +3,12 @@ use std::net::{Ipv4Addr, SocketAddr};
 use crate::{
     server::{
         enemies::{DedicatedServerEnemyPlugin, ServerEnemyRenderPlugin},
+        game_rules::DedicatedServerGameRulesPlugin,
         players::ServerPlayerRenderPlugin,
     },
     shared::{
         SEND_INTERVAL, SERVER_PORT, SHARED_SETTINGS, SINGLE_PLAYER_SERVER_PORT,
-        SharedNetworkingSettings, game_rules::ServerGameRulesPlugin, states::AppState,
+        SharedNetworkingSettings, states::AppState,
     },
 };
 use bevy::{
@@ -24,26 +25,20 @@ use lightyear::{
 };
 use serde::{Deserialize, Serialize};
 mod enemies;
+mod game_rules;
 mod loading;
 mod lobby;
 mod players;
 
 use enemies::ServerEnemyPlugin;
-use loading::ServerLoadingPlugin;
-use lobby::ServerLobbyPlugin;
+use loading::DedicatedServerLoadingPlugin;
 use players::ServerPlayerPlugin;
 
 pub struct GameServerPlugin;
 impl Plugin for GameServerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins((
-            ServerGameRulesPlugin,
-            ServerEnemyPlugin,
-            ServerLobbyPlugin,
-            ServerLoadingPlugin,
-            ServerPlayerPlugin,
-        ))
-        .add_observer(handle_new_client);
+        app.add_plugins((ServerEnemyPlugin, ServerPlayerPlugin))
+            .add_observer(handle_new_client);
     }
 }
 
@@ -108,8 +103,12 @@ pub struct DedicatedServerPlugin;
 
 impl Plugin for DedicatedServerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(DedicatedServerEnemyPlugin)
-            .add_systems(Startup, server_startup);
+        app.add_plugins((
+            DedicatedServerEnemyPlugin,
+            DedicatedServerGameRulesPlugin,
+            DedicatedServerLoadingPlugin,
+        ))
+        .add_systems(Startup, server_startup);
     }
 }
 

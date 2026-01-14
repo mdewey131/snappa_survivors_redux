@@ -42,6 +42,7 @@ pub struct SinglePlayerObserver<C: Component> {
 }
 
 fn add_single_player_observer<C: Component>(mut commands: Commands) {
+    info!("Spawning observer");
     commands.spawn((
         SinglePlayerObserver {
             _mark: PhantomData::<C>::default(),

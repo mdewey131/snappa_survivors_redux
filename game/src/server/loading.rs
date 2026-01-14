@@ -6,9 +6,9 @@ use lightyear::prelude::{
 };
 use rand::Rng;
 
-pub struct ServerLoadingPlugin;
+pub struct DedicatedServerLoadingPlugin;
 
-impl Plugin for ServerLoadingPlugin {
+impl Plugin for DedicatedServerLoadingPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             OnEnter(AppState::LoadingLevel),

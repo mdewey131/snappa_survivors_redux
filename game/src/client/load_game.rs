@@ -1,10 +1,14 @@
+use avian2d::prelude::*;
 use bevy::{ecs::system::SystemId, prelude::*};
 use lightyear::prelude::*;
+use rand::Rng;
 
 use crate::shared::{
     GameMainChannel,
+    game_kinds::{SinglePlayer, is_single_player},
     game_rules::GameRules,
     lobby::{ClientStartGameMessage, ServerStartLoadingGameMessage},
+    players::*,
     states::{AppState, InGameState},
 };
 
@@ -13,16 +17,12 @@ pub struct ClientGameLoadingPlugin;
 impl Plugin for ClientGameLoadingPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
-            Update,
+            OnEnter(AppState::LoadingLevel),
             (
-                tmp_send_game_start_message.run_if(|button: Res<ButtonInput<KeyCode>>| {
-                    button.just_pressed(KeyCode::Enter)
-                }),
-                client_on_receive_start_loading_message,
-            )
-                .run_if(in_state(AppState::Lobby)),
-        )
-        .add_systems(OnEnter(AppState::LoadingLevel), tmp_move_to_game);
+                spawn_player_character.run_if(is_single_player),
+                tmp_move_to_game,
+            ),
+        );
     }
 }
 
@@ -35,38 +35,6 @@ pub fn client_transition_to_loading_state(
     state.set(AppState::LoadingLevel)
 }
 
-/// Most of our loading elements should be thought of as "server driven".
-/// Otherwise, you're going to end up in a position where you double load things
-/// on the client in the single player mode. But, if the responsibility for
-/// loading things always falls on the server, then the client's responsibilty
-/// is to always follow what the server is doing
-pub fn client_on_receive_start_loading_message(
-    mut commands: Commands,
-    mut system_to_run: Local<Option<SystemId<In<GameRules>, ()>>>,
-    mut q_rec: Query<&mut MessageReceiver<ServerStartLoadingGameMessage>>,
-) {
-    let mut run_with = None;
-    for mut rec in &mut q_rec {
-        for message in rec.receive() {
-            run_with = Some(message);
-            break;
-        }
-    }
-
-    if let Some(m) = run_with {
-        if system_to_run.is_none() {
-            *system_to_run = Some(commands.register_system(client_transition_to_loading_state));
-        }
-        commands.run_system_with(system_to_run.unwrap(), m.rules)
-    }
-}
-
-fn tmp_send_game_start_message(mut q_sender: Query<&mut MessageSender<ClientStartGameMessage>>) {
-    for mut sender in &mut q_sender {
-        sender.send::<GameMainChannel>(ClientStartGameMessage)
-    }
-}
-
 /// For now, loading does nothing because I don't want to figure it out. Let's just get to the game stuff
 fn tmp_move_to_game(
     mut app_state: ResMut<NextState<AppState>>,
@@ -74,4 +42,17 @@ fn tmp_move_to_game(
 ) {
     app_state.set(AppState::InGame);
     game_state.set(InGameState::InGame);
+}
+
+/// Very tmp while I don't have a query anywhwere for user's character selection
+fn spawn_player_character(mut commands: Commands) {
+    let mut rng = rand::rng();
+    let pos = (rng.random_range(-50.0..50.0), rng.random_range(-50.0..50.0));
+    commands.spawn((
+        Player {
+            client: PeerId::Local(0),
+        },
+        Position(Vec2::new(pos.0, pos.1)),
+        SinglePlayer,
+    ));
 }

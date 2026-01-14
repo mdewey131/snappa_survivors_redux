@@ -15,11 +15,12 @@ impl Plugin for LobbyProtocolPlugin {
             .add_direction(NetworkDirection::ClientToServer);
         app.register_message::<ServerStartLoadingGameMessage>()
             .add_direction(NetworkDirection::ServerToClient);
+        app.add_message::<ClientStartGameMessage>();
     }
 }
 
 /// Sent from the client to the server to indicate that is time to start the game
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Message, Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct ClientStartGameMessage;
 
 /// Sent from the server to all clients to confirm that we're doing the thing, and its time to load a game
