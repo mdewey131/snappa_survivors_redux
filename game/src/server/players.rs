@@ -13,7 +13,7 @@ impl Plugin for ServerPlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             FixedUpdate,
-            (player_movement::<Replicate>).in_set(CombatSystemSet::Combat),
+            (player_movement::<With<Replicate>>).in_set(CombatSystemSet::Combat),
         )
         .add_observer(handle_player_spawn);
     }

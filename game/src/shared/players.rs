@@ -3,7 +3,7 @@ use crate::shared::{
     inputs::Movement,
 };
 use avian2d::prelude::*;
-use bevy::prelude::*;
+use bevy::{ecs::query::QueryFilter, prelude::*};
 use bevy_enhanced_input::prelude::*;
 use lightyear::prelude::{AppComponentExt, PeerId};
 use serde::{Deserialize, Serialize};
@@ -26,13 +26,13 @@ impl Plugin for PlayerProtocolPlugin {
 }
 
 fn shared_player_movement(mut velo: Mut<LinearVelocity>, input: Vec2) {
-    const MS: f32 = 20.0;
+    const MS: f32 = 30.0;
     velo.0 = input * MS
 }
 
-pub fn player_movement<C: Component>(
+pub fn player_movement<QF: QueryFilter>(
     q_mv_action: Query<(&ActionValue, &ActionOf<Player>), With<Action<Movement>>>,
-    mut q_lv: Query<&mut LinearVelocity, (With<C>, With<Player>)>,
+    mut q_lv: Query<&mut LinearVelocity, (QF, With<Player>)>,
 ) {
     for (val, a_of) in &q_mv_action {
         if let Ok(mut lv) = q_lv.get_mut(a_of.entity()) {
