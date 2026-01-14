@@ -15,30 +15,20 @@ use crate::{
 /// a dedicated server might want to render according to
 /// the replicated component, but the client only wants
 /// to render on the basis of predicted
-pub struct PlayerRenderPlugin<QF> {
-    _mark: PhantomData<QF>,
-}
-impl<QF: QueryFilter> PlayerRenderPlugin<QF> {
-    pub fn new() -> Self {
-        Self { _mark: PhantomData }
-    }
-}
+pub struct SharedPlayerRenderPlugin;
 
-impl<QF: QueryFilter> Plugin for PlayerRenderPlugin<QF> {
+impl Plugin for SharedPlayerRenderPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             Update,
-            (
-                on_player_add::<QF>,
-                (animate::<Player>, update_player_facing_direction)
-                    .chain()
-                    .before(RenderSystems::ExtractCommands),
-            ),
+            ((animate::<Player>, update_player_facing_direction)
+                .chain()
+                .before(RenderSystems::ExtractCommands),),
         );
     }
 }
 
-pub fn on_player_add<QF: QueryFilter>(
+pub fn rendering_on_player_add<QF: QueryFilter>(
     mut commands: Commands,
     assets: Res<AssetServer>,
     mut layouts: ResMut<Assets<TextureAtlasLayout>>,

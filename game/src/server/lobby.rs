@@ -1,4 +1,6 @@
-use crate::shared::{GameMainChannel, game_rules::*, lobby::*, states::AppState};
+use crate::shared::{
+    GameMainChannel, game_kinds::is_single_player, game_rules::*, lobby::*, states::AppState,
+};
 use bevy::prelude::*;
 use lightyear::prelude::*;
 
@@ -7,10 +9,24 @@ impl Plugin for ServerLobbyPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             Update,
-            server_on_receive_start_game_message.run_if(in_state(AppState::Lobby)),
+            (
+                (single_player_receive_start_game_message
+                    .run_if(is_single_player)
+                    .and(in_state(AppState::Lobby))),
+            ),
         );
     }
 }
+pub struct DedicatedServerLobbyPlugin;
+impl Plugin for DedicatedServerLobbyPlugin {
+    fn build(&self, app: &mut App) {
+        app
+            .add_systems(Update,
+                (server_on_receive_start_game_message
+                .run_if(in_state(AppState::Lobby))));
+    }
+}
+
 
 pub fn server_move_to_loading_state(state: &mut ResMut<NextState<AppState>>) {
     state.set(AppState::LoadingLevel)
@@ -44,3 +60,6 @@ pub fn server_on_receive_start_game_message(
         }
     }
 }
+
+
+pub single_player_receive_start_game_message

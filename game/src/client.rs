@@ -1,12 +1,13 @@
 use crate::{
     client::{
+        enemies::ClientEnemyRenderPlugin,
         game_client::{GameClient, GameClientConfig},
         game_kinds::ClientGameKindsPlugin,
         load_game::ClientGameLoadingPlugin,
         main_menu::MainMenuPlugin,
         mp_selection_menu::MPSelectionMenuPlugin,
+        players::ClientPlayerRenderPlugin,
     },
-    render::{enemies::EnemyRenderPlugin, player::PlayerRenderPlugin},
     server::GameServer,
     shared::{
         SEND_INTERVAL,
@@ -56,10 +57,10 @@ impl Plugin for ClientRenderPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((
             GameCameraClientPlugin,
-            EnemyRenderPlugin::<Or<(With<Predicted>, With<SinglePlayer>)>>::new(),
+            ClientEnemyRenderPlugin,
             MainMenuPlugin,
             MPSelectionMenuPlugin,
-            PlayerRenderPlugin::<Or<(With<Predicted>, With<SinglePlayer>)>>::new(),
+            ClientPlayerRenderPlugin,
         ));
     }
 }

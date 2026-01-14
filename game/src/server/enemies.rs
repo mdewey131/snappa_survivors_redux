@@ -4,9 +4,12 @@ use lightyear::prelude::*;
 use rand::Rng;
 use std::time::Duration;
 
-use crate::shared::{
-    colliders::CommonColliderBundle, combat::CombatSystemSet, enemies::*,
-    game_kinds::is_single_player, states::InGameState,
+use crate::{
+    render::enemies::rendering_on_enemy_add,
+    shared::{
+        colliders::CommonColliderBundle, combat::CombatSystemSet, enemies::*,
+        game_kinds::is_single_player, states::InGameState,
+    },
 };
 
 pub struct ServerEnemyPlugin;
@@ -28,6 +31,13 @@ impl Plugin for ServerEnemyPlugin {
                 .run_if(in_state(InGameState::InGame))
                 .in_set(CombatSystemSet::Combat),
         );
+    }
+}
+
+pub struct ServerEnemyRenderPlugin;
+impl Plugin for ServerEnemyRenderPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(Update, rendering_on_enemy_add::<With<Replicate>>);
     }
 }
 

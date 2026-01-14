@@ -1,5 +1,9 @@
-use crate::shared::{
-    colliders::CommonColliderBundle, combat::CombatSystemSet, enemies::*, game_kinds::SinglePlayer,
+use crate::{
+    render::enemies::rendering_on_enemy_add,
+    shared::{
+        colliders::CommonColliderBundle, combat::CombatSystemSet, enemies::*,
+        game_kinds::SinglePlayer,
+    },
 };
 use bevy::prelude::*;
 use lightyear::prelude::*;
@@ -17,6 +21,13 @@ impl Plugin for ClientEnemyPlugin {
                 .in_set(CombatSystemSet::Combat),
         )
         .add_systems(FixedPreUpdate, (add_missing_enemy_components));
+    }
+}
+
+pub struct ClientEnemyRenderPlugin;
+impl Plugin for ClientEnemyRenderPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(Update, rendering_on_enemy_add::<With<Replicate>>);
     }
 }
 

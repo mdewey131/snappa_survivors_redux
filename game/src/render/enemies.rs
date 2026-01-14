@@ -3,30 +3,25 @@ use avian2d::prelude::Position;
 use bevy::{ecs::query::QueryFilter, prelude::*};
 use core::marker::PhantomData;
 
-pub struct EnemyRenderPlugin<QF> {
-    _mark: PhantomData<QF>,
-}
-impl<QF: QueryFilter> EnemyRenderPlugin<QF> {
-    pub fn new() -> Self {
-        Self { _mark: PhantomData }
-    }
-}
+pub struct SharedEnemyRenderPlugin;
 
-impl<QF: QueryFilter> Plugin for EnemyRenderPlugin<QF> {
+impl Plugin for SharedEnemyRenderPlugin {
     fn build(&self, app: &mut App) {
+        /*
         app.add_systems(
             Update,
             (
-                on_enemy_add::<QF>, /*,
                                     (animate::<Player>, update_facing_direction::<Player>)
                                         .chain()
-                                        .before(RenderSystems::ExtractCommands)*/
+                                        .before(RenderSystems::ExtractCommands)
             ),
+
         );
+        */
     }
 }
 
-pub fn on_enemy_add<QF: QueryFilter>(
+pub fn rendering_on_enemy_add<QF: QueryFilter>(
     mut commands: Commands,
     assets: Res<AssetServer>,
     mut layouts: ResMut<Assets<TextureAtlasLayout>>,

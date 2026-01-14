@@ -1,6 +1,6 @@
 use crate::shared::{
     enemies::Enemy,
-    game_kinds::{CurrentGameKind, GameKinds, SinglePlayer},
+    game_kinds::{CurrentGameKind, GameKinds, SinglePlayer, is_single_player},
     players::Player,
     states::AppState,
 };
@@ -43,7 +43,9 @@ pub struct SinglePlayerObserver<C: Component> {
 
 fn add_single_player_observer<C: Component>(mut commands: Commands) {
     commands.spawn((
-        SinglePlayerObserver { _mark: PhantomData },
+        SinglePlayerObserver {
+            _mark: PhantomData::<C>::default(),
+        },
         Observer::new(attach_singleplayer_component::<C>),
     ));
 }

@@ -13,15 +13,23 @@ pub mod player;
 pub mod ui;
 
 use camera::GameMainCamera;
+use enemies::SharedEnemyRenderPlugin;
 use map::MapRenderPlugin;
 use menus::lobby::LobbyMenuPlugin;
+use player::SharedPlayerRenderPlugin;
 use ui::SharedUIPlugin;
 
 pub struct GameSharedRenderPlugin;
 
 impl Plugin for GameSharedRenderPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins((SharedUIPlugin, LobbyMenuPlugin, MapRenderPlugin));
+        app.add_plugins((
+            SharedUIPlugin,
+            LobbyMenuPlugin,
+            MapRenderPlugin,
+            SharedPlayerRenderPlugin,
+            SharedEnemyRenderPlugin,
+        ));
         #[cfg(feature = "inspector")]
         app.add_plugins((EguiPlugin::default(), WorldInspectorPlugin::new()));
         #[cfg(feature = "avian_debug")]

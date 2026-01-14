@@ -3,12 +3,15 @@ use bevy::prelude::*;
 use bevy_enhanced_input::prelude::*;
 use lightyear::prelude::{Controlled, Predicted, Replicate};
 
-use crate::shared::{
-    colliders::CommonColliderBundle,
-    combat::CombatSystemSet,
-    game_kinds::SinglePlayer,
-    inputs::Movement,
-    players::{Player, player_movement},
+use crate::{
+    render::player::rendering_on_player_add,
+    shared::{
+        colliders::CommonColliderBundle,
+        combat::CombatSystemSet,
+        game_kinds::SinglePlayer,
+        inputs::Movement,
+        players::{Player, player_movement},
+    },
 };
 
 pub struct ClientPlayerPlugin;
@@ -21,6 +24,16 @@ impl Plugin for ClientPlayerPlugin {
                 .in_set(CombatSystemSet::Combat),
         )
         .add_observer(handle_predicted_player_spawn);
+    }
+}
+
+pub struct ClientPlayerRenderPlugin;
+impl Plugin for ClientPlayerRenderPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(
+            Update,
+            rendering_on_player_add::<Or<(With<SinglePlayer>, With<Predicted>)>>,
+        );
     }
 }
 
