@@ -1,6 +1,7 @@
 use crate::{
     client::{
         game_client::{GameClient, GameClientConfig},
+        game_kinds::ClientGameKindsPlugin,
         load_game::ClientGameLoadingPlugin,
         main_menu::MainMenuPlugin,
         mp_selection_menu::MPSelectionMenuPlugin,
@@ -14,12 +15,13 @@ use crate::{
     },
 };
 use bevy::prelude::*;
-use lightyear::prelude::{Client, Predicted, ReplicationSender, Timeline};
+use lightyear::prelude::{Client, Predicted, ReplicationSender, Server, Timeline};
 
 pub mod camera;
 pub mod client_states;
 pub mod enemies;
 pub mod game_client;
+pub mod game_kinds;
 pub mod load_game;
 pub mod main_menu;
 pub mod mp_selection_menu;
@@ -35,6 +37,7 @@ impl Plugin for GameClientPlugin {
         app.add_plugins((
             ClientEnemyPlugin,
             ClientStatesPlugin,
+            ClientGameKindsPlugin,
             ClientGameLoadingPlugin,
             ClientPlayerPlugin,
         ))
@@ -80,11 +83,21 @@ pub fn transition_to_single_player(
     mut commands: Commands,
     mut game_choice: ResMut<CurrentGameKind>,
     mut state: ResMut<NextState<AppState>>,
+    q_client: Option<Single<Entity, With<Client>>>,
+    q_server: Option<Single<Entity, With<Server>>>,
 ) {
+    if let Some(c) = q_client {
+        commands.entity(*c).despawn();
+    }
+    if let Some(s) = q_server {
+        commands.entity(*s).despawn();
+    }
+    /*
     commands.spawn((GameClient::SINGLE_PLAYER));
     commands.spawn(GameServer::SINGLE_PLAYER);
+    */
     game_choice.0 = Some(GameKinds::SinglePlayer);
-    state.set(AppState::EstablishServerConnection);
+    state.set(AppState::Lobby);
 }
 
 pub fn transition_to_multi_player(
