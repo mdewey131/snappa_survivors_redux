@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Reflect)]
 pub enum GameKinds {
     SinglePlayer,
     MultiPlayer,
@@ -11,7 +11,8 @@ pub enum GameKinds {
 #[derive(Component, Debug, Clone, Copy)]
 pub struct SinglePlayer;
 
-#[derive(Resource, Debug, Clone, Copy, Default)]
+#[derive(Resource, Debug, Clone, Copy, Default, Reflect)]
+#[reflect(Resource)]
 pub struct CurrentGameKind(pub Option<GameKinds>);
 
 pub struct GameKindsPlugin;
@@ -24,7 +25,10 @@ impl Plugin for GameKindsPlugin {
 
 pub fn is_single_player(r: Res<CurrentGameKind>) -> bool {
     if let Some(k) = r.0 {
-        matches!(GameKinds::SinglePlayer, k)
+        match k {
+            GameKinds::SinglePlayer => true,
+            _ => false,
+        }
     } else {
         false
     }

@@ -46,7 +46,7 @@ impl Plugin for DedicatedServerEnemyPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             FixedUpdate,
-            spawn_enemy.run_if(on_timer(Duration::from_secs(20)).and(is_single_player)),
+            spawn_enemy.run_if(on_timer(Duration::from_secs(20)).and(not(is_single_player))),
         );
     }
 }

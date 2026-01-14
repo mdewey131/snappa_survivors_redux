@@ -4,6 +4,7 @@ use crate::{
     server::{
         enemies::{DedicatedServerEnemyPlugin, ServerEnemyRenderPlugin},
         game_rules::DedicatedServerGameRulesPlugin,
+        lobby::DedicatedServerLobbyPlugin,
         players::ServerPlayerRenderPlugin,
     },
     shared::{
@@ -106,6 +107,7 @@ impl Plugin for DedicatedServerPlugin {
         app.add_plugins((
             DedicatedServerEnemyPlugin,
             DedicatedServerGameRulesPlugin,
+            DedicatedServerLobbyPlugin,
             DedicatedServerLoadingPlugin,
         ))
         .add_systems(Startup, server_startup);

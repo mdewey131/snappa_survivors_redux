@@ -81,6 +81,7 @@ pub fn client_on_receive_start_game_message(
 fn tmp_send_network_game_start_message(
     mut q_sender: Query<&mut MessageSender<ClientStartGameMessage>>,
 ) {
+    info!("Sending!");
     for mut sender in &mut q_sender {
         sender.send::<GameMainChannel>(ClientStartGameMessage)
     }

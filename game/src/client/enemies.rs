@@ -27,7 +27,7 @@ impl Plugin for ClientEnemyPlugin {
 pub struct ClientEnemyRenderPlugin;
 impl Plugin for ClientEnemyRenderPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, rendering_on_enemy_add::<With<Replicate>>);
+        app.add_systems(Update, rendering_on_enemy_add::<With<SinglePlayer>>);
     }
 }
 

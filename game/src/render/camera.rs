@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use lightyear::prelude::Controlled;
 
-use crate::shared::players::Player;
+use crate::shared::{game_kinds::SinglePlayer, players::Player};
 
 pub struct GameCameraPlugin;
 
@@ -26,14 +26,11 @@ pub enum GameCameraMode {
 }
 
 pub fn start_camera_follow_on_controlled_player_add(
-    t: On<Add, Controlled>,
-    q_player: Query<Has<Controlled>, With<Player>>,
+    q_player: Query<Entity, (With<Player>, Or<(Added<Controlled>, Added<SinglePlayer>)>)>,
     mut q_camera: Single<&mut GameMainCamera>,
 ) {
-    if let Ok(cont) = q_player.get(t.entity) {
-        if cont {
-            (*q_camera).mode = GameCameraMode::Following(t.entity);
-        }
+    for e in &q_player {
+        (*q_camera).mode = GameCameraMode::Following(e);
     }
 }
 
