@@ -46,7 +46,7 @@ pub struct AnimationFacing {
 
 impl AnimationFacing {
     /// Returns the old facing direction
-    fn derive_next_direction(&mut self, c_velo: Vec2) -> FacingDirection {
+    pub fn derive_next_direction(&mut self, c_velo: Vec2) -> FacingDirection {
         let old_dir = self.c_dir;
         // Normalize current velocity for a direction
         let dir = c_velo.normalize_or_zero();
@@ -102,6 +102,19 @@ impl AnimationFacing {
         }
         self.last_frame_dir = dir;
         return old_dir;
+    }
+
+    pub fn update_facing(&mut self, config: &mut Mut<AnimationConfig>, sprite: &mut Mut<Sprite>) {
+        if let Some(ref mut tex) = sprite.texture_atlas {
+            let c_idx = tex.index;
+            let diff = c_idx - config.first_sprite_index;
+            let min = (self.tex_width as usize * self.tex_rows[self.c_dir.to_index()]);
+            let max = min + (self.tex_width as usize) - 1;
+            let new = min + diff;
+            tex.index = new;
+            config.first_sprite_index = min;
+            config.last_sprite_index = max;
+        }
     }
 }
 
@@ -164,6 +177,11 @@ pub fn animate<C: Component>(
     }
 }
 
+/// This shows a way to do facing that works off of velocity.
+/// In reality, this probably isn't want you want because entities
+/// can be pushed away, for example. So, better approach might be
+/// to do something to help update the intended direction of a unit
+/// and stick to that
 pub fn update_facing_direction<C: Component>(
     mut q_animation: Query<
         (
@@ -183,18 +201,6 @@ pub fn update_facing_direction<C: Component>(
         } else if config.frame_timer.is_paused() {
             config.frame_timer.unpause()
         }
-        if let Some(ref mut tex) = sprite.texture_atlas {
-            let c_idx = tex.index;
-            let diff = c_idx - config.first_sprite_index;
-            let min = (facing.tex_width as usize * facing.tex_rows[facing.c_dir.to_index()]);
-            let max = min + (facing.tex_width as usize) - 1;
-            let new = min + diff;
-            tex.index = new;
-            config.first_sprite_index = min;
-            config.last_sprite_index = max;
-
-            //let new_base = facing.c_dir.to_index() *
-            //facing.c_dir.to_index()
-        }
+        facing.update_facing(&mut config, &mut sprite)
     }
 }

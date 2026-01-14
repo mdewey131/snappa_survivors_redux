@@ -2,10 +2,11 @@ use std::marker::PhantomData;
 
 use avian2d::prelude::Position;
 use bevy::{prelude::*, render::RenderSystems};
+use bevy_enhanced_input::prelude::*;
 
 use crate::{
     render::{RenderYtoZ, animation::*},
-    shared::players::Player,
+    shared::{inputs::Movement, players::Player},
 };
 
 /// Handles the rendering of the player.
@@ -29,7 +30,7 @@ impl<C: Component> Plugin for PlayerRenderPlugin<C> {
             Update,
             (
                 on_player_add::<C>,
-                (animate::<Player>, update_facing_direction::<Player>)
+                (animate::<Player>, update_player_facing_direction)
                     .chain()
                     .before(RenderSystems::ExtractCommands),
             ),
@@ -67,5 +68,35 @@ pub fn on_player_add<C: Component>(
             Transform::from_translation(pos.0.extend(pos.0.y)),
             RenderYtoZ,
         ));
+    }
+}
+
+pub fn update_player_facing_direction(
+    mut q_animation: Query<
+        (
+            &mut AnimationFacing,
+            &mut AnimationConfig,
+            &mut Sprite,
+            &Actions<Player>,
+        ),
+        With<Player>,
+    >,
+    q_movement: Query<&ActionValue, With<Action<Movement>>>,
+) {
+    for (mut facing, mut config, mut sprite, actions) in &mut q_animation {
+        // Find the movement
+        for a_ent in actions.iter() {
+            if let Ok(av) = q_movement.get(a_ent) {
+                let velo = av.as_axis2d();
+                facing.derive_next_direction(velo);
+                // TODO: Move this elsewhere
+                if velo == Vec2::ZERO {
+                    config.frame_timer.pause()
+                } else if config.frame_timer.is_paused() {
+                    config.frame_timer.unpause()
+                }
+                facing.update_facing(&mut config, &mut sprite)
+            }
+        }
     }
 }
