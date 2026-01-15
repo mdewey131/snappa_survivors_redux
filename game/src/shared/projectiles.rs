@@ -1,5 +1,7 @@
-use bevy::prelude::*;
+use avian2d::prelude::*;
+use bevy::{ecs::query::QueryFilter, prelude::*};
 use lightyear::prelude::*;
+use serde::{Deserialize, Serialize};
 
 pub struct ProjectileProtocolPlugin;
 impl Plugin for ProjectileProtocolPlugin {
@@ -7,12 +9,12 @@ impl Plugin for ProjectileProtocolPlugin {
         app.register_component::<Projectile>().add_prediction();
     }
 }
-#[derive(Component, Debug, Clone, Copy, PartialEq)]
+#[derive(Component, Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct Projectile {
     movement: ProjectileMovement,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum ProjectileMovement {
     Linear(Vec2),
     Orbital {
@@ -30,7 +32,12 @@ pub fn projectile_movement<QF: QueryFilter>(
     for (proj, mut velo) in &mut q_projectile {
         match proj.movement {
             ProjectileMovement::Linear(v) => velo.0 = v,
-            ProjectileMovement::Orbital => {
+            ProjectileMovement::Orbital {
+                around,
+                radius,
+                speed,
+                c_angle,
+            } => {
                 todo!()
             }
         }

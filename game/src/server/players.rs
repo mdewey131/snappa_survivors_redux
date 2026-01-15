@@ -37,6 +37,6 @@ fn handle_player_spawn(
     if let Ok(p) = q_player.get(trigger.entity) {
         commands
             .entity(trigger.entity)
-            .insert(CommonColliderBundle::player(false));
+            .insert(CommonColliderBundle::from(*p));
     }
 }

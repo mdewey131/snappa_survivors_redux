@@ -18,6 +18,23 @@ pub struct Player {
     pub client: PeerId,
 }
 
+impl From<Player> for CommonColliderBundle {
+    fn from(value: Player) -> Self {
+        Self::new(
+            RigidBody::Dynamic,
+            Collider::capsule(20.0, 30.0),
+            1.0,
+            [ColliderTypes::Player].into(),
+            [
+                ColliderTypes::Enemy,
+                ColliderTypes::StaticPickup,
+                ColliderTypes::RemotePickup,
+            ]
+            .into(),
+        )
+    }
+}
+
 pub struct PlayerProtocolPlugin;
 impl Plugin for PlayerProtocolPlugin {
     fn build(&self, app: &mut App) {

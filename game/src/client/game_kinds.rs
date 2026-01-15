@@ -2,6 +2,7 @@ use crate::shared::{
     enemies::Enemy,
     game_kinds::{CurrentGameKind, GameKinds, SinglePlayer, is_single_player},
     players::Player,
+    projectiles::Projectile,
     states::AppState,
 };
 use bevy::prelude::*;
@@ -14,6 +15,7 @@ impl Plugin for ClientGameKindsPlugin {
         app.add_plugins((
             AddSinglePlayerComponentPlugin::<Player>::new(),
             AddSinglePlayerComponentPlugin::<Enemy>::new(),
+            AddSinglePlayerComponentPlugin::<Projectile>::new(),
         ));
     }
 }

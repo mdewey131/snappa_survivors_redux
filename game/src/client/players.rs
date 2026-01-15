@@ -59,7 +59,7 @@ fn handle_predicted_player_spawn(
         // regardless, add the collider components
         commands
             .entity(trigger.entity)
-            .insert(CommonColliderBundle::player(true));
+            .insert(CommonColliderBundle::from(*p));
     }
 }
 
@@ -68,7 +68,7 @@ fn handle_sp_player_spawn(
     mut commands: Commands,
     q_pred: Query<&Player, With<SinglePlayer>>,
 ) {
-    if let Ok(_p) = q_pred.get(trigger.entity) {
+    if let Ok(p) = q_pred.get(trigger.entity) {
         commands.spawn((
             ActionOf::<Player>::new(trigger.entity),
             Action::<Movement>::new(),
@@ -81,6 +81,6 @@ fn handle_sp_player_spawn(
         ));
         commands
             .entity(trigger.entity)
-            .insert(CommonColliderBundle::player(true));
+            .insert(CommonColliderBundle::from(*p));
     }
 }

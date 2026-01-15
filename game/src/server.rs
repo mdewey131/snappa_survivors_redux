@@ -26,6 +26,7 @@ use lightyear::{
 };
 use serde::{Deserialize, Serialize};
 mod enemies;
+mod game_kinds;
 mod game_rules;
 mod loading;
 mod lobby;

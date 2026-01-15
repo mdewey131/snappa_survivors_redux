@@ -1,5 +1,3 @@
-use std::marker::PhantomData;
-
 use avian2d::prelude::*;
 use bevy::prelude::*;
 /// The common set of things that every entity with a RigidBody in this game must have
@@ -14,64 +12,6 @@ pub struct CommonColliderBundle {
 }
 
 impl CommonColliderBundle {
-    pub fn enemy(predicted: bool) -> Self {
-        let (mems, filters) = if predicted {
-            (
-                [ColliderTypes::PredictedEnemy],
-                [
-                    ColliderTypes::PredictedEnemy,
-                    ColliderTypes::PredictedPlayer,
-                ],
-            )
-        } else {
-            (
-                [ColliderTypes::ReplicatedEnemy],
-                [
-                    ColliderTypes::ReplicatedEnemy,
-                    ColliderTypes::ReplicatedPlayer,
-                ],
-            )
-        };
-
-        Self::new(
-            RigidBody::Dynamic,
-            Collider::capsule(20.0, 30.0),
-            1.0,
-            mems.into(),
-            filters.into(),
-        )
-    }
-
-    pub fn player(predicted: bool) -> Self {
-        let (mems, filters) = if predicted {
-            (
-                [ColliderTypes::PredictedPlayer],
-                [
-                    ColliderTypes::PredictedEnemy,
-                    ColliderTypes::PredictedStaticPickup,
-                    ColliderTypes::PredictedRemotePickup,
-                ],
-            )
-        } else {
-            (
-                [ColliderTypes::ReplicatedPlayer],
-                [
-                    ColliderTypes::ReplicatedEnemy,
-                    ColliderTypes::ReplicatedStaticPickup,
-                    ColliderTypes::ReplicatedRemotePickup,
-                ],
-            )
-        };
-
-        Self::new(
-            RigidBody::Dynamic,
-            Collider::capsule(20.0, 30.0),
-            1.0,
-            mems.into(),
-            filters.into(),
-        )
-    }
-
     pub fn new(
         r: RigidBody,
         c: Collider,
@@ -102,22 +42,14 @@ impl CommonColliderBundle {
 #[derive(PhysicsLayer, Default, Clone, Copy, Debug)]
 pub enum ColliderTypes {
     #[default]
-    PredictedPlayer,
-    ReplicatedPlayer,
-    PredictedEnemy,
-    ReplicatedEnemy,
-    PredictedPlayerProjectile,
-    ReplicatedPlayerProjectile,
-    PredictedEnemyProjectile,
-    ReplicatedEnemyProjectile,
-    PredictedPlayerPickupRadius,
-    ReplicatedPlayerPickupRadius,
+    Player,
+    Enemy,
+    PlayerProjectile,
+    EnemyProjectile,
+    PlayerPickupRadius,
     /// Has to be run over by the player
-    PredictedStaticPickup,
-    ReplicatedStaticPickup,
+    StaticPickup,
     //Can be picked up by pickup radius
-    PredictedRemotePickup,
-    ReplicatedRemotePickup,
-    PredictedPlayerRevive,
-    ReplicatedPlayerRevive,
+    RemotePickup,
+    PlayerRevive,
 }

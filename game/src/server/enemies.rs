@@ -64,7 +64,7 @@ fn spawn_enemy(mut commands: Commands) {
     let mut rng = rand::rng();
     let pos = (rng.random_range(-50.0..50.0), rng.random_range(-50.0..50.0));
     commands.spawn((
-        CommonColliderBundle::enemy(false),
+        CommonColliderBundle::from(enemy),
         enemy,
         Position(Vec2::new(pos.0, pos.1)),
         EnemySpawnTimer::default(),

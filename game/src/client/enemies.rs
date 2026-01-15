@@ -47,8 +47,6 @@ fn add_missing_enemy_components(
             }
             _ => {}
         }
-        commands
-            .entity(ent)
-            .insert(CommonColliderBundle::enemy(true));
+        commands.entity(ent).insert(CommonColliderBundle::from(*en));
     }
 }
