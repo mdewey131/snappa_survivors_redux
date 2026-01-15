@@ -9,7 +9,6 @@ use crate::{
         mp_selection_menu::MPSelectionMenuPlugin,
         players::ClientPlayerRenderPlugin,
     },
-    server::GameServer,
     shared::{
         SEND_INTERVAL,
         game_kinds::{CurrentGameKind, GameKinds, SinglePlayer},
@@ -29,10 +28,12 @@ pub mod lobby;
 pub mod main_menu;
 pub mod mp_selection_menu;
 pub mod players;
+pub mod projectiles;
 use camera::GameCameraClientPlugin;
 use client_states::ClientStatesPlugin;
 use enemies::ClientEnemyPlugin;
 use players::ClientPlayerPlugin;
+use projectiles::ClientProjectilePlugin;
 
 pub struct GameClientPlugin;
 impl Plugin for GameClientPlugin {
@@ -44,6 +45,7 @@ impl Plugin for GameClientPlugin {
             ClientGameKindsPlugin,
             ClientGameLoadingPlugin,
             ClientPlayerPlugin,
+            ClientProjectilePlugin,
         ))
         .add_systems(Startup, move_to_first_app_state)
         .add_observer(add_input_delay_on_client_add);

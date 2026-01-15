@@ -30,10 +30,12 @@ mod game_rules;
 mod loading;
 mod lobby;
 mod players;
+mod projectiles;
 
 use enemies::ServerEnemyPlugin;
 use loading::DedicatedServerLoadingPlugin;
 use players::ServerPlayerPlugin;
+use projectiles::DedicatedServerProjectilePlugin;
 
 pub struct GameServerPlugin;
 impl Plugin for GameServerPlugin {
@@ -109,6 +111,7 @@ impl Plugin for DedicatedServerPlugin {
             DedicatedServerGameRulesPlugin,
             DedicatedServerLobbyPlugin,
             DedicatedServerLoadingPlugin,
+            DedicatedServerProjectilePlugin,
         ))
         .add_systems(Startup, server_startup);
     }

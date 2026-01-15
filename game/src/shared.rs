@@ -19,6 +19,7 @@ pub mod game_rules;
 pub mod inputs;
 pub mod lobby;
 pub mod players;
+pub mod projectiles;
 pub mod states;
 
 use colliders::*;
@@ -29,7 +30,9 @@ use game_kinds::GameKindsPlugin;
 use game_rules::SharedGameRulesPlugin;
 use inputs::GameInputProtocolPlugin;
 use lobby::LobbyProtocolPlugin;
+use projectiles::ProjectileProtocolPlugin;
 use states::SharedStatesPlugin;
+
 
 use crate::shared::players::{Player, PlayerProtocolPlugin};
 
@@ -90,6 +93,7 @@ impl Plugin for GameProtocolPlugin {
             LobbyProtocolPlugin,
             PlayerProtocolPlugin,
             GameInputProtocolPlugin,
+            ProjectileProtocolPlugin,
         ))
         .add_channel::<GameMainChannel>(ChannelSettings {
             mode: ChannelMode::OrderedReliable(ReliableSettings::default()),

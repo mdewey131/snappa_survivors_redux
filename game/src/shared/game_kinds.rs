@@ -1,10 +1,14 @@
 use bevy::prelude::*;
+use lightyear::prelude::*;
 
 #[derive(Debug, Clone, Copy, Reflect)]
 pub enum GameKinds {
     SinglePlayer,
     MultiPlayer,
 }
+
+pub type DefaultClientFilter = Or<(With<Predicted>, With<SinglePlayer>)>;
+pub type DefaultServerFilter = With<Replicate>;
 
 /// The marker component and types that is used to differentiate between
 /// We will have lightyear do the work of making predicted and replicated
