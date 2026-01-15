@@ -26,7 +26,6 @@ impl Plugin for ServerEnemyPlugin {
                 // in the client since that gets the server plugin, this causes problems as
                 // written without the check
                 spawn_enemy.run_if(on_timer(Duration::from_secs(20)).and(is_single_player)),
-                enemy_state_machine::<With<Replicate>, With<Replicate>>,
             )
                 .run_if(in_state(InGameState::InGame))
                 .in_set(CombatSystemSet::Combat),
@@ -46,11 +45,17 @@ impl Plugin for DedicatedServerEnemyPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             FixedUpdate,
-            spawn_enemy.run_if(on_timer(Duration::from_secs(20)).and(not(is_single_player))),
+            (
+                spawn_enemy.run_if(on_timer(Duration::from_secs(20)).and(not(is_single_player))),
+                enemy_state_machine::<With<Replicate>, With<Replicate>>,
+            )
+                .run_if(in_state(InGameState::InGame))
+                .in_set(CombatSystemSet::Combat),
         );
     }
 }
 
+/// TODO: Move this to the responsibility of a dedicated spawner that gets selectively spawned on client or server, depending on the context
 fn spawn_enemy(mut commands: Commands) {
     let enemy = Enemy {
         kind: EnemyKind::FacelessMan,
