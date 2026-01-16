@@ -78,7 +78,11 @@ pub fn enemy_state_machine<EnemyQF: QueryFilter, PlayerQF: QueryFilter>(
     for (ent, mut enemy, e_pos, mut e_lv, mut m_timer) in &mut q_enemy {
         match enemy.state {
             EnemyState::Spawning => {
-                let timer = m_timer.as_mut().unwrap();
+                let timer = if m_timer.is_none() {
+                    continue;
+                } else {
+                    m_timer.as_mut().unwrap()
+                };
                 timer.0.tick(time.delta());
                 if timer.0.just_finished() {
                     commands.entity(ent).remove::<EnemySpawnTimer>();

@@ -29,11 +29,13 @@ pub mod main_menu;
 pub mod mp_selection_menu;
 pub mod players;
 pub mod projectiles;
+mod weapons;
 use camera::GameCameraClientPlugin;
 use client_states::ClientStatesPlugin;
 use enemies::ClientEnemyPlugin;
 use players::ClientPlayerPlugin;
 use projectiles::ClientProjectilePlugin;
+use weapons::ClientWeaponsPlugin;
 
 pub struct GameClientPlugin;
 impl Plugin for GameClientPlugin {
@@ -46,6 +48,7 @@ impl Plugin for GameClientPlugin {
             ClientGameLoadingPlugin,
             ClientPlayerPlugin,
             ClientProjectilePlugin,
+            ClientWeaponsPlugin,
         ))
         .add_systems(Startup, move_to_first_app_state)
         .add_observer(add_input_delay_on_client_add);

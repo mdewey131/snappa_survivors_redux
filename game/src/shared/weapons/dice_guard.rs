@@ -37,9 +37,9 @@ pub fn dice_guard_activate<QF: QueryFilter>(
             commands.spawn((
                 DiceGuardProjectile,
                 Projectile {
-                    movement: ProjectileMovement::Linear(*pos)
+                    movement: ProjectileMovement::Linear((pos * 10.0))
                 },
-                Position(*pos),
+                Position(par_pos.0 + pos),
             ));
         }
     }

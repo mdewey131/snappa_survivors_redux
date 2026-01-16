@@ -8,7 +8,6 @@ pub enum InGameState {
     InGame,
     SelectingUpgrades,
     /// The game is not running, but it's not because we're selecting upgrades.
-    /// To be used in debug builds of the game, NOT ON LIVE
     Paused,
 }
 

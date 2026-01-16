@@ -33,6 +33,7 @@ use inputs::GameInputProtocolPlugin;
 use lobby::LobbyProtocolPlugin;
 use projectiles::ProjectileProtocolPlugin;
 use states::SharedStatesPlugin;
+use weapons::{SharedWeaponPlugin, WeaponProtocolPlugin};
 
 use crate::shared::players::{Player, PlayerProtocolPlugin};
 
@@ -62,6 +63,7 @@ impl Plugin for GameSharedPlugin {
             GameKindsPlugin,
             SharedStatesPlugin,
             SharedGameRulesPlugin,
+            SharedWeaponPlugin,
         ));
 
         app.add_plugins((
@@ -94,6 +96,7 @@ impl Plugin for GameProtocolPlugin {
             PlayerProtocolPlugin,
             GameInputProtocolPlugin,
             ProjectileProtocolPlugin,
+            WeaponProtocolPlugin,
         ))
         .add_channel::<GameMainChannel>(ChannelSettings {
             mode: ChannelMode::OrderedReliable(ReliableSettings::default()),

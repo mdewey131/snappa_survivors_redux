@@ -4,6 +4,7 @@ use crate::shared::{
     players::Player,
     projectiles::Projectile,
     states::AppState,
+    weapons::Weapon,
 };
 use bevy::prelude::*;
 use core::marker::PhantomData;
@@ -17,6 +18,7 @@ impl Plugin for DedicatedServerGameKindsPlugin {
             AddReplicationComponentsPlugin::<Player>::new(),
             AddReplicationComponentsPlugin::<Enemy>::new(),
             AddReplicationComponentsPlugin::<Projectile>::new(),
+            AddReplicationComponentsPlugin::<Weapon>::new(),
         ));
     }
 }

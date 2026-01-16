@@ -17,3 +17,13 @@ pub fn read_ron<T: DeserializeOwned>(path: String) -> T {
 /// A small component that marks something that has a callback with some input
 #[derive(Component, Clone, Copy)]
 pub struct CallbackWithInput<I: SystemInput>(pub SystemId<I, ()>);
+
+/// Small convenient struct to use for From<> derivations and in order to import things
+/// that get joined with this
+#[derive(Deref)]
+pub struct AssetFolder(pub String);
+impl AssetFolder {
+    pub fn to_path(&self, path: String) -> String {
+        format!("{}/{}", self.0, path)
+    }
+}

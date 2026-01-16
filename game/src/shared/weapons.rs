@@ -1,8 +1,11 @@
 use bevy::prelude::*;
-use lightyear::prelude::AppComponentExt;
+use lightyear::prelude::{AppComponentExt, PredictionRegistrationExt};
 use serde::{Deserialize, Serialize};
 
-use crate::shared::combat::{CombatSystemSet, Cooldown};
+use crate::{
+    shared::combat::{CombatSystemSet, Cooldown},
+    utils::AssetFolder,
+};
 
 pub mod dice_guard;
 use dice_guard::DiceGuard;
@@ -21,11 +24,11 @@ impl Plugin for SharedWeaponPlugin {
 pub struct WeaponProtocolPlugin;
 impl Plugin for WeaponProtocolPlugin {
     fn build(&self, app: &mut App) {
-        app.register_component::<Weapon>();
+        app.register_component::<Weapon>().add_prediction();
     }
 }
 
-#[derive(Component, Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Component, Serialize, Deserialize, Debug, PartialEq, Reflect, Clone)]
 pub struct Weapon {
     kind: WeaponKind,
     activity_pattern: WeaponActivityPattern,
@@ -40,16 +43,7 @@ pub enum WeaponKind {
     FlurryOfBlows,
 }
 
-impl WeaponKind {
-    pub fn asset_folder(&self) -> String {
-        match self {
-            WeaponKind::DiceGuard => "weapons/dice_guard".into(),
-            _ => "unknown!".into(),
-        }
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Reflect, Clone)]
 pub enum WeaponActivityPattern {
     AlwaysOn,
     ActiveforDuration,
@@ -60,11 +54,24 @@ pub enum WeaponActivityPattern {
     },
 }
 
-impl From<WeaponKind> for WeaponActivityPattern {
+impl From<WeaponKind> for Weapon {
     fn from(value: WeaponKind) -> Self {
-        match value {
+        let pattern = match value {
             WeaponKind::DiceGuard => WeaponActivityPattern::ActiveforDuration,
             _ => WeaponActivityPattern::AlwaysOn,
+        };
+        Weapon {
+            activity_pattern: pattern,
+            kind: value,
+        }
+    }
+}
+
+impl From<WeaponKind> for AssetFolder {
+    fn from(value: WeaponKind) -> Self {
+        match value {
+            WeaponKind::DiceGuard => Self("weapons/dice_guard".into()),
+            _ => Self("unknown!".into()),
         }
     }
 }
@@ -85,21 +92,19 @@ pub struct DeactivateWeapon {
     entity: Entity,
 }
 
+/// Attach this component on the weapon on the client and server separately,
+/// because you can't send Timers over the network
 #[derive(Component, Deref, DerefMut, Reflect)]
 pub struct WeaponActiveTimer(pub Timer);
 
 pub fn add_weapon_to_player(
     player: Entity,
-    commands: &mut Commands,
     weapon_kind: WeaponKind,
+    commands: &mut Commands,
 ) -> Entity {
     info!("Adding Weapon to target");
     let weapon_ent = commands.spawn_empty().id();
-    let pattern: WeaponActivityPattern = weapon_kind.into();
-    let weapon = Weapon {
-        kind: weapon_kind,
-        activity_pattern: pattern,
-    };
+    let weapon: Weapon = weapon_kind.into();
     /*
     let stats: RawStatsList =
         read_ron::<RawStatsList>(format!("assets/{}/stats.ron", weapon_kind.asset_folder()));
@@ -118,7 +123,6 @@ pub fn add_weapon_to_player(
             todo!()
         }
     }
-
     commands.entity(player).add_child(weapon_ent);
 
     /*     commands.queue(move |world: &mut World| {

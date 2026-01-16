@@ -10,6 +10,7 @@ use crate::shared::{
     lobby::{ClientStartGameMessage, ServerStartLoadingGameMessage},
     players::*,
     states::{AppState, InGameState},
+    weapons::{WeaponKind, add_weapon_to_player},
 };
 
 pub struct ClientGameLoadingPlugin;
@@ -48,11 +49,14 @@ fn tmp_move_to_game(
 fn spawn_player_character(mut commands: Commands) {
     let mut rng = rand::rng();
     let pos = (rng.random_range(-50.0..50.0), rng.random_range(-50.0..50.0));
-    commands.spawn((
-        Player {
-            client: PeerId::Local(0),
-        },
-        Position(Vec2::new(pos.0, pos.1)),
-        SinglePlayer,
-    ));
+    let player = commands
+        .spawn((
+            Player {
+                client: PeerId::Local(0),
+            },
+            Position(Vec2::new(pos.0, pos.1)),
+            SinglePlayer,
+        ))
+        .id();
+    add_weapon_to_player(player, WeaponKind::DiceGuard, &mut commands);
 }

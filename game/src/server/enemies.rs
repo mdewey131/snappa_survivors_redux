@@ -68,7 +68,5 @@ fn spawn_enemy(mut commands: Commands) {
         enemy,
         Position(Vec2::new(pos.0, pos.1)),
         EnemySpawnTimer::default(),
-        Replicate::to_clients(NetworkTarget::All),
-        PredictionTarget::to_clients(NetworkTarget::All),
     ));
 }

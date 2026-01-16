@@ -3,9 +3,11 @@ use std::net::{Ipv4Addr, SocketAddr};
 use crate::{
     server::{
         enemies::{DedicatedServerEnemyPlugin, ServerEnemyRenderPlugin},
+        game_kinds::DedicatedServerGameKindsPlugin,
         game_rules::DedicatedServerGameRulesPlugin,
         lobby::DedicatedServerLobbyPlugin,
         players::ServerPlayerRenderPlugin,
+        weapons::DedicatedServerWeaponsPlugin,
     },
     shared::{
         SEND_INTERVAL, SERVER_PORT, SHARED_SETTINGS, SINGLE_PLAYER_SERVER_PORT,
@@ -32,6 +34,7 @@ mod loading;
 mod lobby;
 mod players;
 mod projectiles;
+mod weapons;
 
 use enemies::ServerEnemyPlugin;
 use loading::DedicatedServerLoadingPlugin;
@@ -110,9 +113,11 @@ impl Plugin for DedicatedServerPlugin {
         app.add_plugins((
             DedicatedServerEnemyPlugin,
             DedicatedServerGameRulesPlugin,
+            DedicatedServerGameKindsPlugin,
             DedicatedServerLobbyPlugin,
             DedicatedServerLoadingPlugin,
             DedicatedServerProjectilePlugin,
+            DedicatedServerWeaponsPlugin,
         ))
         .add_systems(Startup, server_startup);
     }

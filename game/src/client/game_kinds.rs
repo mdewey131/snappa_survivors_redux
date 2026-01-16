@@ -4,6 +4,7 @@ use crate::shared::{
     players::Player,
     projectiles::Projectile,
     states::AppState,
+    weapons::Weapon,
 };
 use bevy::prelude::*;
 use core::marker::PhantomData;
@@ -16,6 +17,7 @@ impl Plugin for ClientGameKindsPlugin {
             AddSinglePlayerComponentPlugin::<Player>::new(),
             AddSinglePlayerComponentPlugin::<Enemy>::new(),
             AddSinglePlayerComponentPlugin::<Projectile>::new(),
+            AddSinglePlayerComponentPlugin::<Weapon>::new(),
         ));
     }
 }
