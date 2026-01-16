@@ -3,6 +3,8 @@ use bevy::{ecs::query::QueryFilter, prelude::*};
 use lightyear::prelude::*;
 use serde::{Deserialize, Serialize};
 
+use crate::shared::colliders::{ColliderTypes, CommonColliderBundle};
+
 pub struct ProjectileProtocolPlugin;
 impl Plugin for ProjectileProtocolPlugin {
     fn build(&self, app: &mut App) {
@@ -11,7 +13,19 @@ impl Plugin for ProjectileProtocolPlugin {
 }
 #[derive(Component, Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct Projectile {
-    movement: ProjectileMovement,
+    pub movement: ProjectileMovement,
+}
+
+impl From<Projectile> for CommonColliderBundle {
+    fn from(value: Projectile) -> Self {
+        Self::new(
+            RigidBody::Dynamic,
+            Collider::rectangle(20.0, 20.0),
+            1.0,
+            [ColliderTypes::PlayerProjectile].into(),
+            [ColliderTypes::Enemy].into(),
+        )
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
@@ -41,5 +55,17 @@ pub fn projectile_movement<QF: QueryFilter>(
                 todo!()
             }
         }
+    }
+}
+
+/// To be used whenever we're adding a projectile that needs the things that we don't network
+pub fn add_projectile_components<QF: QueryFilter>(
+    mut commands: Commands,
+    q_projectile: Query<(Entity, &Projectile), QF>,
+) {
+    for (p_ent, p) in &q_projectile {
+        commands
+            .entity(p_ent)
+            .insert((CommonColliderBundle::from(*p)));
     }
 }

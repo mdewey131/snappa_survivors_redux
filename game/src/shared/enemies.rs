@@ -21,7 +21,12 @@ impl From<Enemy> for CommonColliderBundle {
             Collider::capsule(20.0, 30.0),
             1.0,
             [ColliderTypes::Enemy].into(),
-            [ColliderTypes::Enemy, ColliderTypes::Player].into(),
+            [
+                ColliderTypes::Enemy,
+                ColliderTypes::Player,
+                ColliderTypes::PlayerProjectile,
+            ]
+            .into(),
         )
     }
 }
@@ -106,5 +111,3 @@ pub fn enemy_state_machine<EnemyQF: QueryFilter, PlayerQF: QueryFilter>(
         }
     }
 }
-
-
