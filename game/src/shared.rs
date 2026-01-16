@@ -21,6 +21,7 @@ pub mod lobby;
 pub mod players;
 pub mod projectiles;
 pub mod states;
+pub mod weapons;
 
 use colliders::*;
 use combat::CombatPlugin;
@@ -32,7 +33,6 @@ use inputs::GameInputProtocolPlugin;
 use lobby::LobbyProtocolPlugin;
 use projectiles::ProjectileProtocolPlugin;
 use states::SharedStatesPlugin;
-
 
 use crate::shared::players::{Player, PlayerProtocolPlugin};
 

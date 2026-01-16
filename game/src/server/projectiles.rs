@@ -17,13 +17,3 @@ impl Plugin for DedicatedServerProjectilePlugin {
         );
     }
 }
-
-/// Just something simple for testing
-fn spawn_projectile(mut commands: Commands) {
-    commands.spawn((
-        Projectile {
-            movement: ProjectileMovement::Linear(Vec2::Y),
-        },
-        Position(Vec2::ZERO),
-    ));
-}
