@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use crate::shared::{
     colliders::{ColliderTypes, CommonColliderBundle},
     game_kinds::*,
+    game_object_spawning::*,
     players::Player,
 };
 
@@ -82,21 +83,16 @@ pub fn spawn_enemy(commands: &mut Commands, e_kind: EnemyKind, game_kind: GameKi
     };
     let mut rng = rand::rng();
     let pos = (rng.random_range(-50.0..50.0), rng.random_range(-50.0..50.0));
-    // Seems like you need to do this first because putting in the enemy, then the
-    // game kind component makes the triggers invalid
-    let enemy_id = commands.spawn_empty().id();
-    add_game_kinds_components(
+    let _ = spawn_game_object(
         commands,
-        enemy_id,
         game_kind,
         MultiPlayerComponentOptions::from(enemy),
+        (
+            enemy,
+            Position(Vec2::new(pos.0, pos.1)),
+            EnemySpawnTimer::default(),
+        ),
     );
-
-    commands.entity(enemy_id).insert((
-        enemy,
-        Position(Vec2::new(pos.0, pos.1)),
-        EnemySpawnTimer::default(),
-    ));
 }
 
 pub fn enemy_state_machine<EnemyQF: QueryFilter, PlayerQF: QueryFilter>(

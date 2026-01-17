@@ -15,6 +15,7 @@ pub mod combat;
 pub mod despawn_timer;
 pub mod enemies;
 pub mod game_kinds;
+pub mod game_object_spawning;
 pub mod game_rules;
 pub mod inputs;
 pub mod lobby;
