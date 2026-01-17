@@ -14,12 +14,17 @@ pub struct DedicatedServerGameKindsPlugin;
 
 impl Plugin for DedicatedServerGameKindsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins((
-            AddReplicationComponentsPlugin::<Player>::new(),
-            AddReplicationComponentsPlugin::<Projectile>::new(),
-            AddReplicationComponentsPlugin::<Weapon>::new(),
-        ));
+        app.add_systems(OnEnter(AppState::Lobby), update_game_kind_resource)
+            .add_plugins((
+                AddReplicationComponentsPlugin::<Player>::new(),
+                AddReplicationComponentsPlugin::<Projectile>::new(),
+                AddReplicationComponentsPlugin::<Weapon>::new(),
+            ));
     }
+}
+
+fn update_game_kind_resource(mut resource: ResMut<CurrentGameKind>) {
+    resource.0 = Some(GameKinds::MultiPlayer);
 }
 
 pub struct AddReplicationComponentsPlugin<C> {
