@@ -3,7 +3,11 @@ use lightyear::prelude::{AppComponentExt, PredictionRegistrationExt};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    shared::combat::{CombatSystemSet, Cooldown},
+    shared::{
+        combat::{CombatSystemSet, Cooldown},
+        game_kinds::{GameKinds, MultiPlayerComponentOptions},
+        game_object_spawning::spawn_game_object,
+    },
     utils::AssetFolder,
 };
 
@@ -28,10 +32,19 @@ impl Plugin for WeaponProtocolPlugin {
     }
 }
 
-#[derive(Component, Serialize, Deserialize, Debug, PartialEq, Reflect, Clone)]
+#[derive(Component, Serialize, Deserialize, Debug, PartialEq, Reflect, Clone, Copy)]
 pub struct Weapon {
     kind: WeaponKind,
     activity_pattern: WeaponActivityPattern,
+}
+
+impl From<Weapon> for MultiPlayerComponentOptions {
+    fn from(value: Weapon) -> Self {
+        Self {
+            pred: true,
+            interp: false,
+        }
+    }
 }
 
 #[derive(Clone, Copy, Serialize, Deserialize, Debug, PartialEq, Reflect, Default)]
@@ -43,7 +56,7 @@ pub enum WeaponKind {
     FlurryOfBlows,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Reflect, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Reflect, Clone, Copy)]
 pub enum WeaponActivityPattern {
     AlwaysOn,
     ActiveforDuration,
@@ -101,35 +114,35 @@ pub fn add_weapon_to_player(
     player: Entity,
     weapon_kind: WeaponKind,
     commands: &mut Commands,
+    game_kind: GameKinds,
 ) -> Entity {
     info!("Adding Weapon to target");
-    let weapon_ent = commands.spawn_empty().id();
+
     let weapon: Weapon = weapon_kind.into();
+    let w_ent = spawn_game_object(
+        commands,
+        game_kind,
+        MultiPlayerComponentOptions::from(weapon),
+        (weapon, ChildOf(player)),
+    );
+
     /*
     let stats: RawStatsList =
         read_ron::<RawStatsList>(format!("assets/{}/stats.ron", weapon_kind.asset_folder()));
     let mut list = StatsList::new();
     let change_events = stats.insert_into(&mut list, weapon_ent);
     */
-    let mut w_com = commands.entity(weapon_ent);
-    w_com.insert((weapon /*list*/,));
 
     // Add the weapon marker components for each
     match weapon_kind {
         WeaponKind::DiceGuard => {
-            w_com.insert(DiceGuard);
+            commands.entity(w_ent).insert(DiceGuard);
         }
         _ => {
             todo!()
         }
     }
-    commands.entity(player).add_child(weapon_ent);
-
-    /*     commands.queue(move |world: &mut World| {
-        world.write_message_batch(change_events);
-    });
-    */
-    weapon_ent
+    w_ent
 }
 
 fn weapon_off_cooldown(

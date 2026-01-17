@@ -1,4 +1,6 @@
 use crate::shared::{
+    game_kinds::{CurrentGameKind, MultiPlayerComponentOptions},
+    game_object_spawning::spawn_game_object,
     players::Player,
     states::*,
     weapons::{WeaponKind, add_weapon_to_player},
@@ -23,25 +25,35 @@ impl Plugin for DedicatedServerLoadingPlugin {
 
 fn spawn_player_characters(
     mut commands: Commands,
+    game_kinds: Res<CurrentGameKind>,
     q_clients: Query<(Entity, &RemoteId), With<LinkOf>>,
 ) {
     for (ent, remote) in &q_clients {
         let mut rng = rand::rng();
         let pos = (rng.random_range(-50.0..50.0), rng.random_range(-50.0..50.0));
-        let player = commands
-            .spawn((
-                Player { client: remote.0 },
+
+        let player = Player { client: remote.0 };
+
+        let p_ent = spawn_game_object(
+            &mut commands,
+            game_kinds.0.unwrap(),
+            MultiPlayerComponentOptions::from(player),
+            (
+                player,
                 Position(Vec2::new(pos.0, pos.1)),
-                Replicate::to_clients(NetworkTarget::All),
-                PredictionTarget::to_clients(NetworkTarget::All),
                 ControlledBy {
                     owner: ent,
                     lifetime: Lifetime::default(),
                 },
-            ))
-            .id();
+            ),
+        );
 
-        add_weapon_to_player(player, WeaponKind::DiceGuard, &mut commands);
+        add_weapon_to_player(
+            p_ent,
+            WeaponKind::DiceGuard,
+            &mut commands,
+            game_kinds.0.unwrap(),
+        );
     }
 }
 

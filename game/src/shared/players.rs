@@ -1,5 +1,6 @@
 use crate::shared::{
     colliders::{ColliderTypes, CommonColliderBundle},
+    game_kinds::MultiPlayerComponentOptions,
     inputs::Movement,
 };
 use avian2d::prelude::*;
@@ -32,6 +33,15 @@ impl From<Player> for CommonColliderBundle {
             ]
             .into(),
         )
+    }
+}
+
+impl From<Player> for MultiPlayerComponentOptions {
+    fn from(value: Player) -> Self {
+        Self {
+            pred: true,
+            interp: false,
+        }
     }
 }
 
