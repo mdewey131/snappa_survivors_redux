@@ -15,7 +15,6 @@ impl Plugin for ClientGameKindsPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((
             AddSinglePlayerComponentPlugin::<Player>::new(),
-            AddSinglePlayerComponentPlugin::<Enemy>::new(),
             AddSinglePlayerComponentPlugin::<Projectile>::new(),
             AddSinglePlayerComponentPlugin::<Weapon>::new(),
         ));

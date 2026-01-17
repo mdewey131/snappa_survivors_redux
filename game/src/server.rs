@@ -36,7 +36,6 @@ mod players;
 mod projectiles;
 mod weapons;
 
-use enemies::ServerEnemyPlugin;
 use loading::DedicatedServerLoadingPlugin;
 use players::ServerPlayerPlugin;
 use projectiles::DedicatedServerProjectilePlugin;
@@ -44,7 +43,7 @@ use projectiles::DedicatedServerProjectilePlugin;
 pub struct GameServerPlugin;
 impl Plugin for GameServerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins((ServerEnemyPlugin, ServerPlayerPlugin))
+        app.add_plugins((ServerPlayerPlugin))
             .add_observer(handle_new_client);
     }
 }

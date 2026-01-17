@@ -16,7 +16,6 @@ impl Plugin for DedicatedServerGameKindsPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((
             AddReplicationComponentsPlugin::<Player>::new(),
-            AddReplicationComponentsPlugin::<Enemy>::new(),
             AddReplicationComponentsPlugin::<Projectile>::new(),
             AddReplicationComponentsPlugin::<Weapon>::new(),
         ));

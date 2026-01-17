@@ -1,12 +1,16 @@
 use avian2d::prelude::*;
 use bevy::{ecs::query::QueryFilter, prelude::*};
 use lightyear::prelude::*;
+use rand::Rng;
 use serde::{Deserialize, Serialize};
 
 use crate::shared::{
     colliders::{ColliderTypes, CommonColliderBundle},
+    game_kinds::*,
     players::Player,
 };
+
+pub mod spawner;
 
 #[derive(Component, Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Reflect)]
 pub struct Enemy {
@@ -31,8 +35,19 @@ impl From<Enemy> for CommonColliderBundle {
     }
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Reflect)]
+impl From<Enemy> for MultiPlayerComponentOptions {
+    fn from(value: Enemy) -> Self {
+        Self {
+            pred: true,
+            interp: false,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Reflect, Default)]
+#[reflect(Default)]
 pub enum EnemyKind {
+    #[default]
     FacelessMan,
 }
 
@@ -58,6 +73,30 @@ impl Plugin for EnemyProtocolPlugin {
     fn build(&self, app: &mut App) {
         app.register_component::<Enemy>();
     }
+}
+
+pub fn spawn_enemy(commands: &mut Commands, e_kind: EnemyKind, game_kind: GameKinds) {
+    let enemy = Enemy {
+        kind: e_kind,
+        state: EnemyState::Spawning,
+    };
+    let mut rng = rand::rng();
+    let pos = (rng.random_range(-50.0..50.0), rng.random_range(-50.0..50.0));
+    // Seems like you need to do this first because putting in the enemy, then the
+    // game kind component makes the triggers invalid
+    let enemy_id = commands.spawn_empty().id();
+    add_game_kinds_components(
+        commands,
+        enemy_id,
+        game_kind,
+        MultiPlayerComponentOptions::from(enemy),
+    );
+
+    commands.entity(enemy_id).insert((
+        enemy,
+        Position(Vec2::new(pos.0, pos.1)),
+        EnemySpawnTimer::default(),
+    ));
 }
 
 pub fn enemy_state_machine<EnemyQF: QueryFilter, PlayerQF: QueryFilter>(
@@ -113,5 +152,20 @@ pub fn enemy_state_machine<EnemyQF: QueryFilter, PlayerQF: QueryFilter>(
             }
             EnemyState::Dying => {}
         }
+    }
+}
+
+/// These add the components for enemies shortly after spawning.
+/// This is run on both the server and the client to cover the things
+/// that can't be replicated with one system
+pub fn add_non_replicated_enemy_components<QF: QueryFilter>(
+    trigger: On<Add, Enemy>,
+    mut commands: Commands,
+    q_to_attach: Query<&Enemy, (QF)>,
+) {
+    if let Ok(en) = q_to_attach.get(trigger.entity) {
+        commands
+            .entity(trigger.entity)
+            .insert((EnemySpawnTimer::default(), CommonColliderBundle::from(*en)));
     }
 }
