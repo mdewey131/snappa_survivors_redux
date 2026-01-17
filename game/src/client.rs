@@ -2,7 +2,6 @@ use crate::{
     client::{
         enemies::ClientEnemyRenderPlugin,
         game_client::{GameClient, GameClientConfig},
-        game_kinds::ClientGameKindsPlugin,
         load_game::ClientGameLoadingPlugin,
         lobby::ClientGameLobbyPlugin,
         main_menu::MainMenuPlugin,
@@ -22,7 +21,6 @@ pub mod camera;
 pub mod client_states;
 pub mod enemies;
 pub mod game_client;
-pub mod game_kinds;
 pub mod load_game;
 pub mod lobby;
 pub mod main_menu;
@@ -44,7 +42,6 @@ impl Plugin for GameClientPlugin {
             ClientEnemyPlugin,
             ClientStatesPlugin,
             ClientGameLobbyPlugin,
-            ClientGameKindsPlugin,
             ClientGameLoadingPlugin,
             ClientPlayerPlugin,
             ClientProjectilePlugin,

@@ -1,4 +1,4 @@
-use crate::shared::projectiles::Projectile;
+use crate::shared::{game_kinds::{CurrentGameKind, MultiPlayerComponentOptions}, game_object_spawning::spawn_game_object, projectiles::Projectile};
 
 use super::ActivateWeapon;
 use avian2d::prelude::*;
@@ -15,6 +15,7 @@ pub struct DiceGuardProjectile;
 pub fn dice_guard_activate<QF: QueryFilter>(
     trigger: On<ActivateWeapon>,
     mut commands: Commands,
+    game_kind: Res<CurrentGameKind>,
     q_dice_guards: Query<(Entity /*,  &StatsList*/, &ChildOf), (With<DiceGuard>, QF)>,
     q_parent: Query<&Position, With<Player>>,
 ) {
@@ -32,13 +33,14 @@ pub fn dice_guard_activate<QF: QueryFilter>(
         };
          */
         for (i, pos) in vec![Vec2::X, Vec2::Y, Vec2::NEG_X, Vec2::NEG_Y].iter().enumerate(){ //spawn_positions.positions_2d().into_iter().enumerate() {
+            let proj = Projectile {
+                movement: ProjectileMovement::Linear((pos * 10.0))
+            };
             let angle = std::f32::consts::TAU * (i as f32 / p_count);
             trace!("Found angle to be {angle}, position is {:?}", pos);
-            commands.spawn((
+            spawn_game_object(&mut commands, game_kind.0.unwrap(), MultiPlayerComponentOptions::from(proj), (
+                proj,
                 DiceGuardProjectile,
-                Projectile {
-                    movement: ProjectileMovement::Linear((pos * 10.0))
-                },
                 Position(par_pos.0 + pos),
             ));
         }

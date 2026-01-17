@@ -3,7 +3,6 @@ use std::net::{Ipv4Addr, SocketAddr};
 use crate::{
     server::{
         enemies::{DedicatedServerEnemyPlugin, ServerEnemyRenderPlugin},
-        game_kinds::DedicatedServerGameKindsPlugin,
         game_rules::DedicatedServerGameRulesPlugin,
         lobby::DedicatedServerLobbyPlugin,
         players::ServerPlayerRenderPlugin,
@@ -11,7 +10,7 @@ use crate::{
     },
     shared::{
         SEND_INTERVAL, SERVER_PORT, SHARED_SETTINGS, SINGLE_PLAYER_SERVER_PORT,
-        SharedNetworkingSettings, states::AppState,
+        SharedNetworkingSettings, game_kinds::CurrentGameKind, states::AppState,
     },
 };
 use bevy::{
@@ -28,7 +27,6 @@ use lightyear::{
 };
 use serde::{Deserialize, Serialize};
 mod enemies;
-mod game_kinds;
 mod game_rules;
 mod loading;
 mod lobby;
@@ -112,13 +110,13 @@ impl Plugin for DedicatedServerPlugin {
         app.add_plugins((
             DedicatedServerEnemyPlugin,
             DedicatedServerGameRulesPlugin,
-            DedicatedServerGameKindsPlugin,
             DedicatedServerLobbyPlugin,
             DedicatedServerLoadingPlugin,
             DedicatedServerProjectilePlugin,
             DedicatedServerWeaponsPlugin,
         ))
-        .add_systems(Startup, server_startup);
+        .add_systems(Startup, server_startup)
+        .add_systems(OnEnter(AppState::Lobby), update_game_kind_resource);
     }
 }
 
@@ -155,4 +153,8 @@ pub fn handle_new_client(trigger: On<Add, LinkOf>, mut commands: Commands) {
         ),
         ReplicationReceiver::default(),
     ));
+}
+
+fn update_game_kind_resource(mut r: ResMut<CurrentGameKind>) {
+    r.0 = Some(crate::shared::game_kinds::GameKinds::MultiPlayer);
 }

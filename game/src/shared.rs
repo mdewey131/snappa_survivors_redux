@@ -126,5 +126,5 @@ pub struct SharedNetworkingSettings {
 pub struct GameMainChannel;
 
 fn position_should_rollback(this: &Position, that: &Position) -> bool {
-    (this.0 - that.0).length() >= 0.01
+    (this.0 - that.0).length() >= 0.05
 }

@@ -11,12 +11,10 @@ impl Plugin for ClientProjectilePlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             FixedUpdate,
-            (
-                add_projectile_components::<Or<(Added<Predicted>, Added<SinglePlayer>)>>,
-                projectile_movement::<DefaultClientFilter>,
-            )
+            (projectile_movement::<DefaultClientFilter>,)
                 .in_set(CombatSystemSet::Combat)
                 .run_if(in_state(InGameState::InGame)),
-        );
+        )
+        .add_observer(add_projectile_components::<DefaultClientFilter>);
     }
 }

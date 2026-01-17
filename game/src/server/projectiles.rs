@@ -9,11 +9,8 @@ impl Plugin for DedicatedServerProjectilePlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             FixedUpdate,
-            (
-                add_projectile_components::<Added<Replicate>>,
-                projectile_movement::<DefaultServerFilter>,
-            )
-                .run_if(in_state(InGameState::InGame)),
-        );
+            (projectile_movement::<DefaultServerFilter>,).run_if(in_state(InGameState::InGame)),
+        )
+        .add_observer(add_projectile_components::<DefaultServerFilter>);
     }
 }
