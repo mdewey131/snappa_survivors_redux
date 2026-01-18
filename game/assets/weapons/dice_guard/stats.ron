@@ -1,0 +1,86 @@
+([
+    (
+        stat: (
+            kind: Damage,
+            cat: Current,
+        ),
+        value: 10.0,
+    ),
+    (
+        stat: (
+            kind: Damage,
+            cat: Base,
+        ),
+        value: 10.0,
+    ),
+    (
+        stat: (
+            kind: EffectSize,
+            cat: Base,
+        ),
+        value: 500.0,
+    ),
+    (
+        stat: (
+            kind: EffectSize,
+            cat: Current,
+        ),
+        value: 500.0,
+    ),
+    (
+        stat: (
+            kind: EffectDuration,
+            cat: Base,
+        ),
+        value: 5.0,
+    ),
+    (
+        stat: (
+            kind: EffectDuration,
+            cat: Current,
+        ),
+        value: 5.0,
+    ),
+    (
+        stat: (
+            kind: ProjectileCount,
+            cat: Base,
+        ),
+        value: 2.0,
+    ),
+    (
+        stat: (
+            kind: ProjectileCount,
+            cat: Current,
+        ),
+        value: 2.0,
+    ),
+    (
+        stat: (
+            kind: ProjectileSpeed,
+            cat: Current,
+        ),
+        value: 15.0,
+    ),
+    (
+        stat: (
+            kind: ProjectileSpeed,
+            cat: Base,
+        ),
+        value: 15.0,
+    ),
+    (
+        stat: (
+            kind: CooldownRate,
+            cat: Base,
+        ),
+        value: 1.0,
+    ),
+    (
+        stat: (
+            kind: CooldownRate,
+            cat: Current,
+        ),
+        value: 1.0,
+    ),
+])

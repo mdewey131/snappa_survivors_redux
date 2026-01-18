@@ -1,5 +1,8 @@
 use avian2d::prelude::*;
-use bevy::{ecs::query::QueryFilter, prelude::*};
+use bevy::{
+    ecs::{entity::MapEntities, query::QueryFilter},
+    prelude::*,
+};
 use lightyear::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -11,7 +14,9 @@ use crate::shared::{
 pub struct ProjectileProtocolPlugin;
 impl Plugin for ProjectileProtocolPlugin {
     fn build(&self, app: &mut App) {
-        app.register_component::<Projectile>().add_prediction();
+        app.register_component::<Projectile>()
+            .add_prediction()
+            .add_map_entities();
     }
 }
 #[derive(Component, Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
@@ -19,10 +24,26 @@ pub struct Projectile {
     pub movement: ProjectileMovement,
 }
 
+impl MapEntities for Projectile {
+    fn map_entities<E: EntityMapper>(&mut self, entity_mapper: &mut E) {
+        match self.movement {
+            ProjectileMovement::Orbital {
+                ref mut around,
+                speed,
+                radius,
+                c_angle,
+            } => {
+                *around = entity_mapper.get_mapped(*around);
+            }
+            _ => {}
+        }
+    }
+}
+
 impl From<Projectile> for CommonColliderBundle {
     fn from(value: Projectile) -> Self {
         Self::new(
-            RigidBody::Dynamic,
+            RigidBody::Kinematic,
             Collider::rectangle(20.0, 20.0),
             1.0,
             [ColliderTypes::PlayerProjectile].into(),
@@ -90,6 +111,6 @@ pub fn add_projectile_components<QF: QueryFilter>(
     if let Ok(p) = q_projectile.get(trigger.entity) {
         commands
             .entity(trigger.entity)
-            .insert((CommonColliderBundle::from(*p)));
+            .insert((CommonColliderBundle::from(*p), Sensor));
     }
 }
