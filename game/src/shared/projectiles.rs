@@ -45,26 +45,37 @@ pub enum ProjectileMovement {
     Linear(Vec2),
     Orbital {
         around: Entity,
-        radius: f32,
         speed: f32,
+        radius: f32,
         c_angle: f32,
     },
 }
 
 pub fn projectile_movement<QF: QueryFilter>(
+    time: Res<Time<Fixed>>,
     q_target: Query<&Position, Without<Projectile>>,
-    mut q_projectile: Query<(&Projectile, &mut LinearVelocity), (With<Projectile>, QF)>,
+    mut q_projectile: Query<
+        (&mut Projectile, &mut LinearVelocity, &mut Position),
+        (With<Projectile>, QF),
+    >,
 ) {
-    for (proj, mut velo) in &mut q_projectile {
+    for (mut proj, mut velo, mut proj_pos) in &mut q_projectile {
         match proj.movement {
             ProjectileMovement::Linear(v) => velo.0 = v,
             ProjectileMovement::Orbital {
                 around,
-                radius,
                 speed,
-                c_angle,
+                radius,
+                ref mut c_angle,
             } => {
-                todo!()
+                let base_pos = q_target.get(around).expect("Following Entity not found");
+                let pct_circ = std::f32::consts::TAU / 100.0;
+                let angle_diff = speed * time.delta_secs() * pct_circ;
+                *c_angle += angle_diff;
+                // Update pos now
+                let new_pos = base_pos.0 + Vec2::from_angle(*c_angle) * radius;
+                proj_pos.0 = new_pos;
+                // velo.0 = (new_pos - proj_pos.0)
             }
         }
     }

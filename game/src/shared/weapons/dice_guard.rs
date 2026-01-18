@@ -1,4 +1,4 @@
-use crate::shared::{game_kinds::{CurrentGameKind, MultiPlayerComponentOptions}, game_object_spawning::spawn_game_object, projectiles::Projectile};
+use crate::{shared::{game_kinds::{CurrentGameKind, MultiPlayerComponentOptions}, game_object_spawning::spawn_game_object, projectiles::Projectile}, utils::CreatedBy};
 
 use super::ActivateWeapon;
 use avian2d::prelude::*;
@@ -22,7 +22,7 @@ pub fn dice_guard_activate<QF: QueryFilter>(
     if let Ok((dg_ent /*, stats */, parent)) = q_dice_guards.get(trigger.entity) {
         info!("Dice guard activated!");
         let par_pos = q_parent.get(parent.parent()).unwrap();
-        let p_count = 3.0; //**stats.get_current(StatKind::ProjectileCount).unwrap();
+        let p_count = 4.0; //**stats.get_current(StatKind::ProjectileCount).unwrap();
         let size = 5.0; //**stats.get_current(StatKind::EffectSize).unwrap();
         let speed = 50.0; //**stats.get_current(StatKind::ProjectileSpeed).unwrap();
         /*
@@ -32,16 +32,24 @@ pub fn dice_guard_activate<QF: QueryFilter>(
             radius: size,
         };
          */
-        for (i, pos) in vec![Vec2::X, Vec2::Y, Vec2::NEG_X, Vec2::NEG_Y].iter().enumerate(){ //spawn_positions.positions_2d().into_iter().enumerate() {
-            let proj = Projectile {
-                movement: ProjectileMovement::Linear((pos * 10.0))
-            };
+        for (i, _) in vec![Vec2::X, Vec2::Y, Vec2::NEG_X, Vec2::NEG_Y].iter().enumerate(){ //spawn_positions.positions_2d().into_iter().enumerate() {
+            let r = 100.0;
             let angle = std::f32::consts::TAU * (i as f32 / p_count);
+            let proj = Projectile {
+                movement: ProjectileMovement::Orbital {
+                    around: parent.parent(),
+                    speed: 50.0,
+                    c_angle: angle,
+                    radius: 100.0
+                },
+            };
+            let pos = par_pos.0 + Vec2::from_angle(angle) * r;
             trace!("Found angle to be {angle}, position is {:?}", pos);
             spawn_game_object(&mut commands, game_kind.0.unwrap(), MultiPlayerComponentOptions::from(proj), (
                 proj,
                 DiceGuardProjectile,
-                Position(par_pos.0 + pos),
+                Position(pos),
+                CreatedBy(parent.parent())
             ));
         }
     }

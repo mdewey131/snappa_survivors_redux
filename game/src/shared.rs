@@ -36,7 +36,10 @@ use projectiles::ProjectileProtocolPlugin;
 use states::SharedStatesPlugin;
 use weapons::{SharedWeaponPlugin, WeaponProtocolPlugin};
 
-use crate::shared::players::{Player, PlayerProtocolPlugin};
+use crate::{
+    shared::players::{Player, PlayerProtocolPlugin},
+    utils::CreatedBy,
+};
 
 pub const SHARED_SETTINGS: SharedNetworkingSettings = SharedNetworkingSettings {
     protocol_id: 0,
@@ -110,6 +113,7 @@ impl Plugin for GameProtocolPlugin {
             .add_should_rollback(position_should_rollback)
             .add_linear_interpolation()
             .add_linear_correction_fn();
+        app.register_component::<CreatedBy>().add_map_entities();
     }
 }
 

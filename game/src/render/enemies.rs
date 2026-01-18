@@ -25,9 +25,9 @@ pub fn rendering_on_enemy_add<QF: QueryFilter>(
     mut commands: Commands,
     assets: Res<AssetServer>,
     mut layouts: ResMut<Assets<TextureAtlasLayout>>,
-    q_player: Query<(Entity, &Position), (Added<Enemy>, QF)>,
+    q_enemy: Query<(Entity, &Position), (Added<Enemy>, QF)>,
 ) {
-    for (e, pos) in &q_player {
+    for (e, pos) in &q_enemy {
         let handle: Handle<Image> = assets.load("enemies/faceless/sprite.png");
         //let layout = TextureAtlasLayout::from_grid(UVec2::splat(32), 4, 4, None, None);
         //let tex_atlas = layouts.add(layout);
