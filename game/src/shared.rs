@@ -22,6 +22,7 @@ pub mod lobby;
 pub mod players;
 pub mod projectiles;
 pub mod states;
+pub mod stats;
 pub mod weapons;
 
 use colliders::*;

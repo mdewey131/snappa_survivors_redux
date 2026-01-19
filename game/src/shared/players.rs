@@ -1,7 +1,10 @@
-use crate::shared::{
-    colliders::{ColliderTypes, CommonColliderBundle},
-    game_kinds::MultiPlayerComponentOptions,
-    inputs::Movement,
+use crate::{
+    shared::{
+        colliders::{ColliderTypes, CommonColliderBundle},
+        game_kinds::MultiPlayerComponentOptions,
+        inputs::Movement,
+    },
+    utils::AssetFolder,
 };
 use avian2d::prelude::*;
 use bevy::{ecs::query::QueryFilter, prelude::*};
@@ -42,6 +45,21 @@ impl From<Player> for MultiPlayerComponentOptions {
             pred: true,
             interp: false,
         }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Reflect)]
+pub enum CharacterKind {
+    #[default]
+    Dewey,
+}
+
+impl From<CharacterKind> for AssetFolder {
+    fn from(value: CharacterKind) -> Self {
+        let s = match value {
+            CharacterKind::Dewey => "survivors/dewey".into(),
+        };
+        Self(s)
     }
 }
 

@@ -4,11 +4,14 @@ use lightyear::prelude::*;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
-use crate::shared::{
-    colliders::{ColliderTypes, CommonColliderBundle},
-    game_kinds::*,
-    game_object_spawning::*,
-    players::Player,
+use crate::{
+    shared::{
+        colliders::{ColliderTypes, CommonColliderBundle},
+        game_kinds::*,
+        game_object_spawning::*,
+        players::Player,
+    },
+    utils::AssetFolder,
 };
 
 pub mod spawner;
@@ -50,6 +53,15 @@ impl From<Enemy> for MultiPlayerComponentOptions {
 pub enum EnemyKind {
     #[default]
     FacelessMan,
+}
+
+impl From<EnemyKind> for AssetFolder {
+    fn from(value: EnemyKind) -> Self {
+        let string = match value {
+            EnemyKind::FacelessMan => "enemies/faceless".into(),
+        };
+        Self(string)
+    }
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Reflect)]

@@ -1,1 +1,1 @@
-([(stat: Stat(kind: Damage, cat: Current), value: 10.0)])
+([Health((max: 50.0, current: 50.0))])

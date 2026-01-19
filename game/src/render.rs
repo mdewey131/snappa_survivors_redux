@@ -20,6 +20,9 @@ use menus::lobby::LobbyMenuPlugin;
 use player::SharedPlayerRenderPlugin;
 use ui::SharedUIPlugin;
 
+#[cfg(feature = "dev")]
+use crate::shared::stats::editor::StatsEditorPlugin;
+
 pub struct GameSharedRenderPlugin;
 
 impl Plugin for GameSharedRenderPlugin {
@@ -35,6 +38,8 @@ impl Plugin for GameSharedRenderPlugin {
         app.add_plugins((EguiPlugin::default(), WorldInspectorPlugin::new()));
         #[cfg(feature = "avian_debug")]
         app.add_plugins(PhysicsDebugPlugin::default());
+        #[cfg(feature = "dev")]
+        app.add_plugins(StatsEditorPlugin);
 
         app.add_systems(Startup, startup)
             .add_systems(PostUpdate, render_y_to_z.before(RenderSystems::Prepare));
