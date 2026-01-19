@@ -102,6 +102,7 @@ struct GameProtocolPlugin;
 impl Plugin for GameProtocolPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((
+            CollidersProtocolPlugin,
             EnemyProtocolPlugin,
             LobbyProtocolPlugin,
             PlayerProtocolPlugin,

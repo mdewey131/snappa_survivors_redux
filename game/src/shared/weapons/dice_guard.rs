@@ -1,5 +1,6 @@
 use crate::{
     shared::{
+        colliders::*,
         combat::Cooldown,
         game_kinds::{CurrentGameKind, MultiPlayerComponentOptions},
         game_object_spawning::spawn_game_object,
@@ -76,6 +77,7 @@ pub fn dice_guard_activate<QF: QueryFilter>(
                     CreatedBy(dg_ent),
                     *dam,
                     *size,
+                    AppliesCollisionEffect::new([ColliderTypes::Enemy].into(), ApplyDamage),
                 ),
             );
         }

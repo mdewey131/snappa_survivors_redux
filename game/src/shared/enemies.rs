@@ -6,11 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     shared::{
-        colliders::{ColliderTypes, CommonColliderBundle},
-        game_kinds::*,
-        game_object_spawning::*,
-        players::Player,
-        stats::RawStatsList,
+        colliders::*, game_kinds::*, game_object_spawning::*, players::Player, stats::RawStatsList,
     },
     utils::AssetFolder,
 };
@@ -104,6 +100,7 @@ pub fn spawn_enemy(commands: &mut Commands, e_kind: EnemyKind, game_kind: GameKi
             enemy,
             Position(Vec2::new(pos.0, pos.1)),
             EnemySpawnTimer::default(),
+            AppliesCollisionEffect::new([ColliderTypes::Player].into(), ApplyDamage),
         ),
     );
 
@@ -176,8 +173,10 @@ pub fn add_non_replicated_enemy_components<QF: QueryFilter>(
     q_to_attach: Query<&Enemy, (QF)>,
 ) {
     if let Ok(en) = q_to_attach.get(trigger.entity) {
-        commands
-            .entity(trigger.entity)
-            .insert((EnemySpawnTimer::default(), CommonColliderBundle::from(*en)));
+        commands.entity(trigger.entity).insert((
+            EnemySpawnTimer::default(),
+            CommonColliderBundle::from(*en),
+            RecentlyCollided::default(),
+        ));
     }
 }

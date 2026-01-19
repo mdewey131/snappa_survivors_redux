@@ -1,6 +1,6 @@
 use avian2d::prelude::*;
 use bevy::{platform::collections::HashMap, prelude::*};
-use lightyear::prediction::SyncComponent;
+use lightyear::{prediction::SyncComponent, prelude::*};
 use serde::{Deserialize, Serialize};
 
 use crate::shared::{
@@ -26,6 +26,15 @@ impl Plugin for SharedColliderPlugin {
                 .in_set(CombatSystemSet::PostPhysicsSet)
                 .run_if(in_state(InGameState::InGame)),
         );
+    }
+}
+
+/// Handles the marker components for things like "AppliesCollisionEffect"
+pub struct CollidersProtocolPlugin;
+impl Plugin for CollidersProtocolPlugin {
+    fn build(&self, app: &mut App) {
+        app.register_component::<AppliesCollisionEffect<ApplyDamage>>()
+            .add_prediction();
     }
 }
 
