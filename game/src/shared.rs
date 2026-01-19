@@ -40,7 +40,10 @@ use states::SharedStatesPlugin;
 use weapons::{SharedWeaponPlugin, WeaponProtocolPlugin};
 
 use crate::{
-    shared::players::{Player, PlayerProtocolPlugin},
+    shared::{
+        players::{Player, PlayerProtocolPlugin},
+        stats::components::StatsProtocolPlugin,
+    },
     utils::CreatedBy,
 };
 
@@ -104,6 +107,7 @@ impl Plugin for GameProtocolPlugin {
             PlayerProtocolPlugin,
             GameInputProtocolPlugin,
             ProjectileProtocolPlugin,
+            StatsProtocolPlugin,
             WeaponProtocolPlugin,
         ))
         .add_channel::<GameMainChannel>(ChannelSettings {

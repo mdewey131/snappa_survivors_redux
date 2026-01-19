@@ -7,7 +7,7 @@ use crate::{
         combat::{CombatSystemSet, Cooldown},
         game_kinds::{GameKinds, MultiPlayerComponentOptions},
         game_object_spawning::spawn_game_object,
-        stats::RawStatsList,
+        stats::{RawStatsList, components::*},
     },
     utils::AssetFolder,
 };
@@ -30,6 +30,8 @@ pub struct WeaponProtocolPlugin;
 impl Plugin for WeaponProtocolPlugin {
     fn build(&self, app: &mut App) {
         app.register_component::<Weapon>().add_prediction();
+        app.register_component::<DiceGuardProjectile>()
+            .add_prediction();
     }
 }
 
@@ -152,11 +154,11 @@ pub fn add_weapon_to_player(
 fn weapon_off_cooldown(
     mut commands: Commands,
     mut q_weapon: Query<
-        (Entity, &mut Weapon /*&StatsList*/),
+        (Entity, &mut Weapon, Option<&EffectDuration>),
         (Without<WeaponActiveTimer>, Without<Cooldown>),
     >,
 ) {
-    for (ent, mut weapon /*stats*/) in &mut q_weapon {
+    for (ent, mut weapon, m_dur) in &mut q_weapon {
         match weapon.activity_pattern {
             WeaponActivityPattern::AlwaysOn => {
                 commands
@@ -187,11 +189,15 @@ fn weapon_off_cooldown(
                 }
             }
             WeaponActivityPattern::ActiveforDuration => {
-                let dur = 5.0; //**(stats.get_current(StatKind::EffectDuration).unwrap());
                 commands.trigger(ActivateWeapon { entity: ent });
                 commands
                     .entity(ent)
-                    .insert(WeaponActiveTimer(Timer::from_seconds(dur, TimerMode::Once)));
+                    .insert(WeaponActiveTimer(Timer::from_seconds(
+                        m_dur
+                            .expect("Active duration weapon without an effect duration")
+                            .0,
+                        TimerMode::Once,
+                    )));
             }
         }
     }

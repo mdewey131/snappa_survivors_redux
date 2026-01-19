@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::shared::{combat::CombatSystemSet, stats::components::Health};
 
-#[derive(Component, Debug, Clone, Reflect, Deref, DerefMut)]
+#[derive(Component, Debug, Clone, Reflect, Deref, DerefMut, Default)]
 pub struct DamageBuffer(Vec<DamageInstance>);
 
 #[derive(Clone, Copy, Serialize, Deserialize, PartialEq, PartialOrd, Reflect, Debug)]

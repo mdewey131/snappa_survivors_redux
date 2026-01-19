@@ -14,12 +14,13 @@ use super::ActivateWeapon;
 use crate::shared::{players::Player, projectiles::*};
 use avian2d::prelude::*;
 use bevy::{ecs::query::QueryFilter, prelude::*};
+use serde::{Deserialize, Serialize};
 
 /// Marker component for a weapon
 #[derive(Component)]
 pub struct DiceGuard;
 
-#[derive(Component)]
+#[derive(Component, Debug, Serialize, Deserialize, PartialEq, Clone, Copy)]
 pub struct DiceGuardProjectile;
 
 pub fn dice_guard_activate<QF: QueryFilter>(
