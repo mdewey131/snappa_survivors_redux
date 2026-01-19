@@ -3,6 +3,7 @@ use crate::{
         colliders::{ColliderTypes, CommonColliderBundle},
         game_kinds::MultiPlayerComponentOptions,
         inputs::Movement,
+        stats::components::MovementSpeed,
     },
     utils::AssetFolder,
 };
@@ -70,18 +71,17 @@ impl Plugin for PlayerProtocolPlugin {
     }
 }
 
-fn shared_player_movement(mut velo: Mut<LinearVelocity>, input: Vec2) {
-    const MS: f32 = 30.0;
-    velo.0 = input * MS
+fn shared_player_movement(mut velo: Mut<LinearVelocity>, ms: f32, input: Vec2) {
+    velo.0 = input * ms
 }
 
 pub fn player_movement<QF: QueryFilter>(
     q_mv_action: Query<(&ActionValue, &ActionOf<Player>), With<Action<Movement>>>,
-    mut q_lv: Query<&mut LinearVelocity, (QF, With<Player>)>,
+    mut q_lv: Query<(&MovementSpeed, &mut LinearVelocity), (QF, With<Player>)>,
 ) {
     for (val, a_of) in &q_mv_action {
-        if let Ok(mut lv) = q_lv.get_mut(a_of.entity()) {
-            shared_player_movement(lv, val.as_axis2d());
+        if let Ok((ms, mut lv)) = q_lv.get_mut(a_of.entity()) {
+            shared_player_movement(lv, ms.current, val.as_axis2d());
         }
     }
 }
