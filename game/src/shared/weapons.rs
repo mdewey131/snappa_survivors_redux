@@ -7,6 +7,7 @@ use crate::{
         combat::{CombatSystemSet, Cooldown},
         game_kinds::{GameKinds, MultiPlayerComponentOptions},
         game_object_spawning::spawn_game_object,
+        stats::RawStatsList,
     },
     utils::AssetFolder,
 };
@@ -125,6 +126,9 @@ pub fn add_weapon_to_player(
         MultiPlayerComponentOptions::from(weapon),
         (weapon, ChildOf(player)),
     );
+
+    let stats = RawStatsList::import_stats(weapon_kind);
+    stats.apply_to_character(w_ent, commands);
 
     /*
     let stats: RawStatsList =

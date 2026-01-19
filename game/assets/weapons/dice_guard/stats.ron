@@ -1,1 +1,9 @@
-([Health((max: 50.0, current: 50.0))])
+([
+    AttackRange((100.0)),
+    CDR((5.0)),
+    Damage((5.0)),
+    EffDuration((3.0)),
+    EffSize((50.0)),
+    ProjSpeed((40.0)),
+    ProjCount((100)),
+])

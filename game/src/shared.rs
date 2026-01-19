@@ -12,6 +12,7 @@ use lightyear::{
 
 pub mod colliders;
 pub mod combat;
+pub mod damage;
 pub mod despawn_timer;
 pub mod enemies;
 pub mod game_kinds;
@@ -27,6 +28,7 @@ pub mod weapons;
 
 use colliders::*;
 use combat::CombatPlugin;
+use damage::SharedDamagePlugin;
 use despawn_timer::DespawnTimerPlugin;
 use enemies::EnemyProtocolPlugin;
 use game_kinds::GameKindsPlugin;
@@ -66,6 +68,7 @@ impl Plugin for GameSharedPlugin {
             DespawnTimerPlugin,
             GameProtocolPlugin,
             GameKindsPlugin,
+            SharedDamagePlugin,
             SharedStatesPlugin,
             SharedGameRulesPlugin,
             SharedWeaponPlugin,

@@ -1,8 +1,9 @@
 use crate::shared::{
     game_kinds::{CurrentGameKind, MultiPlayerComponentOptions},
     game_object_spawning::spawn_game_object,
-    players::Player,
+    players::{CharacterKind, Player},
     states::*,
+    stats::RawStatsList,
     weapons::{WeaponKind, add_weapon_to_player},
 };
 use avian2d::prelude::Position;
@@ -47,6 +48,9 @@ fn spawn_player_characters(
                 },
             ),
         );
+
+        let stats = RawStatsList::import_stats(CharacterKind::Dewey);
+        stats.apply_to_character(p_ent, &mut commands);
 
         add_weapon_to_player(
             p_ent,

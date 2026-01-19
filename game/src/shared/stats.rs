@@ -7,7 +7,8 @@ pub mod components;
 pub mod editor;
 
 use components::*;
-use editor::*;
+
+use crate::utils::AssetFolder;
 
 #[derive(Debug, Clone, Copy, Deserialize, Serialize, Reflect)]
 #[reflect(Default)]
@@ -88,6 +89,12 @@ impl StatKind {
 pub struct RawStatsList(Vec<StatKind>);
 
 impl RawStatsList {
+    pub fn import_stats(to_folder: impl Into<AssetFolder>) -> Self {
+        let folder: AssetFolder = to_folder.into();
+        let new_path = format!("assets/{}", folder.to_path("stats.ron".into()));
+        crate::utils::read_ron::<RawStatsList>(new_path)
+    }
+
     pub fn apply_to_character(mut self, ent: Entity, comms: &mut Commands) {
         let mut ec = comms.entity(ent);
         for sk in self.0.drain(..) {

@@ -55,12 +55,6 @@ impl StatsEditor {
         let _write = std::fs::write(stats_path, ron_string);
     }
 
-    fn load_procedure(to_folder: impl Into<AssetFolder>) -> RawStatsList {
-        let folder: AssetFolder = to_folder.into();
-        let new_path = format!("assets/{}", folder.to_path("stats.ron".into()));
-        crate::utils::read_ron::<RawStatsList>(new_path)
-    }
-
     pub fn save_enemy(&mut self) {
         if let Some(ref list) = self.c_enemy_stats {
             Self::save_procedure(list, self.c_enemy);
@@ -89,7 +83,7 @@ fn load_new_stats(mut editor: ResMut<StatsEditor>) {
         None => true,
     };
     if load_char {
-        let stats = StatsEditor::load_procedure(editor.c_char);
+        let stats = RawStatsList::import_stats(editor.c_char);
         editor.c_char_stats = Some(stats);
         editor.p_char = Some(editor.c_char);
     }
@@ -100,7 +94,7 @@ fn load_new_stats(mut editor: ResMut<StatsEditor>) {
     };
 
     if load_enemy {
-        let stats = StatsEditor::load_procedure(editor.c_enemy);
+        let stats = RawStatsList::import_stats(editor.c_enemy);
         editor.c_enemy_stats = Some(stats);
         editor.p_enemy = Some(editor.c_enemy);
     }
@@ -111,7 +105,7 @@ fn load_new_stats(mut editor: ResMut<StatsEditor>) {
     };
 
     if load_weapon {
-        let stats = StatsEditor::load_procedure(editor.c_weapon);
+        let stats = RawStatsList::import_stats(editor.c_weapon);
         editor.c_weapon_stats = Some(stats);
         editor.p_weapon = Some(editor.c_weapon);
     }

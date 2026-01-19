@@ -1,9 +1,19 @@
-use crate::{shared::{combat::Cooldown, game_kinds::{CurrentGameKind, MultiPlayerComponentOptions}, game_object_spawning::spawn_game_object, projectiles::Projectile, weapons::DeactivateWeapon}, utils::{CreatedBy, CreatorOf}};
+use crate::{
+    shared::{
+        combat::Cooldown,
+        game_kinds::{CurrentGameKind, MultiPlayerComponentOptions},
+        game_object_spawning::spawn_game_object,
+        projectiles::Projectile,
+        stats::components::*,
+        weapons::DeactivateWeapon,
+    },
+    utils::{CreatedBy, CreatorOf},
+};
 
 use super::ActivateWeapon;
+use crate::shared::{players::Player, projectiles::*};
 use avian2d::prelude::*;
 use bevy::{ecs::query::QueryFilter, prelude::*};
-use crate::shared::{players::Player, projectiles::*};
 
 /// Marker component for a weapon
 #[derive(Component)]
@@ -16,15 +26,22 @@ pub fn dice_guard_activate<QF: QueryFilter>(
     trigger: On<ActivateWeapon>,
     mut commands: Commands,
     game_kind: Res<CurrentGameKind>,
-    q_dice_guards: Query<(Entity /*,  &StatsList*/, &ChildOf), (With<DiceGuard>, QF)>,
+    q_dice_guards: Query<
+        (
+            Entity,
+            &ChildOf,
+            &ProjectileCount,
+            &EffectSize,
+            &ProjectileSpeed,
+            &Damage,
+        ),
+        (With<DiceGuard>, QF),
+    >,
     q_parent: Query<&Position, With<Player>>,
 ) {
-    if let Ok((dg_ent /*, stats */, parent)) = q_dice_guards.get(trigger.entity) {
+    if let Ok((dg_ent, parent, p_count, size, speed, dam)) = q_dice_guards.get(trigger.entity) {
         info!("Dice guard activated!");
         let par_pos = q_parent.get(parent.parent()).unwrap();
-        let p_count = 4.0; //**stats.get_current(StatKind::ProjectileCount).unwrap();
-        let size = 5.0; //**stats.get_current(StatKind::EffectSize).unwrap();
-        let speed = 50.0; //**stats.get_current(StatKind::ProjectileSpeed).unwrap();
         /*
         let spawn_positions = SpawnStrategy::Circle {
             center: par_pos.0,
@@ -32,25 +49,34 @@ pub fn dice_guard_activate<QF: QueryFilter>(
             radius: size,
         };
          */
-        for (i, _) in vec![Vec2::X, Vec2::Y, Vec2::NEG_X, Vec2::NEG_Y].iter().enumerate(){ //spawn_positions.positions_2d().into_iter().enumerate() {
-            let r = 100.0;
-            let angle = std::f32::consts::TAU * (i as f32 / p_count);
+        for i in (0..p_count.0) {
+            // Shorhand for now
+            let r = size.0 * 4.0;
+            //spawn_positions.positions_2d().into_iter().enumerate() {
+            let angle = std::f32::consts::TAU * (i as f32 / p_count.0 as f32);
             let proj = Projectile {
                 movement: ProjectileMovement::Orbital {
                     around: parent.parent(),
-                    speed: 50.0,
+                    speed: speed.0,
                     c_angle: angle,
-                    radius: 100.0
+                    radius: r,
                 },
             };
             let pos = par_pos.0 + Vec2::from_angle(angle) * r;
             trace!("Found angle to be {angle}, position is {:?}", pos);
-            spawn_game_object(&mut commands, game_kind.0.unwrap(), MultiPlayerComponentOptions::from(proj), (
-                proj,
-                DiceGuardProjectile,
-                Position(pos),
-                CreatedBy(dg_ent)
-            ));
+            spawn_game_object(
+                &mut commands,
+                game_kind.0.unwrap(),
+                MultiPlayerComponentOptions::from(proj),
+                (
+                    proj,
+                    DiceGuardProjectile,
+                    Position(pos),
+                    CreatedBy(dg_ent),
+                    *dam,
+                    *size,
+                ),
+            );
         }
     }
 }
@@ -58,13 +84,12 @@ pub fn dice_guard_activate<QF: QueryFilter>(
 pub fn dice_guard_deactivate<QF: QueryFilter>(
     trigger: On<DeactivateWeapon>,
     mut commands: Commands,
-    q_dice_guards: Query<(Entity, &CreatorOf, /*&StatsList*/), (With<DiceGuard>, QF)>,
+    q_dice_guards: Query<(Entity, &CreatorOf, &CooldownRate), (With<DiceGuard>, QF)>,
 ) {
-    if let Ok((ent, created, /*stats*/)) = q_dice_guards.get(trigger.entity) {
+    if let Ok((ent, created, cdr)) = q_dice_guards.get(trigger.entity) {
         for proj in created.iter() {
             commands.entity(proj).despawn();
         }
-        let cd = 5.0; //**stats.get_current(StatKind::CooldownRate).unwrap();
-        commands.entity(ent).insert(Cooldown::new(cd));
+        commands.entity(ent).insert(Cooldown::new(cdr.0));
     }
 }

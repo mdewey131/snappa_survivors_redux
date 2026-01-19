@@ -32,8 +32,8 @@ pub struct EffectSize(pub f32);
 #[derive(Component, Debug, Clone, Copy, Deserialize, Serialize, Default, Reflect)]
 #[reflect(Default)]
 pub struct Health {
-    max: f32,
-    current: f32,
+    pub max: f32,
+    pub current: f32,
 }
 
 #[derive(Component, Debug, Clone, Copy, Deserialize, Serialize, Default, Reflect)]
@@ -43,8 +43,8 @@ pub struct Luck(pub f32);
 #[derive(Component, Debug, Clone, Copy, Deserialize, Serialize, Default, Reflect)]
 #[reflect(Default)]
 pub struct MovementSpeed {
-    current: f32,
-    cap: f32,
+    pub current: f32,
+    pub cap: f32,
 }
 
 #[derive(Component, Debug, Clone, Copy, Deserialize, Serialize, Default, Reflect)]

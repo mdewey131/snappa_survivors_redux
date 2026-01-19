@@ -10,6 +10,7 @@ use crate::{
         game_kinds::*,
         game_object_spawning::*,
         players::Player,
+        stats::RawStatsList,
     },
     utils::AssetFolder,
 };
@@ -95,7 +96,7 @@ pub fn spawn_enemy(commands: &mut Commands, e_kind: EnemyKind, game_kind: GameKi
     };
     let mut rng = rand::rng();
     let pos = (rng.random_range(-50.0..50.0), rng.random_range(-50.0..50.0));
-    let _ = spawn_game_object(
+    let e_ent = spawn_game_object(
         commands,
         game_kind,
         MultiPlayerComponentOptions::from(enemy),
@@ -105,6 +106,9 @@ pub fn spawn_enemy(commands: &mut Commands, e_kind: EnemyKind, game_kind: GameKi
             EnemySpawnTimer::default(),
         ),
     );
+
+    let stats = RawStatsList::import_stats(e_kind);
+    stats.apply_to_character(e_ent, commands);
 }
 
 pub fn enemy_state_machine<EnemyQF: QueryFilter, PlayerQF: QueryFilter>(
