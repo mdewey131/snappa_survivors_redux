@@ -11,6 +11,7 @@ pub mod map;
 pub mod menus;
 pub mod player;
 pub mod ui;
+pub mod weapons;
 
 use camera::GameMainCamera;
 use enemies::SharedEnemyRenderPlugin;

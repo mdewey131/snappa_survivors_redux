@@ -33,7 +33,7 @@ use client_states::ClientStatesPlugin;
 use enemies::ClientEnemyPlugin;
 use players::ClientPlayerPlugin;
 use projectiles::ClientProjectilePlugin;
-use weapons::ClientWeaponsPlugin;
+use weapons::*;
 
 pub struct GameClientPlugin;
 impl Plugin for GameClientPlugin {
@@ -66,6 +66,7 @@ impl Plugin for ClientRenderPlugin {
             MainMenuPlugin,
             MPSelectionMenuPlugin,
             ClientPlayerRenderPlugin,
+            ClientDiceGuardRenderPlugin,
         ));
     }
 }

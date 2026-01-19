@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 mod dice_guard;
-use dice_guard::ClientDiceGuardPlugin;
+pub use dice_guard::*;
 
 pub struct ClientWeaponsPlugin;
 impl Plugin for ClientWeaponsPlugin {

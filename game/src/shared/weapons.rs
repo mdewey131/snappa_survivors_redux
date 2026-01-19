@@ -11,8 +11,8 @@ use crate::{
     utils::AssetFolder,
 };
 
-pub mod dice_guard;
-use dice_guard::DiceGuard;
+mod dice_guard;
+pub use dice_guard::*;
 
 pub struct SharedWeaponPlugin;
 

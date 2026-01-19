@@ -6,7 +6,7 @@ use crate::{
         game_rules::DedicatedServerGameRulesPlugin,
         lobby::DedicatedServerLobbyPlugin,
         players::ServerPlayerRenderPlugin,
-        weapons::DedicatedServerWeaponsPlugin,
+        weapons::*,
     },
     shared::{
         SEND_INTERVAL, SERVER_PORT, SHARED_SETTINGS, SINGLE_PLAYER_SERVER_PORT,
@@ -125,7 +125,11 @@ impl Plugin for DedicatedServerPlugin {
 pub struct DedicatedServerRendererPlugin;
 impl Plugin for DedicatedServerRendererPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins((ServerPlayerRenderPlugin, ServerEnemyRenderPlugin));
+        app.add_plugins((
+            ServerPlayerRenderPlugin,
+            ServerEnemyRenderPlugin,
+            DedicatedServerDiceGuardRenderPlugin,
+        ));
     }
 }
 

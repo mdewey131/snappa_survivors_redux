@@ -1,4 +1,4 @@
-use crate::{shared::{game_kinds::{CurrentGameKind, MultiPlayerComponentOptions}, game_object_spawning::spawn_game_object, projectiles::Projectile}, utils::CreatedBy};
+use crate::{shared::{combat::Cooldown, game_kinds::{CurrentGameKind, MultiPlayerComponentOptions}, game_object_spawning::spawn_game_object, projectiles::Projectile, weapons::DeactivateWeapon}, utils::{CreatedBy, CreatorOf}};
 
 use super::ActivateWeapon;
 use avian2d::prelude::*;
@@ -49,24 +49,22 @@ pub fn dice_guard_activate<QF: QueryFilter>(
                 proj,
                 DiceGuardProjectile,
                 Position(pos),
-                CreatedBy(parent.parent())
+                CreatedBy(dg_ent)
             ));
         }
     }
 }
 
-/*
-fn dice_guard_deactivate(
+pub fn dice_guard_deactivate<QF: QueryFilter>(
     trigger: On<DeactivateWeapon>,
     mut commands: Commands,
-    q_dice_guards: Query<(Entity, &CreatorOf, &StatsList), With<DiceGuard>>,
+    q_dice_guards: Query<(Entity, &CreatorOf, /*&StatsList*/), (With<DiceGuard>, QF)>,
 ) {
-    if let Ok((ent, created, stats)) = q_dice_guards.get(trigger.entity) {
+    if let Ok((ent, created, /*stats*/)) = q_dice_guards.get(trigger.entity) {
         for proj in created.iter() {
             commands.entity(proj).despawn();
         }
-        let cd = **stats.get_current(StatKind::CooldownRate).unwrap();
+        let cd = 5.0; //**stats.get_current(StatKind::CooldownRate).unwrap();
         commands.entity(ent).insert(Cooldown::new(cd));
     }
 }
-*/
