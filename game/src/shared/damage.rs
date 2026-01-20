@@ -1,10 +1,21 @@
-use bevy::prelude::*;
+use bevy::{ecs::entity::MapEntities, prelude::*};
+use lightyear::prelude::{AppComponentExt, PredictionRegistrationExt};
 use serde::{Deserialize, Serialize};
 
 use crate::shared::{combat::CombatSystemSet, stats::components::Health};
 
-#[derive(Component, Debug, Clone, Reflect, Deref, DerefMut, Default)]
+#[derive(
+    Component, Debug, Clone, Reflect, Deref, DerefMut, Default, PartialEq, Serialize, Deserialize,
+)]
 pub struct DamageBuffer(Vec<DamageInstance>);
+
+impl MapEntities for DamageBuffer {
+    fn map_entities<E: EntityMapper>(&mut self, entity_mapper: &mut E) {
+        for inst in &mut self.0 {
+            inst.damage_source = entity_mapper.get_mapped(inst.damage_source);
+        }
+    }
+}
 
 #[derive(Clone, Copy, Serialize, Deserialize, PartialEq, PartialOrd, Reflect, Debug)]
 pub struct DamageInstance {
@@ -29,6 +40,15 @@ impl Plugin for SharedDamagePlugin {
                 .chain()
                 .in_set(CombatSystemSet::Cleanup),),
         );
+    }
+}
+
+pub struct DamageProtocolPlugin;
+impl Plugin for DamageProtocolPlugin {
+    fn build(&self, app: &mut App) {
+        app.register_component::<DamageBuffer>()
+            .add_prediction()
+            .add_map_entities();
     }
 }
 

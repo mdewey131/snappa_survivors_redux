@@ -119,12 +119,13 @@ pub fn enemy_state_machine<EnemyQF: QueryFilter, PlayerQF: QueryFilter>(
             &Position,
             &mut LinearVelocity,
             Option<&mut EnemySpawnTimer>,
+            Has<Collider>,
         ),
         (EnemyQF),
     >,
     q_targets: Query<(Entity, &Position), (With<Player>, Without<Enemy>, PlayerQF)>,
 ) {
-    for (ent, mut enemy, e_pos, mut e_lv, mut m_timer) in &mut q_enemy {
+    for (ent, mut enemy, e_pos, mut e_lv, mut m_timer, has_col) in &mut q_enemy {
         match enemy.state {
             EnemyState::Spawning => {
                 let timer = if m_timer.is_none() {
@@ -160,7 +161,13 @@ pub fn enemy_state_machine<EnemyQF: QueryFilter, PlayerQF: QueryFilter>(
                     enemy.state = EnemyState::LookForTargets
                 }
             }
-            EnemyState::Dying => {}
+            EnemyState::Dying => {
+                // Proxy for "we haven't run this before"
+                if has_col {
+                    commands.entity(ent).remove::<Collider>();
+                    e_lv.0 = Vec2::ZERO;
+                }
+            }
         }
     }
 }
@@ -187,12 +194,15 @@ pub fn on_enemy_death(
     trigger: On<Add, Dead>,
     mut commands: Commands,
     gk: Res<CurrentGameKind>,
-    q_enemy: Query<(&Position, &Enemy)>,
+    mut q_enemy: Query<(&Position, &mut Enemy)>,
 ) {
-    if let Ok((pos, enemy)) = q_enemy.get(trigger.entity) {
+    if let Ok((pos, mut enemy)) = q_enemy.get_mut(trigger.entity) {
         let xp_amt = match enemy.kind {
             EnemyKind::FacelessMan => 1.0,
         };
+
+        enemy.state = EnemyState::Dying;
+
         let _xp = spawn_game_object(
             &mut commands,
             gk.0.unwrap(),

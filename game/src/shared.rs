@@ -29,7 +29,7 @@ pub mod weapons;
 
 use colliders::*;
 use combat::CombatPlugin;
-use damage::SharedDamagePlugin;
+use damage::*;
 use despawn_timer::DespawnTimerPlugin;
 use enemies::EnemyProtocolPlugin;
 use game_kinds::GameKindsPlugin;
@@ -107,6 +107,7 @@ impl Plugin for GameProtocolPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((
             CollidersProtocolPlugin,
+            DamageProtocolPlugin,
             EnemyProtocolPlugin,
             LobbyProtocolPlugin,
             PlayerProtocolPlugin,

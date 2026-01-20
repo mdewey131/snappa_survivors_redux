@@ -1,5 +1,5 @@
 use avian2d::prelude::*;
-use bevy::{platform::collections::HashMap, prelude::*};
+use bevy::{ecs::entity::MapEntities, platform::collections::HashMap, prelude::*};
 use lightyear::{prediction::SyncComponent, prelude::*};
 use serde::{Deserialize, Serialize};
 
@@ -35,6 +35,9 @@ impl Plugin for CollidersProtocolPlugin {
     fn build(&self, app: &mut App) {
         app.register_component::<AppliesCollisionEffect<ApplyDamage>>()
             .add_prediction();
+        app.register_component::<RecentlyCollided>()
+            .add_prediction()
+            .add_map_entities();
     }
 }
 
@@ -178,10 +181,6 @@ fn collision_damage_system(
             if let Ok(applies_effect) = q_applies_damage.get(applying_entity) {
                 if (layers.memberships.0 & applies_effect.to.0) != 0 {
                     if recent_collided.with.get(&applying_entity).is_none() {
-                        info!(
-                            "Firing collision damage from {:?} to {:?}",
-                            applying_entity, ent_to_damage
-                        );
                         recent_collided
                             .with
                             .insert(applying_entity, CollisionDamageTimer::new());
@@ -203,11 +202,6 @@ fn tick_rec_collided(
         let mut to_rm = Vec::new();
         for (ent, ref mut timer) in recent.with.iter_mut() {
             timer.tick(time.delta());
-            info!(
-                "Ticking timer. Remaining: {:?}, game time duration: {:?}",
-                timer.remaining_secs(),
-                time.delta()
-            );
             if timer.just_finished() {
                 to_rm.push(ent.clone())
             }
@@ -219,12 +213,30 @@ fn tick_rec_collided(
 }
 
 /// A component that stores all of the entities that this entity has recently collided with.
-#[derive(Component, Default)]
+#[derive(Component, Default, Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct RecentlyCollided {
     pub with: HashMap<Entity, CollisionDamageTimer>,
 }
+impl MapEntities for RecentlyCollided {
+    fn map_entities<E: EntityMapper>(&mut self, entity_mapper: &mut E) {
+        // visit keys
+        let mut to_rep = Vec::new();
+        for k in self.with.keys() {
+            if self.with.get(k).is_some() {
+                to_rep.push(*k);
+            }
+        }
+        for ent in to_rep.into_iter() {
+            let val = self.with.remove(&ent);
+            if let Some(v) = val {
+                let nk = entity_mapper.get_mapped(ent);
+                self.with.insert(nk, v);
+            }
+        }
+    }
+}
 
-#[derive(Debug, Deref, DerefMut, Clone)]
+#[derive(Debug, Deref, DerefMut, Clone, Serialize, Deserialize, PartialEq)]
 pub struct CollisionDamageTimer(pub Timer);
 impl CollisionDamageTimer {
     pub fn new() -> Self {
