@@ -7,6 +7,7 @@ pub mod editor;
 pub mod xp;
 
 use components::*;
+use xp::LevelManager;
 
 use crate::utils::AssetFolder;
 

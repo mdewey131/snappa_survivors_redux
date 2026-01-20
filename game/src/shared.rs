@@ -43,7 +43,7 @@ use weapons::{SharedWeaponPlugin, WeaponProtocolPlugin};
 use crate::{
     shared::{
         players::{Player, PlayerProtocolPlugin},
-        stats::components::StatsProtocolPlugin,
+        stats::StatsProtocolPlugin,
     },
     utils::CreatedBy,
 };
