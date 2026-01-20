@@ -1,7 +1,7 @@
 use crate::{
     shared::{
-        colliders::{ColliderTypes, CommonColliderBundle},
-        game_kinds::MultiPlayerComponentOptions,
+        colliders::{ColliderTypes, CommonColliderBundle, RecentlyCollided},
+        game_kinds::{MultiPlayerComponentOptions, SinglePlayer},
         inputs::Movement,
         stats::components::MovementSpeed,
     },
@@ -10,7 +10,7 @@ use crate::{
 use avian2d::prelude::*;
 use bevy::{ecs::query::QueryFilter, prelude::*};
 use bevy_enhanced_input::prelude::*;
-use lightyear::prelude::{AppComponentExt, PeerId};
+use lightyear::prelude::*;
 use serde::{Deserialize, Serialize};
 
 /// The component that describes a player.
@@ -83,5 +83,32 @@ pub fn player_movement<QF: QueryFilter>(
         if let Ok((ms, mut lv)) = q_lv.get_mut(a_of.entity()) {
             shared_player_movement(lv, ms.current, val.as_axis2d());
         }
+    }
+}
+
+pub fn add_non_networked_player_components<QF: QueryFilter>(
+    trigger: On<Add, Player>,
+    mut commands: Commands,
+    q_pred: Query<(Has<Controlled>, Has<SinglePlayer>, &Player), QF>,
+) {
+    if let Ok((cont, sp, p)) = q_pred.get(trigger.entity) {
+        if cont || sp {
+            commands.spawn((
+                ActionOf::<Player>::new(trigger.entity),
+                Action::<Movement>::new(),
+                Bindings::spawn(Cardinal::wasd_keys()),
+                // This isn't in the example, but
+                // it seems that you need this so that the
+                // replication works in a single player scenario. It doesn't appear
+                // to affect MP too much
+                Replicate::to_server(),
+            ));
+        }
+        // regardless, add the collider components
+        commands.entity(trigger.entity).insert((
+            CommonColliderBundle::from(*p),
+            Name::from("Player"),
+            RecentlyCollided::default(),
+        ));
     }
 }

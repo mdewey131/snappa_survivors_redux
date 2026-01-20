@@ -8,9 +8,9 @@ use crate::{
     shared::{
         colliders::CommonColliderBundle,
         combat::CombatSystemSet,
-        game_kinds::SinglePlayer,
+        game_kinds::{DefaultClientFilter, SinglePlayer},
         inputs::Movement,
-        players::{Player, player_movement},
+        players::*,
     },
 };
 
@@ -23,8 +23,7 @@ impl Plugin for ClientPlayerPlugin {
             (player_movement::<Or<(With<Predicted>, With<SinglePlayer>)>>)
                 .in_set(CombatSystemSet::Combat),
         )
-        .add_observer(handle_predicted_player_spawn)
-        .add_observer(handle_sp_player_spawn);
+        .add_observer(add_non_networked_player_components::<DefaultClientFilter>);
     }
 }
 
@@ -35,52 +34,5 @@ impl Plugin for ClientPlayerRenderPlugin {
             Update,
             rendering_on_player_add::<Or<(With<SinglePlayer>, With<Predicted>)>>,
         );
-    }
-}
-
-fn handle_predicted_player_spawn(
-    trigger: On<Add, Player>,
-    mut commands: Commands,
-    q_pred: Query<(Has<Controlled>, &Player), With<Predicted>>,
-) {
-    if let Ok((cont, p)) = q_pred.get(trigger.entity) {
-        if cont {
-            commands.spawn((
-                ActionOf::<Player>::new(trigger.entity),
-                Action::<Movement>::new(),
-                Bindings::spawn(Cardinal::wasd_keys()),
-                // This isn't in the example, but
-                // it seems that you need this so that the
-                // replication works in a single player scenario. It doesn't appear
-                // to affect MP too much
-                Replicate::to_server(),
-            ));
-        }
-        // regardless, add the collider components
-        commands
-            .entity(trigger.entity)
-            .insert(CommonColliderBundle::from(*p));
-    }
-}
-
-fn handle_sp_player_spawn(
-    trigger: On<Add, Player>,
-    mut commands: Commands,
-    q_pred: Query<&Player, With<SinglePlayer>>,
-) {
-    if let Ok(p) = q_pred.get(trigger.entity) {
-        commands.spawn((
-            ActionOf::<Player>::new(trigger.entity),
-            Action::<Movement>::new(),
-            Bindings::spawn(Cardinal::wasd_keys()),
-            // This isn't in the example, but
-            // it seems that you need this so that the
-            // replication works in a single player scenario. It doesn't appear
-            // to affect MP too much
-            Replicate::to_server(),
-        ));
-        commands
-            .entity(trigger.entity)
-            .insert(CommonColliderBundle::from(*p));
     }
 }

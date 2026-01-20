@@ -174,6 +174,7 @@ pub fn add_non_replicated_enemy_components<QF: QueryFilter>(
 ) {
     if let Ok(en) = q_to_attach.get(trigger.entity) {
         commands.entity(trigger.entity).insert((
+            Name::from("Enemy"),
             EnemySpawnTimer::default(),
             CommonColliderBundle::from(*en),
             RecentlyCollided::default(),

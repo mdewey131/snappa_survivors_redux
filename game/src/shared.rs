@@ -71,6 +71,7 @@ impl Plugin for GameSharedPlugin {
             DespawnTimerPlugin,
             GameProtocolPlugin,
             GameKindsPlugin,
+            SharedColliderPlugin,
             SharedDamagePlugin,
             SharedStatesPlugin,
             SharedGameRulesPlugin,

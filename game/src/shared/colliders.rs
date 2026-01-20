@@ -161,6 +161,7 @@ impl CollisionEffect for ApplyDamage {
 /// In this system, we want to add entities to the list in the event that they collide with the entity, but are
 /// not in the list of entities that have been recently collided with.
 /// This can happen because of collision start, or as the result of an ongoing collision. So, we use the Collisions param
+/// rather than reading from the messages
 fn collision_damage_system(
     collisions: Collisions,
     mut commands: Commands,

@@ -7,5 +7,9 @@
         max: 50.0,
         current: 50.0,
     )),
+    MS((
+        current: 50.0,
+        cap: 500.0,
+    )),
     Luck((1.0)),
 ])

@@ -1,1 +1,7 @@
-([Health((max: 50.0, current: 50.0))])
+([
+    Damage((5.0)),
+    Health((
+        max: 50.0,
+        current: 50.0,
+    )),
+])
