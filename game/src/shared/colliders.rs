@@ -213,6 +213,10 @@ fn tick_rec_collided(
 }
 
 /// A component that stores all of the entities that this entity has recently collided with.
+///
+/// This is predicted over the network, which may be a decision that I want to revisit in the future.
+/// But, that is the most surefire way to synchronize the client and the server in terms of when collisions
+/// should trigger damage effects, so we keep it for now
 #[derive(Component, Default, Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct RecentlyCollided {
     pub with: HashMap<Entity, CollisionDamageTimer>,

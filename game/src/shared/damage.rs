@@ -26,6 +26,17 @@ pub struct DamageInstance {
 #[derive(Component, Clone, Copy, Serialize, Deserialize, PartialEq, PartialOrd, Reflect, Debug)]
 pub struct Dead;
 
+/// Added on entities that are dead, in order to determine when we're going to despawn these units.
+///
+/// This should also be looked for in order to figure out some animation elements, like a dying animation
+#[derive(Component, Clone, Deref, DerefMut, Serialize, Deserialize, PartialEq, Reflect, Debug)]
+pub struct DeathTimer(pub Timer);
+impl DeathTimer {
+    pub fn new(secs: f32) -> Self {
+        Self(Timer::from_seconds(secs, TimerMode::Once))
+    }
+}
+
 pub struct SharedDamagePlugin;
 
 impl Plugin for SharedDamagePlugin {
@@ -33,6 +44,7 @@ impl Plugin for SharedDamagePlugin {
         app.add_message::<EntityKilledMessage>().add_systems(
             FixedPostUpdate,
             ((
+                tick_death_timer,
                 apply_frame_damage,
                 clear_damage_buffer,
                 apply_dead_component,
@@ -111,5 +123,18 @@ fn apply_dead_component(
         /*if q_check.get(e.dead_entity).is_err()  { */
         commands.entity(e.dead_entity).insert(Dead);
         //}
+    }
+}
+
+fn tick_death_timer(
+    time: Res<Time<Fixed>>,
+    mut commands: Commands,
+    mut q_timer: Query<(Entity, &mut DeathTimer)>,
+) {
+    for (time_ent, mut death_timer) in &mut q_timer {
+        death_timer.tick(time.delta());
+        if death_timer.just_finished() {
+            commands.entity(time_ent).despawn();
+        }
     }
 }

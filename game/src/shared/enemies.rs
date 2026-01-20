@@ -6,8 +6,13 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     shared::{
-        colliders::*, damage::Dead, drops::XPDrop, game_kinds::*, game_object_spawning::*,
-        players::Player, stats::RawStatsList,
+        colliders::*,
+        damage::{Dead, DeathTimer},
+        drops::XPDrop,
+        game_kinds::*,
+        game_object_spawning::*,
+        players::Player,
+        stats::RawStatsList,
     },
     utils::AssetFolder,
 };
@@ -164,7 +169,10 @@ pub fn enemy_state_machine<EnemyQF: QueryFilter, PlayerQF: QueryFilter>(
             EnemyState::Dying => {
                 // Proxy for "we haven't run this before"
                 if has_col {
-                    commands.entity(ent).remove::<Collider>();
+                    commands
+                        .entity(ent)
+                        .remove::<Collider>()
+                        .insert(DeathTimer::new(0.5));
                     e_lv.0 = Vec2::ZERO;
                 }
             }
