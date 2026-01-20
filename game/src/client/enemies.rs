@@ -30,7 +30,8 @@ impl Plugin for ClientEnemyPlugin {
             )
                 .in_set(CombatSystemSet::Combat),
         )
-        .add_observer(add_non_replicated_enemy_components::<DefaultClientFilter>);
+        .add_observer(add_non_replicated_enemy_components::<DefaultClientFilter>)
+        .add_observer(on_enemy_death);
     }
 }
 

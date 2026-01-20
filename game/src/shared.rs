@@ -42,6 +42,7 @@ use weapons::{SharedWeaponPlugin, WeaponProtocolPlugin};
 
 use crate::{
     shared::{
+        drops::SharedDropsPlugin,
         players::{Player, PlayerProtocolPlugin},
         stats::StatsProtocolPlugin,
     },
@@ -74,6 +75,7 @@ impl Plugin for GameSharedPlugin {
             GameKindsPlugin,
             SharedColliderPlugin,
             SharedDamagePlugin,
+            SharedDropsPlugin,
             SharedStatesPlugin,
             SharedGameRulesPlugin,
             SharedWeaponPlugin,

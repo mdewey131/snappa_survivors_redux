@@ -1,7 +1,8 @@
 use crate::{
     shared::{
         colliders::{ColliderTypes, CommonColliderBundle, RecentlyCollided},
-        game_kinds::{MultiPlayerComponentOptions, SinglePlayer},
+        damage::Dead,
+        game_kinds::{CurrentGameKind, MultiPlayerComponentOptions, SinglePlayer},
         inputs::Movement,
         stats::components::MovementSpeed,
     },
@@ -77,7 +78,7 @@ fn shared_player_movement(mut velo: Mut<LinearVelocity>, ms: f32, input: Vec2) {
 
 pub fn player_movement<QF: QueryFilter>(
     q_mv_action: Query<(&ActionValue, &ActionOf<Player>), With<Action<Movement>>>,
-    mut q_lv: Query<(&MovementSpeed, &mut LinearVelocity), (QF, With<Player>)>,
+    mut q_lv: Query<(&MovementSpeed, &mut LinearVelocity), (QF, With<Player>, Without<Dead>)>,
 ) {
     for (val, a_of) in &q_mv_action {
         if let Ok((ms, mut lv)) = q_lv.get_mut(a_of.entity()) {
@@ -112,3 +113,13 @@ pub fn add_non_networked_player_components<QF: QueryFilter>(
         ));
     }
 }
+
+// On death, we want to spawn a region that can be used for players to revive their friend
+/*
+pub fn on_death(
+    trigger: On<Add, Dead>,
+    gk: Res<CurrentGameKind>,
+    q_player: Query<(), With<Player>>,
+) {
+}
+ */

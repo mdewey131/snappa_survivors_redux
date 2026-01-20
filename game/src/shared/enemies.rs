@@ -6,8 +6,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     shared::{
-        colliders::*, damage::Dead, game_kinds::*, game_object_spawning::*, players::Player,
-        stats::RawStatsList,
+        colliders::*, damage::Dead, drops::XPDrop, game_kinds::*, game_object_spawning::*,
+        players::Player, stats::RawStatsList,
     },
     utils::AssetFolder,
 };
@@ -183,17 +183,24 @@ pub fn add_non_replicated_enemy_components<QF: QueryFilter>(
     }
 }
 
-/*
 pub fn on_enemy_death(
     trigger: On<Add, Dead>,
     mut commands: Commands,
-    q_enemy: Query<&Position, With<Enemy>>
+    gk: Res<CurrentGameKind>,
+    q_enemy: Query<(&Position, &Enemy)>,
 ) {
-    if let Ok(pos) = q_enemy.get(trigger.entity) {\
-        commands.spawn((
-            pos.clone(),
-
-        ))
+    if let Ok((pos, enemy)) = q_enemy.get(trigger.entity) {
+        let xp_amt = match enemy.kind {
+            EnemyKind::FacelessMan => 1.0,
+        };
+        let _xp = spawn_game_object(
+            &mut commands,
+            gk.0.unwrap(),
+            MultiPlayerComponentOptions {
+                pred: true,
+                interp: false,
+            },
+            (pos.clone(), XPDrop(xp_amt)),
+        );
     }
 }
- */
