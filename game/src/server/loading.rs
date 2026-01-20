@@ -3,7 +3,7 @@ use crate::shared::{
     game_object_spawning::spawn_game_object,
     players::{CharacterKind, Player},
     states::*,
-    stats::RawStatsList,
+    stats::{RawStatsList, xp::add_level_manager},
     weapons::{WeaponKind, add_weapon_to_player},
 };
 use avian2d::prelude::Position;
@@ -19,7 +19,7 @@ impl Plugin for DedicatedServerLoadingPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             OnEnter(AppState::LoadingLevel),
-            (spawn_player_characters, tmp_move_to_game).chain(),
+            (add_level_manager, spawn_player_characters, tmp_move_to_game).chain(),
         );
     }
 }

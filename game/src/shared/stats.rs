@@ -1,14 +1,36 @@
-use std::marker::PhantomData;
-
 use bevy::prelude::*;
+use lightyear::prelude::*;
 use serde::{Deserialize, Serialize};
 
 pub mod components;
 pub mod editor;
+pub mod xp;
 
 use components::*;
 
 use crate::utils::AssetFolder;
+
+pub struct StatsProtocolPlugin;
+
+impl Plugin for StatsProtocolPlugin {
+    fn build(&self, app: &mut App) {
+        app.register_component::<AttackRange>().add_prediction();
+        app.register_component::<CritChance>().add_prediction();
+        app.register_component::<CritDamage>().add_prediction();
+        app.register_component::<CooldownRate>().add_prediction();
+        app.register_component::<Damage>().add_prediction();
+        app.register_component::<EffectSize>().add_prediction();
+        app.register_component::<EffectDuration>().add_prediction();
+        app.register_component::<Health>().add_prediction();
+        app.register_component::<Luck>().add_prediction();
+        app.register_component::<MovementSpeed>().add_prediction();
+        app.register_component::<PickupRadius>().add_prediction();
+        app.register_component::<ProjectileCount>().add_prediction();
+        app.register_component::<ProjectileSpeed>().add_prediction();
+        app.register_component::<XPGain>().add_prediction();
+        app.register_component::<LevelManager>().add_prediction();
+    }
+}
 
 #[derive(Debug, Clone, Copy, Deserialize, Serialize, Reflect)]
 #[reflect(Default)]

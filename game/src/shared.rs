@@ -14,6 +14,7 @@ pub mod colliders;
 pub mod combat;
 pub mod damage;
 pub mod despawn_timer;
+pub mod drops;
 pub mod enemies;
 pub mod game_kinds;
 pub mod game_object_spawning;
