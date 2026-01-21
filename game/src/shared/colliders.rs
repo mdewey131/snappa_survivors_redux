@@ -23,7 +23,7 @@ impl Plugin for SharedColliderPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             FixedUpdate,
-            (tick_rec_collided)
+            (tick_rec_collided, update_child_colliders_position)
                 .in_set(CombatSystemSet::Combat)
                 .run_if(in_state(InGameState::InGame)),
         )
@@ -216,5 +216,16 @@ pub struct CollisionDamageTimer(pub Timer);
 impl CollisionDamageTimer {
     pub fn new() -> Self {
         Self(Timer::from_seconds(2.0, TimerMode::Once))
+    }
+}
+
+fn update_child_colliders_position(
+    mut q_children: Query<(&ChildOf, &mut Position)>,
+    q_parent: Query<&Position, Without<ChildOf>>,
+) {
+    for (childof, mut c_pos) in &mut q_children {
+        if let Ok(p_pos) = q_parent.get(childof.0) {
+            c_pos.0 = p_pos.0
+        }
     }
 }
