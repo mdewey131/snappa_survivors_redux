@@ -15,6 +15,7 @@ pub struct StatsProtocolPlugin;
 
 impl Plugin for StatsProtocolPlugin {
     fn build(&self, app: &mut App) {
+        app.register_component::<Armor>().add_prediction();
         app.register_component::<AttackRange>().add_prediction();
         app.register_component::<CritChance>().add_prediction();
         app.register_component::<CritDamage>().add_prediction();
@@ -23,11 +24,15 @@ impl Plugin for StatsProtocolPlugin {
         app.register_component::<EffectSize>().add_prediction();
         app.register_component::<EffectDuration>().add_prediction();
         app.register_component::<Health>().add_prediction();
+        app.register_component::<HealthRegen>().add_prediction();
         app.register_component::<Luck>().add_prediction();
+        app.register_component::<LifeSteal>().add_prediction();
         app.register_component::<MovementSpeed>().add_prediction();
         app.register_component::<PickupRadius>().add_prediction();
         app.register_component::<ProjectileCount>().add_prediction();
         app.register_component::<ProjectileSpeed>().add_prediction();
+        app.register_component::<Shield>().add_prediction();
+        app.register_component::<Thorns>().add_prediction();
         app.register_component::<XPGain>().add_prediction();
         app.register_component::<LevelManager>().add_prediction();
     }
@@ -37,18 +42,24 @@ impl Plugin for StatsProtocolPlugin {
 #[reflect(Default)]
 pub enum StatKind {
     AttackRange(AttackRange),
+    Armor(Armor),
     CritChance(CritChance),
     CritDamage(CritDamage),
     CDR(CooldownRate),
     Damage(Damage),
     EffDuration(EffectDuration),
     EffSize(EffectSize),
+    Evasion(Evasion),
     Health(Health),
+    HealthRegen(HPRegen),
     Luck(Luck),
+    LifeSteal(LifeSteal),
     MS(MovementSpeed),
     PickupR(PickupRadius),
     ProjCount(ProjectileCount),
     ProjSpeed(ProjectileSpeed),
+    Shield(Shield),
+    Thorns(Thorns),
     XPGain(XPGain),
 }
 
@@ -63,6 +74,9 @@ impl StatKind {
         match self {
             Self::AttackRange(r) => {
                 ec.insert(*r);
+            }
+            Self::Armor(a) => {
+                ec.insert(*a);
             }
             Self::CDR(c) => {
                 ec.insert(*c);
@@ -82,11 +96,20 @@ impl StatKind {
             Self::EffSize(es) => {
                 ec.insert(*es);
             }
+            Self::Evasion(ev) => {
+                ec.insert(*ev);
+            }
             Self::Health(hp) => {
                 ec.insert(*hp);
             }
+            Self::HealthRegen(hr) => {
+                ec.insert(*hr);
+            }
             Self::Luck(l) => {
                 ec.insert(*l);
+            }
+            Self::LifeSteal(ls) => {
+                ec.insert(*ls);
             }
             Self::MS(m) => {
                 ec.insert(*m);
@@ -99,6 +122,12 @@ impl StatKind {
             }
             Self::ProjSpeed(ps) => {
                 ec.insert(*ps);
+            }
+            Self::Shield(s) => {
+                ec.insert(*s);
+            }
+            Self::Thorns(t) => {
+                ec.insert(*t);
             }
             Self::XPGain(xp) => {
                 ec.insert(*xp);

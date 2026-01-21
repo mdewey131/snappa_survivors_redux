@@ -26,6 +26,7 @@ pub mod projectiles;
 pub mod states;
 pub mod stats;
 pub mod weapons;
+pub mod upgrades::*;
 
 use colliders::*;
 use combat::CombatPlugin;

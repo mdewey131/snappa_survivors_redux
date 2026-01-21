@@ -8,6 +8,10 @@ pub struct AttackRange(pub f32);
 
 #[derive(Component, Debug, Clone, Copy, Deserialize, Serialize, Default, Reflect, PartialEq)]
 #[reflect(Default)]
+pub struct Armor(pub f32);
+
+#[derive(Component, Debug, Clone, Copy, Deserialize, Serialize, Default, Reflect, PartialEq)]
+#[reflect(Default)]
 pub struct CritChance(pub f32);
 
 #[derive(Component, Debug, Clone, Copy, Deserialize, Serialize, Default, Reflect, PartialEq)]
@@ -32,6 +36,10 @@ pub struct EffectSize(pub f32);
 
 #[derive(Component, Debug, Clone, Copy, Deserialize, Serialize, Default, Reflect, PartialEq)]
 #[reflect(Default)]
+pub struct Evasion(pub f32);
+
+#[derive(Component, Debug, Clone, Copy, Deserialize, Serialize, Default, Reflect, PartialEq)]
+#[reflect(Default)]
 #[require(DamageBuffer)]
 pub struct Health {
     pub max: f32,
@@ -40,7 +48,15 @@ pub struct Health {
 
 #[derive(Component, Debug, Clone, Copy, Deserialize, Serialize, Default, Reflect, PartialEq)]
 #[reflect(Default)]
+pub struct HealthRegen(pub f32);
+
+#[derive(Component, Debug, Clone, Copy, Deserialize, Serialize, Default, Reflect, PartialEq)]
+#[reflect(Default)]
 pub struct Luck(pub f32);
+
+#[derive(Component, Debug, Clone, Copy, Deserialize, Serialize, Default, Reflect, PartialEq)]
+#[reflect(Default)]
+pub struct LifeSteal(pub f32);
 
 #[derive(Component, Debug, Clone, Copy, Deserialize, Serialize, Default, Reflect, PartialEq)]
 #[reflect(Default)]
@@ -60,6 +76,14 @@ pub struct ProjectileCount(pub u8);
 #[derive(Component, Debug, Clone, Copy, Deserialize, Serialize, Default, Reflect, PartialEq)]
 #[reflect(Default)]
 pub struct ProjectileSpeed(pub f32);
+
+#[derive(Component, Debug, Clone, Copy, Deserialize, Serialize, Default, Reflect, PartialEq)]
+#[reflect(Default)]
+pub struct Shield(pub f32);
+
+#[derive(Component, Debug, Clone, Copy, Deserialize, Serialize, Default, Reflect, PartialEq)]
+#[reflect(Default)]
+pub struct Thorns(pub f32);
 
 #[derive(Component, Debug, Clone, Copy, Deserialize, Serialize, Default, Reflect, PartialEq)]
 #[reflect(Default)]

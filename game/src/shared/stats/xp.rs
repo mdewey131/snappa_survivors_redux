@@ -8,10 +8,14 @@ use crate::shared::{
     states::InGameState,
 };
 
+/// Lets us know that there has been a level up for players
+#[derive(Message)]
+pub struct LevelUpMessage;
+
 pub struct SharedXPPlugin;
 impl Plugin for SharedXPPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(
+        app.add_message::<LevelUpMessage>().add_systems(
             FixedUpdate,
             (update_xp_manager)
                 .in_set(CombatSystemSet::Combat)
@@ -40,9 +44,12 @@ impl Default for LevelManager {
     }
 }
 
-pub fn update_xp_manager(mut q_level: Single<&mut LevelManager>) {
+pub fn update_xp_manager(
+    mut level_up_messages: MessageWriter<LevelUpMessage>,
+    mut q_level: Single<&mut LevelManager>,
+) {
     if q_level.c_xp >= q_level.next_max {
-        info!("Level up!");
+        level_up_messages.send(LevelUpMessage);
         q_level.c_level += 1;
         q_level.prev_max = q_level.next_max;
         q_level.next_max = (q_level.c_level as f32 * 5.0).powf(2.0);
