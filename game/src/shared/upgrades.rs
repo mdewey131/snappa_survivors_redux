@@ -3,7 +3,7 @@ use bevy::prelude::*;
 
 #[derive(Component)]
 pub struct Upgrade {
-    kind: UpgradeKind,
+    pub kind: UpgradeKind,
 }
 
 pub enum UpgradeKind {
@@ -30,5 +30,6 @@ pub enum StatUpgradeKind {
     PickupRadius,
     ProjectileCount,
     Shield,
+    Thorns,
     XPGain,
 }
