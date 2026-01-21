@@ -4,7 +4,7 @@ use crate::{
         damage::Dead,
         game_kinds::{CurrentGameKind, MultiPlayerComponentOptions, SinglePlayer},
         inputs::Movement,
-        stats::components::MovementSpeed,
+        stats::components::{MovementSpeed, PickupRadius},
     },
     utils::AssetFolder,
 };
@@ -65,6 +65,10 @@ impl From<CharacterKind> for AssetFolder {
     }
 }
 
+/// Marker component for the pickup radius that a player has
+#[derive(Component, Debug, Clone, Copy)]
+pub struct PlayerPickupRadius;
+
 pub struct PlayerProtocolPlugin;
 impl Plugin for PlayerProtocolPlugin {
     fn build(&self, app: &mut App) {
@@ -90,9 +94,9 @@ pub fn player_movement<QF: QueryFilter>(
 pub fn add_non_networked_player_components<QF: QueryFilter>(
     trigger: On<Add, Player>,
     mut commands: Commands,
-    q_pred: Query<(Has<Controlled>, Has<SinglePlayer>, &Player), QF>,
+    q_pred: Query<(Has<Controlled>, Has<SinglePlayer>, &Player, &PickupRadius), QF>,
 ) {
-    if let Ok((cont, sp, p)) = q_pred.get(trigger.entity) {
+    if let Ok((cont, sp, p, pur)) = q_pred.get(trigger.entity) {
         if cont || sp {
             commands.spawn((
                 ActionOf::<Player>::new(trigger.entity),
@@ -106,11 +110,22 @@ pub fn add_non_networked_player_components<QF: QueryFilter>(
             ));
         }
         // regardless, add the collider components
-        commands.entity(trigger.entity).insert((
-            CommonColliderBundle::from(*p),
-            Name::from("Player"),
-            RecentlyCollided::default(),
-        ));
+        commands
+            .entity(trigger.entity)
+            .insert((
+                CommonColliderBundle::from(*p),
+                Name::from("Player"),
+                RecentlyCollided::default(),
+            ))
+            .with_child((
+                Collider::circle(pur.0),
+                Sensor,
+                PlayerPickupRadius,
+                CollisionLayers::new(
+                    [ColliderTypes::PlayerPickupRadius],
+                    [ColliderTypes::RemotePickup],
+                ),
+            ));
     }
 }
 

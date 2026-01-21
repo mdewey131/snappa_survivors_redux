@@ -14,13 +14,13 @@ pub mod colliders;
 pub mod combat;
 pub mod damage;
 pub mod despawn_timer;
-pub mod drops;
 pub mod enemies;
 pub mod game_kinds;
 pub mod game_object_spawning;
 pub mod game_rules;
 pub mod inputs;
 pub mod lobby;
+pub mod pickups;
 pub mod players;
 pub mod projectiles;
 pub mod states;
@@ -42,7 +42,7 @@ use weapons::{SharedWeaponPlugin, WeaponProtocolPlugin};
 
 use crate::{
     shared::{
-        drops::SharedDropsPlugin,
+        pickups::SharedPickupsPlugin,
         players::{Player, PlayerProtocolPlugin},
         stats::StatsProtocolPlugin,
     },
@@ -75,7 +75,7 @@ impl Plugin for GameSharedPlugin {
             GameKindsPlugin,
             SharedColliderPlugin,
             SharedDamagePlugin,
-            SharedDropsPlugin,
+            SharedPickupsPlugin,
             SharedStatesPlugin,
             SharedGameRulesPlugin,
             SharedWeaponPlugin,

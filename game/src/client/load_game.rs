@@ -58,12 +58,10 @@ fn spawn_player_character(mut commands: Commands, game_kinds: Res<CurrentGameKin
     let p_ent = spawn_game_object(
         &mut commands,
         game_kinds.0.unwrap(),
+        Some(CharacterKind::Dewey),
         MultiPlayerComponentOptions::from(player),
         (player, Position(Vec2::new(pos.0, pos.1))),
     );
-
-    let stats = RawStatsList::import_stats(CharacterKind::Dewey);
-    stats.apply_to_character(p_ent, &mut commands);
 
     add_weapon_to_player(
         p_ent,

@@ -8,9 +8,9 @@ use crate::{
     shared::{
         colliders::*,
         damage::{Dead, DeathTimer},
-        drops::XPDrop,
         game_kinds::*,
         game_object_spawning::*,
+        pickups::XPPickup,
         players::Player,
         stats::RawStatsList,
     },
@@ -101,6 +101,7 @@ pub fn spawn_enemy(commands: &mut Commands, e_kind: EnemyKind, game_kind: GameKi
     let e_ent = spawn_game_object(
         commands,
         game_kind,
+        Some(e_kind),
         MultiPlayerComponentOptions::from(enemy),
         (
             enemy,
@@ -109,9 +110,6 @@ pub fn spawn_enemy(commands: &mut Commands, e_kind: EnemyKind, game_kind: GameKi
             AppliesCollisionEffect::new([ColliderTypes::Player].into(), ApplyDamage),
         ),
     );
-
-    let stats = RawStatsList::import_stats(e_kind);
-    stats.apply_to_character(e_ent, commands);
 }
 
 pub fn enemy_state_machine<EnemyQF: QueryFilter, PlayerQF: QueryFilter>(
@@ -214,11 +212,12 @@ pub fn on_enemy_death(
         let _xp = spawn_game_object(
             &mut commands,
             gk.0.unwrap(),
+            None::<()>,
             MultiPlayerComponentOptions {
                 pred: true,
                 interp: false,
             },
-            (pos.clone(), XPDrop(xp_amt)),
+            (pos.clone(), XPPickup::new(xp_amt)),
         );
     }
 }

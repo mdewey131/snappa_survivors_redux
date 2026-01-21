@@ -52,6 +52,7 @@ pub fn add_level_manager(mut commands: Commands, gk: Res<CurrentGameKind>) {
     let _lm = spawn_game_object(
         &mut commands,
         gk.0.unwrap(),
+        None::<()>,
         MultiPlayerComponentOptions {
             pred: true,
             interp: false,

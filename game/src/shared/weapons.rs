@@ -125,12 +125,10 @@ pub fn add_weapon_to_player(
     let w_ent = spawn_game_object(
         commands,
         game_kind,
+        Some(weapon_kind),
         MultiPlayerComponentOptions::from(weapon),
         (weapon, ChildOf(player)),
     );
-
-    let stats = RawStatsList::import_stats(weapon_kind);
-    stats.apply_to_character(w_ent, commands);
 
     /*
     let stats: RawStatsList =

@@ -69,6 +69,7 @@ pub fn dice_guard_activate<QF: QueryFilter>(
             spawn_game_object(
                 &mut commands,
                 game_kind.0.unwrap(),
+                None::<()>,
                 MultiPlayerComponentOptions::from(proj),
                 (
                     proj,

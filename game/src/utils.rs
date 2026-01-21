@@ -30,6 +30,11 @@ impl AssetFolder {
         format!("{}/{}", self.0, path)
     }
 }
+impl From<()> for AssetFolder {
+    fn from(value: ()) -> Self {
+        AssetFolder("".into())
+    }
+}
 
 #[derive(Component, Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Reflect)]
 #[relationship(relationship_target = CreatorOf)]
