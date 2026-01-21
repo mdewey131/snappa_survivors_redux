@@ -2,11 +2,23 @@ use bevy::{ecs::query::QueryFilter, prelude::*};
 use serde::{Deserialize, Serialize};
 
 use crate::shared::{
+    combat::CombatSystemSet,
     game_kinds::{CurrentGameKind, MultiPlayerComponentOptions},
     game_object_spawning::spawn_game_object,
-    players::Player,
-    stats::components::XPGain,
+    states::InGameState,
 };
+
+pub struct SharedXPPlugin;
+impl Plugin for SharedXPPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(
+            FixedUpdate,
+            (update_xp_manager)
+                .in_set(CombatSystemSet::Combat)
+                .run_if(in_state(InGameState::InGame)),
+        );
+    }
+}
 
 #[derive(Component, Debug, Clone, Serialize, Deserialize, PartialEq, Reflect)]
 pub struct LevelManager {
@@ -28,23 +40,12 @@ impl Default for LevelManager {
     }
 }
 
-#[derive(Message)]
-pub struct ApplyXPMessage {
-    pub amount: f32,
-}
-
-pub fn add_xp<QF: QueryFilter>(
-    mut mess: MessageReader<ApplyXPMessage>,
-    mut q_level: Single<&mut LevelManager>,
-    _q_stats: Query<&XPGain, (With<Player>, QF)>,
-) {
-    for xp in mess.read() {
-        q_level.c_xp += xp.amount;
-        if q_level.c_xp >= q_level.next_max {
-            q_level.c_level += 1;
-            q_level.prev_max = q_level.next_max;
-            q_level.next_max = (q_level.c_level as f32 * 10.0).powf(1.5);
-        }
+pub fn update_xp_manager(mut q_level: Single<&mut LevelManager>) {
+    if q_level.c_xp >= q_level.next_max {
+        info!("Level up!");
+        q_level.c_level += 1;
+        q_level.prev_max = q_level.next_max;
+        q_level.next_max = (q_level.c_level as f32 * 5.0).powf(2.0);
     }
 }
 

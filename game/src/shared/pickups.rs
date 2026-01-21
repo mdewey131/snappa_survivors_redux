@@ -1,4 +1,9 @@
-use crate::shared::{colliders::*, combat::CombatSystemSet, states::InGameState};
+use crate::shared::{
+    colliders::*,
+    combat::CombatSystemSet,
+    states::InGameState,
+    stats::{components::XPGain, xp::LevelManager},
+};
 use avian2d::prelude::*;
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -66,7 +71,8 @@ impl Plugin for SharedPickupsPlugin {
                 .in_set(CombatSystemSet::PostPhysicsSet)
                 .run_if(in_state(InGameState::InGame)),
         )
-        .add_observer(add_xp_collider_components);
+        .add_observer(add_xp_collider_components)
+        .add_observer(award_xp);
     }
 }
 
@@ -123,4 +129,21 @@ impl CollisionEffect for TriggerPickup {
     fn apply_to(&self, coms: &mut Commands, to: Entity, from: Entity) {
         coms.trigger(PickupTrigger::new(from, to));
     }
+}
+
+fn award_xp(
+    on: On<PickupTrigger>,
+    mut commands: Commands,
+    q_trigger: Query<&XPPickup>,
+    mut q_lm: Single<&mut LevelManager>,
+    q_xp: Query<&XPGain>,
+) {
+    let mult = q_xp.iter().fold(1.0, |acc, xp| acc * xp.0);
+    let xp_to_add = if let Ok(pickup) = q_trigger.get(on.entity) {
+        commands.entity(on.entity).despawn();
+        pickup.val * mult
+    } else {
+        0.0
+    };
+    q_lm.c_xp += xp_to_add
 }

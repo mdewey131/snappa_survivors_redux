@@ -38,6 +38,7 @@ use inputs::GameInputProtocolPlugin;
 use lobby::LobbyProtocolPlugin;
 use projectiles::ProjectileProtocolPlugin;
 use states::SharedStatesPlugin;
+use stats::xp::SharedXPPlugin;
 use weapons::{SharedWeaponPlugin, WeaponProtocolPlugin};
 
 use crate::{
@@ -79,6 +80,7 @@ impl Plugin for GameSharedPlugin {
             SharedStatesPlugin,
             SharedGameRulesPlugin,
             SharedWeaponPlugin,
+            SharedXPPlugin,
         ));
 
         app.add_plugins((
