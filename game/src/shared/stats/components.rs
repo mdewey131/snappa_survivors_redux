@@ -1,10 +1,34 @@
 use crate::shared::damage::DamageBuffer;
-use bevy::prelude::*;
-use serde::{Deserialize, Serialize};
+use bevy::{ecs::component::Mutable, prelude::*};
+use serde::{Deserialize, Serialize, de::DeserializeOwned};
+
+/// Uses trait defined getters and setters because we can't guarantee what the
+/// internals look like, and this allows us to recalculate the stats via relationships
+/// in a generic way
+pub trait Stat: Component {
+    fn get(&self) -> f32;
+    fn set(&mut self, val: f32);
+}
+
+/// A wrapper component around the base version of a stat
+#[derive(Component, Debug, Clone, Copy, Deserialize, Serialize, Default, Reflect, PartialEq)]
+pub struct Base<S: Stat>(pub S);
+
+/// A wrapper component around the current value of a stat
+#[derive(Component, Debug, Clone, Copy, Deserialize, Serialize, Default, Reflect, PartialEq)]
+pub struct Current<S: Stat>(pub S);
 
 #[derive(Component, Debug, Clone, Copy, Deserialize, Serialize, Default, Reflect, PartialEq)]
 #[reflect(Default)]
 pub struct AttackRange(pub f32);
+impl Stat for AttackRange {
+    fn get(&self) -> f32 {
+        self.0
+    }
+    fn set(&mut self, val: f32) {
+        self.0 = val
+    }
+}
 
 #[derive(Component, Debug, Clone, Copy, Deserialize, Serialize, Default, Reflect, PartialEq)]
 #[reflect(Default)]
