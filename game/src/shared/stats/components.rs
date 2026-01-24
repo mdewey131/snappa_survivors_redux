@@ -1,34 +1,22 @@
+use std::sync::{Mutex, Weak};
+
 use crate::shared::damage::DamageBuffer;
 use bevy::{ecs::component::Mutable, prelude::*};
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 
-/// Uses trait defined getters and setters because we can't guarantee what the
-/// internals look like, and this allows us to recalculate the stats via relationships
-/// in a generic way
-pub trait Stat: Component {
-    fn get(&self) -> f32;
-    fn set(&mut self, val: f32);
+/// Reads from the stat list of the player to get the max value, but this is what gets used for
+/// calculations of the player's
+#[derive(Component, Debug, Clone, Copy, Deserialize, Serialize, Default, Reflect, PartialEq)]
+#[reflect(Default)]
+#[require(DamageBuffer)]
+pub struct Health {
+    pub max: f32,
+    pub current: f32,
 }
-
-/// A wrapper component around the base version of a stat
-#[derive(Component, Debug, Clone, Copy, Deserialize, Serialize, Default, Reflect, PartialEq)]
-pub struct Base<S: Stat>(pub S);
-
-/// A wrapper component around the current value of a stat
-#[derive(Component, Debug, Clone, Copy, Deserialize, Serialize, Default, Reflect, PartialEq)]
-pub struct Current<S: Stat>(pub S);
 
 #[derive(Component, Debug, Clone, Copy, Deserialize, Serialize, Default, Reflect, PartialEq)]
 #[reflect(Default)]
 pub struct AttackRange(pub f32);
-impl Stat for AttackRange {
-    fn get(&self) -> f32 {
-        self.0
-    }
-    fn set(&mut self, val: f32) {
-        self.0 = val
-    }
-}
 
 #[derive(Component, Debug, Clone, Copy, Deserialize, Serialize, Default, Reflect, PartialEq)]
 #[reflect(Default)]
@@ -61,14 +49,6 @@ pub struct EffectSize(pub f32);
 #[derive(Component, Debug, Clone, Copy, Deserialize, Serialize, Default, Reflect, PartialEq)]
 #[reflect(Default)]
 pub struct Evasion(pub f32);
-
-#[derive(Component, Debug, Clone, Copy, Deserialize, Serialize, Default, Reflect, PartialEq)]
-#[reflect(Default)]
-#[require(DamageBuffer)]
-pub struct Health {
-    pub max: f32,
-    pub current: f32,
-}
 
 #[derive(Component, Debug, Clone, Copy, Deserialize, Serialize, Default, Reflect, PartialEq)]
 #[reflect(Default)]

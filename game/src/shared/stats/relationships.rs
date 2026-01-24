@@ -36,20 +36,6 @@ pub struct StatModifierDependency {
     pub method: StatModifierMethod,
 }
 
-#[derive(Debug, Clone, Copy)]
-pub enum StatCategory {
-    Base,
-    Current,
-}
-
-#[derive(Debug, Clone, Copy)]
-pub enum StatModifierMethod {
-    /// To be used in things like projectile count, where it's just "add me to the base value"
-    FlatAddStat,
-    /// To be used for instances where the stat represents a percentage of the base value
-    StatMultipliesBase,
-}
-
 /// All of the stats that "this one" modifies
 #[derive(Component, Debug, Clone)]
 pub struct ModifiesStats<C> {

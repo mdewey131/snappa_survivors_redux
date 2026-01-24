@@ -46,7 +46,6 @@ use crate::{
     shared::{
         pickups::SharedPickupsPlugin,
         players::{Player, PlayerProtocolPlugin},
-        stats::StatsProtocolPlugin,
     },
     utils::CreatedBy,
 };
@@ -116,7 +115,7 @@ impl Plugin for GameProtocolPlugin {
             PlayerProtocolPlugin,
             GameInputProtocolPlugin,
             ProjectileProtocolPlugin,
-            StatsProtocolPlugin,
+            //StatsProtocolPlugin,
             WeaponProtocolPlugin,
         ))
         .add_channel::<GameMainChannel>(ChannelSettings {

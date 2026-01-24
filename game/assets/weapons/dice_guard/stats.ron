@@ -1,9 +1,1 @@
-([
-    AttackRange((100.0)),
-    CDR((5.0)),
-    Damage((5.0)),
-    EffDuration((30.0)),
-    EffSize((50.0)),
-    ProjSpeed((40.0)),
-    ProjCount((5)),
-])
+([(kind: Health, val: 50.0)])

@@ -1,1 +1,1 @@
-([Health((max: 50.0, current: 50.0))])
+([(kind: Health, val: 50.0)])

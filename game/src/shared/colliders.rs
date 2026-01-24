@@ -8,7 +8,7 @@ use crate::shared::{
     damage::{DamageBuffer, DamageInstance},
     pickups::{TriggerPickup, XPPickupFollowPlayer},
     states::InGameState,
-    stats::components::Damage,
+    //stats::components::Damage,
 };
 
 mod generic_message_system;
@@ -114,9 +114,9 @@ impl CollisionEffect for ApplyDamage {
     fn apply_to(&self, coms: &mut Commands, to: Entity, from: Entity) {
         coms.queue(move |world: &mut World| {
             // Get damage of the entity applying it
-            let ent_dam = world.get::<Damage>(from);
+            let ent_dam = Some(5.0); //world.get::<Damage>(from);
             let dam_val = if let Some(d) = ent_dam {
-                d.0
+                d
             } else {
                 return;
             };
