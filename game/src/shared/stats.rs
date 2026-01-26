@@ -14,10 +14,17 @@ pub mod relationships;
 */
 pub mod xp;
 
-//use components::*;
+use components::*;
 use xp::LevelManager;
 
-use crate::{shared::stats, utils::AssetFolder};
+use crate::utils::AssetFolder;
+
+pub struct SharedStatsPlugin;
+impl Plugin for SharedStatsPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_plugins(StatComponentPlugin);
+    }
+}
 
 /// The result of the inevitable "rewrite into an enum"
 #[derive(
@@ -46,14 +53,97 @@ pub enum StatKind {
     XPGain,
 }
 
-/// Holds references to the current modifier
-#[derive(Component)]
+impl StatKind {
+    fn to_component(&self, ec: &mut EntityCommands, input: f32) {
+        match *self {
+            StatKind::Armor => {
+                ec.insert(Armor(input));
+            }
+            StatKind::AttackRange => {
+                ec.insert(AttackRange(input));
+            }
+            StatKind::CDR => {
+                ec.insert(CooldownRate(input));
+            }
+            StatKind::CritChance => {
+                ec.insert(CritChance(input));
+            }
+            StatKind::CritDamage => {
+                ec.insert(CritDamage(input));
+            }
+            StatKind::Damage => {
+                ec.insert(Damage(input));
+            }
+            StatKind::EffDuration => {
+                ec.insert(EffectDuration(input));
+            }
+            StatKind::EffSize => {
+                ec.insert(EffectSize(input));
+            }
+            StatKind::Evasion => {
+                ec.insert(Evasion(input));
+            }
+            StatKind::Health => {
+                ec.insert(Health::new(input));
+            }
+            StatKind::Evasion => {
+                ec.insert(Evasion(input));
+            }
+            StatKind::HealthRegen => {
+                ec.insert(HealthRegen(input));
+            }
+            StatKind::LifeSteal => {
+                ec.insert(LifeSteal(input));
+            }
+            StatKind::Luck => {
+                ec.insert(Luck(input));
+            }
+            StatKind::MS => {
+                ec.insert(MovementSpeed {
+                    current: input,
+                    cap: 600.0,
+                });
+            }
+            StatKind::PickupR => {
+                ec.insert(PickupRadius(input));
+            }
+            StatKind::ProjCount => {
+                ec.insert(ProjectileCount(input));
+            }
+            StatKind::ProjSpeed => {
+                ec.insert(ProjectileSpeed(input));
+            }
+            StatKind::Shield => {
+                ec.insert(Shield(input));
+            }
+            StatKind::Thorns => {
+                ec.insert(Thorns(input));
+            }
+            StatKind::XPGain => {
+                ec.insert(XPGain(input));
+            }
+        }
+    }
+}
+
+/// Holds references to the current modifier.
+/// One limitation of this approach is that a stat hasn't changed until its
+/// observed. In theory this isn't a problem, but it may introduce some overhead
+/// when we're constantly in need of a mutable reference to self in order to get
+/// the current value.
+///
+/// A potential solution to this problem is making a set of StatComponents
+/// that are responsible for reading from the mutex at the end of every frame,
+/// and can therefore be kept around as read-only copies of the stats that an
+/// entity possesses
+#[derive(Component, Reflect, Debug)]
 pub struct Stat {
-    // this can be increased, and changes the value of current...
+    // this value gets changed, which causes changes...
     pub base_value: f32,
-    // by adding with its modifiers modifiers,
+    // by adding with its modifiers...
     pub modifiers: Vec<StatModifier>,
     // to equal the current value
+    #[reflect(ignore)]
     current: Arc<Mutex<f32>>,
 }
 
@@ -77,8 +167,10 @@ impl Stat {
     }
 }
 
+#[derive(Component, Reflect, Debug)]
 pub struct StatModifier {
     /// Holds a weak reference to the stat that it takes from
+    #[reflect(ignore)]
     pub from_stat: Weak<Mutex<f32>>,
     /// How to combine with the stat to make the modifier
     pub method: StatModifierMethod,
@@ -101,12 +193,13 @@ impl StatModifier {
     }
 }
 
+#[derive(Component, Reflect, Debug)]
 pub enum StatModifierMethod {
     FlatAdd,
     MultipliyWith(f32),
 }
 
-#[derive(Component)]
+#[derive(Component, Debug, Reflect)]
 pub struct StatList {
     pub list: HashMap<StatKind, Stat>,
     pub changed: HashMap<StatKind, bool>,
@@ -162,6 +255,8 @@ impl RawStatsList {
     pub fn apply_to_character(mut self, ent: Entity, comms: &mut Commands) {
         let mut stats_list = StatList::new();
         for stats_entry in self.0.drain(..) {
+            let mut ec = comms.entity(ent);
+            stats_entry.kind.to_component(&mut ec, stats_entry.val);
             let stat = Stat {
                 base_value: stats_entry.val,
                 modifiers: Vec::new(),
