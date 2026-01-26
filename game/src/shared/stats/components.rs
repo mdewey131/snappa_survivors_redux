@@ -107,6 +107,9 @@ impl Health {
             current: val,
         }
     }
+    pub fn max(&self) -> f32 {
+        self.max
+    }
 }
 
 impl StatComponent for Health {

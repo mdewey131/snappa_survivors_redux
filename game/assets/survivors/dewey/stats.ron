@@ -1,1 +1,14 @@
-([(kind: Health, val: 50.0)])
+([
+    (
+        kind: Health,
+        val: 50.0,
+    ),
+    (
+        kind: MS,
+        val: 100.0,
+    ),
+    (
+        kind: PickupR,
+        val: 200.0,
+    ),
+])
