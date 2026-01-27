@@ -1,1 +1,26 @@
-([(kind: Health, val: 50.0)])
+([
+    (
+        kind: Damage,
+        val: 5.0,
+    ),
+    (
+        kind: CDR,
+        val: 10.0,
+    ),
+    (
+        kind: EffSize,
+        val: 100.0,
+    ),
+    (
+        kind: EffDuration,
+        val: 5.0,
+    ),
+    (
+        kind: ProjCount,
+        val: 5.0,
+    ),
+    (
+        kind: ProjSpeed,
+        val: 100.0,
+    ),
+])

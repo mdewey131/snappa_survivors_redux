@@ -39,7 +39,7 @@ use inputs::GameInputProtocolPlugin;
 use lobby::LobbyProtocolPlugin;
 use projectiles::ProjectileProtocolPlugin;
 use states::SharedStatesPlugin;
-use stats::{SharedStatsPlugin, xp::SharedXPPlugin};
+use stats::{plugins::*, xp::SharedXPPlugin};
 use weapons::{SharedWeaponPlugin, WeaponProtocolPlugin};
 
 use crate::{
@@ -116,7 +116,7 @@ impl Plugin for GameProtocolPlugin {
             PlayerProtocolPlugin,
             GameInputProtocolPlugin,
             ProjectileProtocolPlugin,
-            //StatsProtocolPlugin,
+            StatsProtocolPlugin,
             WeaponProtocolPlugin,
         ))
         .add_channel::<GameMainChannel>(ChannelSettings {

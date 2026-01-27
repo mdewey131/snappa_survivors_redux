@@ -19,12 +19,10 @@ pub struct SharedWeaponPlugin;
 
 impl Plugin for SharedWeaponPlugin {
     fn build(&self, app: &mut App) {
-        /*
         app.add_systems(
             FixedUpdate,
             (weapon_off_cooldown, tick_weapon_active_timer).in_set(CombatSystemSet::Combat),
         );
-         */
     }
 }
 

@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 
 pub mod components;
 pub mod editor;
+pub mod plugins;
 /*
 pub mod relationships;
 */
@@ -18,13 +19,6 @@ use components::*;
 use xp::LevelManager;
 
 use crate::utils::AssetFolder;
-
-pub struct SharedStatsPlugin;
-impl Plugin for SharedStatsPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_plugins(StatComponentPlugin);
-    }
-}
 
 /// The result of the inevitable "rewrite into an enum"
 #[derive(
@@ -137,6 +131,7 @@ impl StatKind {
 /// and can therefore be kept around as read-only copies of the stats that an
 /// entity possesses
 #[derive(Component, Reflect, Debug)]
+#[reflect(Component)]
 pub struct Stat {
     // this value gets changed, which causes changes...
     pub base_value: f32,
@@ -152,7 +147,7 @@ impl Stat {
         let modifier_total = self
             .modifiers
             .iter_mut()
-            .map(|modifier| modifier.val())
+            .map(|modifier| modifier.val(self.base_value))
             .sum::<f32>();
         if let Ok(mut guard) = self.current.lock() {
             *guard = self.base_value + modifier_total;
@@ -178,7 +173,15 @@ pub struct StatModifier {
 }
 
 impl StatModifier {
-    fn val(&mut self) -> f32 {
+    /// TODO: Make this value something other than 0
+    pub fn new(from_stat: Weak<Mutex<f32>>, method: StatModifierMethod) -> Self {
+        Self {
+            from_stat,
+            method,
+            val: 0.0,
+        }
+    }
+    fn val(&mut self, base_stat: f32) -> f32 {
         let stat_value = match self.from_stat.upgrade() {
             Some(arc) => match arc.lock() {
                 Ok(mutex_guard) => *mutex_guard,
@@ -188,7 +191,9 @@ impl StatModifier {
         };
         match self.method {
             StatModifierMethod::FlatAdd => stat_value,
-            StatModifierMethod::MultipliyWith(c) => stat_value * c,
+            StatModifierMethod::MultipliyWithBase { coefficient } => {
+                ((base_stat * stat_value * coefficient) - base_stat)
+            }
         }
     }
 }
@@ -196,27 +201,25 @@ impl StatModifier {
 #[derive(Component, Reflect, Debug)]
 pub enum StatModifierMethod {
     FlatAdd,
-    MultipliyWith(f32),
+    MultipliyWithBase { coefficient: f32 },
 }
 
 #[derive(Component, Debug, Reflect)]
+#[reflect(Component)]
 pub struct StatList {
     pub list: HashMap<StatKind, Stat>,
-    pub changed: HashMap<StatKind, bool>,
 }
 
 impl StatList {
     fn new() -> Self {
         Self {
             list: HashMap::new(),
-            changed: HashMap::new(),
         }
     }
     fn get_current(&mut self, stat_kind: &StatKind) -> Option<f32> {
         let stat = self.list.get_mut(stat_kind);
         if let Some(s) = stat {
             if let Some(v) = s.get_current() {
-                self.changed.insert(*stat_kind, true);
                 return Some(v);
             } else {
                 return None;
@@ -336,32 +339,7 @@ pub struct CurrentStatChangeMessage {
 
 */
 /*
-pub struct StatsProtocolPlugin;
 
-impl Plugin for StatsProtocolPlugin {
-    fn build(&self, app: &mut App) {
-        app.register_component::<Armor>().add_prediction();
-        app.register_component::<AttackRange>().add_prediction();
-        app.register_component::<CritChance>().add_prediction();
-        app.register_component::<CritDamage>().add_prediction();
-        app.register_component::<CooldownRate>().add_prediction();
-        app.register_component::<Damage>().add_prediction();
-        app.register_component::<EffectSize>().add_prediction();
-        app.register_component::<EffectDuration>().add_prediction();
-        app.register_component::<Health>().add_prediction();
-        app.register_component::<HealthRegen>().add_prediction();
-        app.register_component::<Luck>().add_prediction();
-        app.register_component::<LifeSteal>().add_prediction();
-        app.register_component::<MovementSpeed>().add_prediction();
-        app.register_component::<PickupRadius>().add_prediction();
-        app.register_component::<ProjectileCount>().add_prediction();
-        app.register_component::<ProjectileSpeed>().add_prediction();
-        app.register_component::<Shield>().add_prediction();
-        app.register_component::<Thorns>().add_prediction();
-        app.register_component::<XPGain>().add_prediction();
-        app.register_component::<LevelManager>().add_prediction();
-    }
-}
 
 #[derive(Debug, Clone, Copy, Deserialize, Serialize, Reflect)]
 #[reflect(Default)]

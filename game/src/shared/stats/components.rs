@@ -15,56 +15,6 @@ use bevy::{
 };
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 
-pub struct StatComponentPlugin;
-impl Plugin for StatComponentPlugin {
-    fn build(&self, app: &mut App) {
-        // Split these up otherwise it doesn't impl Plugins<>
-        app.add_plugins((
-            StatComponentInnerPlugin::<AttackRange>::new(),
-            StatComponentInnerPlugin::<Armor>::new(),
-            StatComponentInnerPlugin::<CritChance>::new(),
-            StatComponentInnerPlugin::<CritDamage>::new(),
-            StatComponentInnerPlugin::<CooldownRate>::new(),
-            StatComponentInnerPlugin::<Damage>::new(),
-            StatComponentInnerPlugin::<EffectDuration>::new(),
-            StatComponentInnerPlugin::<EffectSize>::new(),
-            StatComponentInnerPlugin::<Evasion>::new(),
-            StatComponentInnerPlugin::<Health>::new(),
-            StatComponentInnerPlugin::<HealthRegen>::new(),
-            StatComponentInnerPlugin::<Luck>::new(),
-            StatComponentInnerPlugin::<LifeSteal>::new(),
-        ));
-        app.add_plugins((
-            StatComponentInnerPlugin::<MovementSpeed>::new(),
-            StatComponentInnerPlugin::<PickupRadius>::new(),
-            StatComponentInnerPlugin::<ProjectileCount>::new(),
-            StatComponentInnerPlugin::<ProjectileSpeed>::new(),
-            StatComponentInnerPlugin::<Shield>::new(),
-            StatComponentInnerPlugin::<Thorns>::new(),
-            StatComponentInnerPlugin::<XPGain>::new(),
-        ));
-    }
-}
-
-pub struct StatComponentInnerPlugin<SC> {
-    _mark: PhantomData<SC>,
-}
-impl<SC: StatComponent> StatComponentInnerPlugin<SC> {
-    fn new() -> Self {
-        Self { _mark: PhantomData }
-    }
-}
-impl<SC: StatComponent> Plugin for StatComponentInnerPlugin<SC> {
-    fn build(&self, app: &mut App) {
-        app.add_systems(
-            FixedPostUpdate,
-            (SC::update_stat_component)
-                .in_set(CombatSystemSet::Last)
-                .run_if(in_state(InGameState::InGame)),
-        );
-    }
-}
-
 /// Marks a compoonent as being dependent on a stat.
 ///
 /// It is the responsibility of this component to check up on the value of statlist

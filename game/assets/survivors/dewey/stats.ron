@@ -11,4 +11,8 @@
         kind: PickupR,
         val: 200.0,
     ),
+    (
+        kind: Damage,
+        val: 2.0,
+    ),
 ])

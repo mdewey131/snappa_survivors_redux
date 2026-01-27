@@ -1,3 +1,4 @@
+use avian2d::prelude::Position;
 use bevy::{prelude::*, render::RenderSystems};
 
 use crate::render::camera::*;
@@ -13,7 +14,7 @@ impl Plugin for GameCameraClientPlugin {
                 update_camera_pos_client,
             )
                 .chain()
-                .before(RenderSystems::ExtractCommands),
+                .in_set(RenderSystems::Prepare),
         );
     }
 }
