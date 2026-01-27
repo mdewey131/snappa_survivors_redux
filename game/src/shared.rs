@@ -40,6 +40,7 @@ use lobby::LobbyProtocolPlugin;
 use projectiles::ProjectileProtocolPlugin;
 use states::SharedStatesPlugin;
 use stats::{plugins::*, xp::SharedXPPlugin};
+use upgrades::TempUpgradePlugin;
 use weapons::{SharedWeaponPlugin, WeaponProtocolPlugin};
 
 use crate::{
@@ -74,6 +75,7 @@ impl Plugin for GameSharedPlugin {
             DespawnTimerPlugin,
             GameProtocolPlugin,
             GameKindsPlugin,
+            TempUpgradePlugin,
             SharedColliderPlugin,
             SharedDamagePlugin,
             SharedPickupsPlugin,

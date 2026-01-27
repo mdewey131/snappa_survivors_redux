@@ -30,7 +30,7 @@ impl Plugin for ClientGameLobbyPlugin {
         );
     }
 }
-///
+
 /// Most of our loading elements should be thought of as "server driven".
 /// Otherwise, you're going to end up in a position where you double load things
 /// on the client in the single player mode. But, if the responsibility for
