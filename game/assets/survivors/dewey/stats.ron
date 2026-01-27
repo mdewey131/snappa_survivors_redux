@@ -1,5 +1,25 @@
 ([
     (
+        kind: AttackRange,
+        val: 1.0,
+    ),
+    (
+        kind: CritChance,
+        val: 0.0,
+    ),
+    (
+        kind: CritDamage,
+        val: 1.0,
+    ),
+    (
+        kind: CDR,
+        val: 1.0,
+    ),
+    (
+        kind: Damage,
+        val: 1.0,
+    ),
+    (
         kind: Health,
         val: 50.0,
     ),
@@ -8,11 +28,23 @@
         val: 100.0,
     ),
     (
+        kind: EffDuration,
+        val: 1.0,
+    ),
+    (
+        kind: EffSize,
+        val: 1.0,
+    ),
+    (
         kind: PickupR,
         val: 200.0,
     ),
     (
-        kind: Damage,
-        val: 2.0,
+        kind: ProjCount,
+        val: 0.0,
+    ),
+    (
+        kind: ProjSpeed,
+        val: 1.0,
     ),
 ])

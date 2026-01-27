@@ -1,4 +1,4 @@
-use super::{components::*, xp::*};
+use super::{components::*, relationships::StatRelationshipsPlugin, xp::*};
 use crate::shared::{combat::CombatSystemSet, states::InGameState};
 use bevy::prelude::*;
 use lightyear::prelude::*;
@@ -8,6 +8,7 @@ pub struct SharedStatsPlugin;
 impl Plugin for SharedStatsPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(StatComponentPlugin);
+        app.add_plugins(StatRelationshipsPlugin);
     }
 }
 

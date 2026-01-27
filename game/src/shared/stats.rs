@@ -10,9 +10,7 @@ use serde::{Deserialize, Serialize};
 pub mod components;
 pub mod editor;
 pub mod plugins;
-/*
 pub mod relationships;
-*/
 pub mod xp;
 
 use components::*;

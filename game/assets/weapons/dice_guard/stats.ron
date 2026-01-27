@@ -1,15 +1,19 @@
 ([
     (
-        kind: Damage,
-        val: 5.0,
+        kind: AttackRange,
+        val: 100.0,
     ),
     (
         kind: CDR,
         val: 10.0,
     ),
     (
+        kind: Damage,
+        val: 5.0,
+    ),
+    (
         kind: EffSize,
-        val: 100.0,
+        val: 30.0,
     ),
     (
         kind: EffDuration,
@@ -21,6 +25,6 @@
     ),
     (
         kind: ProjSpeed,
-        val: 100.0,
+        val: 50.0,
     ),
 ])
