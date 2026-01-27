@@ -1,3 +1,4 @@
+use avian2d::prelude::Position;
 #[cfg(feature = "avian_debug")]
 use avian2d::prelude::*;
 use bevy::{prelude::*, render::RenderSystems};
@@ -71,7 +72,7 @@ fn render_y_to_z(mut q_pos: Query<&mut Transform, (With<RenderYtoZ>, Changed<Tra
 
 /// A function that I was so sure didn't need to be written, making sure that we update an entity's transform
 /// to be based on their position. This is apparently necessary?
-fn sync_transform_to_pos(mut q_transform: Query<(&mut Transform, &Position)>) {
+fn sync_transform_to_pos(mut q_transform: Query<(&mut Transform, &Position), Without<ChildOf>>) {
     for (mut t, pos) in &mut q_transform {
         t.translation.x = pos.0.x;
         t.translation.y = pos.0.y;
