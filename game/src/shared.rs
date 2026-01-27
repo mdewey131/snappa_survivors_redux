@@ -25,8 +25,8 @@ pub mod players;
 pub mod projectiles;
 pub mod states;
 pub mod stats;
+pub mod upgrades;
 pub mod weapons;
-pub mod upgrades::*;
 
 use colliders::*;
 use combat::CombatPlugin;
@@ -39,14 +39,13 @@ use inputs::GameInputProtocolPlugin;
 use lobby::LobbyProtocolPlugin;
 use projectiles::ProjectileProtocolPlugin;
 use states::SharedStatesPlugin;
-use stats::xp::SharedXPPlugin;
+use stats::{plugins::*, xp::SharedXPPlugin};
 use weapons::{SharedWeaponPlugin, WeaponProtocolPlugin};
 
 use crate::{
     shared::{
         pickups::SharedPickupsPlugin,
         players::{Player, PlayerProtocolPlugin},
-        stats::StatsProtocolPlugin,
     },
     utils::CreatedBy,
 };
@@ -80,6 +79,7 @@ impl Plugin for GameSharedPlugin {
             SharedPickupsPlugin,
             SharedStatesPlugin,
             SharedGameRulesPlugin,
+            SharedStatsPlugin,
             SharedWeaponPlugin,
             SharedXPPlugin,
         ));

@@ -1,16 +1,50 @@
 ([
-    AttackRange((1.0)),
-    CDR((1.0)),
-    CritChance((1.0)),
-    CritDamage((1.0)),
-    Health((
-        max: 50.0,
-        current: 50.0,
-    )),
-    MS((
-        current: 50.0,
-        cap: 500.0,
-    )),
-    Luck((1.0)),
-    PickupR((100.0)),
+    (
+        kind: AttackRange,
+        val: 1.0,
+    ),
+    (
+        kind: CritChance,
+        val: 0.0,
+    ),
+    (
+        kind: CritDamage,
+        val: 1.0,
+    ),
+    (
+        kind: CDR,
+        val: 1.0,
+    ),
+    (
+        kind: Damage,
+        val: 1.0,
+    ),
+    (
+        kind: Health,
+        val: 50.0,
+    ),
+    (
+        kind: MS,
+        val: 100.0,
+    ),
+    (
+        kind: EffDuration,
+        val: 1.0,
+    ),
+    (
+        kind: EffSize,
+        val: 1.0,
+    ),
+    (
+        kind: PickupR,
+        val: 200.0,
+    ),
+    (
+        kind: ProjCount,
+        val: 0.0,
+    ),
+    (
+        kind: ProjSpeed,
+        val: 1.0,
+    ),
 ])

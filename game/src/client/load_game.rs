@@ -11,7 +11,7 @@ use crate::shared::{
     lobby::{ClientStartGameMessage, ServerStartLoadingGameMessage},
     players::*,
     states::{AppState, InGameState},
-    stats::{RawStatsList, xp::add_level_manager},
+    stats::RawStatsList, //xp::add_level_manager},
     weapons::{WeaponKind, add_weapon_to_player},
 };
 
@@ -22,7 +22,7 @@ impl Plugin for ClientGameLoadingPlugin {
         app.add_systems(
             OnEnter(AppState::LoadingLevel),
             (
-                (spawn_player_character, add_level_manager).run_if(is_single_player),
+                (spawn_player_character /*add_level_manager*/,).run_if(is_single_player),
                 tmp_move_to_game,
             ),
         );

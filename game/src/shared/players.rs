@@ -77,7 +77,7 @@ impl Plugin for PlayerProtocolPlugin {
 }
 
 fn shared_player_movement(mut velo: Mut<LinearVelocity>, ms: f32, input: Vec2) {
-    velo.0 = input * ms
+    velo.0 = input.normalize_or_zero() * ms
 }
 
 pub fn player_movement<QF: QueryFilter>(

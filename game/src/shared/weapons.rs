@@ -127,15 +127,8 @@ pub fn add_weapon_to_player(
         game_kind,
         Some(weapon_kind),
         MultiPlayerComponentOptions::from(weapon),
-        (weapon, ChildOf(player)),
+        (weapon, ChildOf(player), Cooldown::new(0.5)),
     );
-
-    /*
-    let stats: RawStatsList =
-        read_ron::<RawStatsList>(format!("assets/{}/stats.ron", weapon_kind.asset_folder()));
-    let mut list = StatsList::new();
-    let change_events = stats.insert_into(&mut list, weapon_ent);
-    */
 
     // Add the weapon marker components for each
     match weapon_kind {

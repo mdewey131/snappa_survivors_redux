@@ -96,7 +96,7 @@ fn apply_frame_damage(
                 dam.amount
             })
             .sum::<f32>();
-        health.current = health_to_set.clamp(0.0, health.max);
+        health.current = health_to_set.clamp(0.0, health.max());
         if dead {
             events.write(EntityKilledMessage {
                 dead_entity: ent,

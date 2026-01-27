@@ -1,3 +1,4 @@
+use avian2d::prelude::Position;
 #[cfg(feature = "avian_debug")]
 use avian2d::prelude::*;
 use bevy::{prelude::*, render::RenderSystems};
@@ -41,8 +42,12 @@ impl Plugin for GameSharedRenderPlugin {
         #[cfg(feature = "dev")]
         app.add_plugins(StatsEditorPlugin);
 
-        app.add_systems(Startup, startup)
-            .add_systems(PostUpdate, render_y_to_z.before(RenderSystems::Prepare));
+        app.add_systems(Startup, startup).add_systems(
+            PostUpdate,
+            (render_y_to_z, sync_transform_to_pos)
+                .chain()
+                .before(RenderSystems::Prepare),
+        );
     }
 }
 
@@ -62,5 +67,14 @@ fn render_y_to_z(mut q_pos: Query<&mut Transform, (With<RenderYtoZ>, Changed<Tra
         // We have to rebase to the amount allowed by the 2d camera, which seems to be -1000.
         // Since that's the case, I think it will be okay to just bring this down by a few orders of magnitude
         pos.translation.z = pos.translation.y * -0.001
+    }
+}
+
+/// A function that I was so sure didn't need to be written, making sure that we update an entity's transform
+/// to be based on their position. This is apparently necessary?
+fn sync_transform_to_pos(mut q_transform: Query<(&mut Transform, &Position), Without<ChildOf>>) {
+    for (mut t, pos) in &mut q_transform {
+        t.translation.x = pos.0.x;
+        t.translation.y = pos.0.y;
     }
 }

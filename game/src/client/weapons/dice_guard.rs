@@ -2,7 +2,11 @@ use bevy::prelude::*;
 
 use crate::{
     render::weapons::add_dice_guard_rendering_components,
-    shared::{game_kinds::DefaultClientFilter, weapons::*},
+    shared::{
+        game_kinds::DefaultClientFilter,
+        stats::{StatKind, StatList, StatModifier, StatModifierMethod},
+        weapons::*,
+    },
 };
 
 pub struct ClientDiceGuardPlugin;
