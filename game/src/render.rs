@@ -12,6 +12,7 @@ pub mod map;
 pub mod menus;
 pub mod player;
 pub mod ui;
+pub mod upgrades;
 pub mod weapons;
 
 use camera::GameMainCamera;
@@ -20,6 +21,7 @@ use map::MapRenderPlugin;
 use menus::lobby::LobbyMenuPlugin;
 use player::SharedPlayerRenderPlugin;
 use ui::SharedUIPlugin;
+use upgrades::UpgradeRenderPlugin;
 
 #[cfg(feature = "dev")]
 use crate::shared::stats::editor::StatsEditorPlugin;
@@ -34,6 +36,7 @@ impl Plugin for GameSharedRenderPlugin {
             MapRenderPlugin,
             SharedPlayerRenderPlugin,
             SharedEnemyRenderPlugin,
+            UpgradeRenderPlugin,
         ));
         #[cfg(feature = "inspector")]
         app.add_plugins((EguiPlugin::default(), WorldInspectorPlugin::new()));

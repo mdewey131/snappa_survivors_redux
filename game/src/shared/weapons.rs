@@ -7,6 +7,7 @@ use crate::{
         combat::{CombatSystemSet, Cooldown},
         game_kinds::{GameKinds, MultiPlayerComponentOptions},
         game_object_spawning::spawn_game_object,
+        states::InGameState,
         stats::{RawStatsList, components::*},
     },
     utils::AssetFolder,
@@ -21,7 +22,9 @@ impl Plugin for SharedWeaponPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             FixedUpdate,
-            (weapon_off_cooldown, tick_weapon_active_timer).in_set(CombatSystemSet::Combat),
+            (weapon_off_cooldown, tick_weapon_active_timer)
+                .in_set(CombatSystemSet::Combat)
+                .run_if(in_state(InGameState::InGame)),
         );
     }
 }

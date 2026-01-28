@@ -1,3 +1,4 @@
+use avian2d::prelude::{Physics, PhysicsTime};
 use bevy::prelude::*;
 
 /// Handles all of the logic that is relevant to the game loop.
@@ -41,5 +42,15 @@ pub struct SharedStatesPlugin;
 impl Plugin for SharedStatesPlugin {
     fn build(&self, app: &mut App) {
         app.init_state::<AppState>().init_state::<InGameState>();
+        app.add_systems(OnExit(InGameState::InGame), pause_combat);
+        app.add_systems(OnEnter(InGameState::InGame), resume_combat);
     }
+}
+
+fn pause_combat(mut physics: ResMut<Time<Physics>>) {
+    physics.pause();
+}
+
+fn resume_combat(mut physics: ResMut<Time<Physics>>) {
+    physics.unpause();
 }

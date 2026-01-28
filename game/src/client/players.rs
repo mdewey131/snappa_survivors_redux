@@ -11,6 +11,7 @@ use crate::{
         game_kinds::{DefaultClientFilter, SinglePlayer},
         inputs::Movement,
         players::*,
+        states::InGameState,
     },
 };
 
@@ -21,7 +22,8 @@ impl Plugin for ClientPlayerPlugin {
         app.add_systems(
             FixedUpdate,
             (player_movement::<Or<(With<Predicted>, With<SinglePlayer>)>>)
-                .in_set(CombatSystemSet::Combat),
+                .in_set(CombatSystemSet::Combat)
+                .run_if(in_state(InGameState::InGame)),
         )
         .add_observer(add_non_networked_player_components::<DefaultClientFilter>);
     }
@@ -30,9 +32,6 @@ impl Plugin for ClientPlayerPlugin {
 pub struct ClientPlayerRenderPlugin;
 impl Plugin for ClientPlayerRenderPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(
-            Update,
-            rendering_on_player_add::<Or<(With<SinglePlayer>, With<Predicted>)>>,
-        );
+        app.add_systems(Update, rendering_on_player_add::<DefaultClientFilter>);
     }
 }

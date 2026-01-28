@@ -5,7 +5,7 @@ use crate::{
     render::player::rendering_on_player_add,
     shared::{
         colliders::CommonColliderBundle, combat::CombatSystemSet, game_kinds::DefaultServerFilter,
-        players::*,
+        players::*, states::InGameState,
     },
 };
 
@@ -15,7 +15,9 @@ impl Plugin for ServerPlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             FixedUpdate,
-            (player_movement::<With<Replicate>>).in_set(CombatSystemSet::Combat),
+            (player_movement::<With<Replicate>>)
+                .in_set(CombatSystemSet::Combat)
+                .run_if(in_state(InGameState::InGame)),
         )
         .add_observer(add_non_networked_player_components::<DefaultServerFilter>);
     }

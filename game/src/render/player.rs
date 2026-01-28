@@ -6,7 +6,7 @@ use bevy_enhanced_input::prelude::*;
 
 use crate::{
     render::{RenderYtoZ, animation::*},
-    shared::{inputs::Movement, players::Player},
+    shared::{inputs::Movement, players::Player, states::InGameState},
 };
 
 /// Handles the rendering of the player.
@@ -23,7 +23,8 @@ impl Plugin for SharedPlayerRenderPlugin {
             Update,
             ((animate::<Player>, update_player_facing_direction)
                 .chain()
-                .before(RenderSystems::ExtractCommands),),
+                .before(RenderSystems::ExtractCommands)
+                .run_if(in_state(InGameState::InGame)),),
         );
     }
 }
