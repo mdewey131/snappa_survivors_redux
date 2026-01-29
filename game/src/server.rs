@@ -11,6 +11,7 @@ use crate::{
     shared::{
         SEND_INTERVAL, SERVER_PORT, SHARED_SETTINGS, SINGLE_PLAYER_SERVER_PORT,
         SharedNetworkingSettings, game_kinds::CurrentGameKind, states::AppState,
+        upgrades::DedicatedServerUpgradePlugin,
     },
 };
 use bevy::{
@@ -114,6 +115,7 @@ impl Plugin for DedicatedServerPlugin {
             DedicatedServerLoadingPlugin,
             DedicatedServerProjectilePlugin,
             DedicatedServerWeaponsPlugin,
+            DedicatedServerUpgradePlugin,
         ))
         .add_systems(Startup, server_startup)
         .add_systems(OnEnter(AppState::Lobby), update_game_kind_resource);

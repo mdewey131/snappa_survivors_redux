@@ -12,6 +12,7 @@ use crate::{
         SEND_INTERVAL,
         game_kinds::{CurrentGameKind, GameKinds, SinglePlayer},
         states::AppState,
+        upgrades::ClientUpgradePlugin,
     },
 };
 use bevy::prelude::*;
@@ -46,6 +47,7 @@ impl Plugin for GameClientPlugin {
             ClientPlayerPlugin,
             ClientProjectilePlugin,
             ClientWeaponsPlugin,
+            ClientUpgradePlugin,
         ))
         .add_systems(Startup, move_to_first_app_state)
         .add_observer(add_input_delay_on_client_add);

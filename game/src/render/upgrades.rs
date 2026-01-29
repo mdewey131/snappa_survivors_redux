@@ -20,6 +20,12 @@ impl Plugin for UpgradeRenderPlugin {
             OnEnter(InGameState::SelectingUpgrades),
             spawn_upgrade_screen,
         )
+        .add_systems(
+            Update,
+            spawn_upgrade_buttons
+                .run_if(in_state(InGameState::SelectingUpgrades))
+                .run_if(|q_button: Query<&UpgradeButton>| q_button.is_empty()),
+        )
         .add_observer(on_upgrade_choice_selection);
     }
 }
@@ -81,14 +87,45 @@ fn upgrade_description_text() -> Node {
 
 fn spawn_upgrade_screen(
     mut commands: Commands,
-    q_player: Single<&UpgradeOptions, (With<Player>, Or<(With<Controlled>, With<SinglePlayer>)>)>,
+    q_player: Option<
+        Single<&UpgradeOptions, (With<Player>, Or<(With<Controlled>, With<SinglePlayer>)>)>,
+    >,
 ) {
     let screen = commands.spawn(UpgradeScreen).id();
+    if let Some(player) = q_player {
+        for (idx, option) in player.options.iter().enumerate() {
+            let game_button = GameButton::new(GameButtonOnRelease::EventTrigger);
+            commands
+                .spawn((
+                    ChildOf(screen),
+                    UpgradeButton {
+                        upgrade_index: idx,
+                        upgrade: *option,
+                    },
+                    game_button,
+                ))
+                .with_children(|p| {
+                    p.spawn((UpgradeButtonTitle, Text::from(format!("{:?}", option.kind))));
+                    p.spawn((
+                        UpgradeButtonDescription,
+                        Text::from(format!("{:?}, Level {}", option.rarity, option.level)),
+                    ));
+                });
+        }
+    }
+}
+
+/// Run as a backstop on the client, because the upgradeoptions might arrive later than the message to move in game
+fn spawn_upgrade_buttons(
+    mut commands: Commands,
+    q_player: Single<&UpgradeOptions, (With<Player>, Or<(With<Controlled>, With<SinglePlayer>)>)>,
+    q_screen: Single<Entity, With<UpgradeScreen>>,
+) {
     for (idx, option) in q_player.options.iter().enumerate() {
         let game_button = GameButton::new(GameButtonOnRelease::EventTrigger);
         commands
             .spawn((
-                ChildOf(screen),
+                ChildOf(*q_screen),
                 UpgradeButton {
                     upgrade_index: idx,
                     upgrade: *option,

@@ -3,12 +3,63 @@ use crate::shared::{
     game_kinds::{SinglePlayer, is_single_player},
     players::Player,
     states::InGameState,
-    stats::xp::LevelUpMessage,
+    stats::{RawStatsList, StatKind, StatList, xp::LevelUpMessage},
     weapons::WeaponKind,
 };
 use bevy::prelude::*;
 use lightyear::prelude::*;
 use serde::{Deserialize, Serialize};
+
+/// TO BE MOVED to its proper folder
+pub struct ClientUpgradePlugin;
+impl Plugin for ClientUpgradePlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(
+            OnExit(InGameState::SelectingUpgrades),
+            apply_upgrade.run_if(is_single_player),
+        )
+        .add_systems(
+            Update,
+            (
+                (
+                    client_move_to_selecting_upgrades_state_on_server_message,
+                    client_send_upgrade_selection_message,
+                    client_move_to_in_game_state_on_receive_server_start_game_message,
+                )
+                    .run_if(not(is_single_player)),
+                (
+                    spawn_upgrade_choices_on_level_up
+                        .pipe(client_move_to_selecting_upgrades_state_on_upgrade_generation),
+                    client_1p_move_to_in_game_state_on_upgrade_selection,
+                )
+                    .run_if(is_single_player),
+            ),
+        );
+    }
+}
+
+pub struct DedicatedServerUpgradePlugin;
+impl Plugin for DedicatedServerUpgradePlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(
+            OnExit(InGameState::SelectingUpgrades),
+            apply_upgrade.run_if(not(is_single_player)),
+        );
+        app.add_systems(
+            Update,
+            (
+                spawn_upgrade_choices_on_level_up
+                    .pipe(server_send_upgrade_message_to_client)
+                    .run_if(in_state(InGameState::InGame)),
+                (
+                    server_on_receive_upgrade_selection_message,
+                    server_send_start_game_message_on_all_selected.run_if(all_players_selected),
+                )
+                    .run_if(in_state(InGameState::SelectingUpgrades)),
+            ),
+        );
+    }
+}
 
 pub struct TempUpgradePlugin;
 impl Plugin for TempUpgradePlugin {
@@ -18,16 +69,19 @@ impl Plugin for TempUpgradePlugin {
             .add_direction(NetworkDirection::ServerToClient);
         app.register_message::<UpgradeSelectionMessage>()
             .add_direction(NetworkDirection::ClientToServer);
+        app.register_message::<ServerStartGameMessage>()
+            .add_direction(NetworkDirection::ServerToClient);
         app.register_component::<UpgradeOptions>().add_prediction();
 
+        /*
         // TODO: Move this to client and server delineated plugins
         app.add_systems(
             Update,
             (
                 (
-                    client_move_to_selecting_upgrades_on_server_message,
+                    client_move_to_selecting_upgrades_state_on_server_message,
                     client_send_upgrade_selection_message,
-                    spawn_upgrade_choices.pipe(server_send_upgrade_message_to_client),
+                    spawn_upgrade_choices_on_level_up.pipe(server_send_upgrade_message_to_client),
                 )
                     .run_if(in_state(InGameState::InGame)),
                 (server_on_receive_upgrade_selection_message,)
@@ -39,12 +93,13 @@ impl Plugin for TempUpgradePlugin {
         app.add_systems(
             Update,
             (
-                (spawn_upgrade_choices
-                    .pipe(client_move_to_selecting_upgrades_on_upgrade_generation),),
+                (spawn_upgrade_choices_on_level_up
+                    .pipe(client_move_to_selecting_upgrades_state_on_upgrade_generation),),
                 client_1p_move_to_in_game_state_on_upgrade_selection,
             )
                 .run_if(is_single_player),
         );
+        */
     }
 }
 
@@ -53,6 +108,9 @@ pub struct ServerMoveToUpgradesMessage;
 
 #[derive(Message, Clone, Debug, Serialize, Deserialize)]
 pub struct UpgradeSelectionMessage(pub usize);
+
+#[derive(Debug, Clone, Serialize, Deserialize, Copy, PartialEq)]
+pub struct ServerStartGameMessage;
 
 /// This component is added on to player entities.
 /// We do it in this way so that we can know which ones to render on each player's screen,
@@ -69,7 +127,7 @@ pub struct UpgradeOptions {
 /// to take, which will boost their stats depending on
 /// the upgrade kind (which provides base values),
 /// and the rarity (which modifies those values)
-#[derive(Component, Reflect, Debug, Clone, Copy, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Reflect, Debug, Clone, Copy, Serialize, Deserialize, Default, PartialEq)]
 pub struct Upgrade {
     pub kind: UpgradeKind,
     pub rarity: UpgradeRarity,
@@ -131,7 +189,7 @@ pub enum StatUpgradeKind {
 ///
 /// This returns a result, which we mostly do to be able to pipe this into other functions that
 /// do different things depending on where we are (send message from server in MP, move to selecting state on client)
-pub fn spawn_upgrade_choices(
+pub fn spawn_upgrade_choices_on_level_up(
     mut reader: MessageReader<LevelUpMessage>,
     mut commands: Commands,
     q_player: Query<Entity, With<Player>>,
@@ -169,11 +227,12 @@ pub fn server_send_upgrade_message_to_client(
     if incoming.0.is_err() {
         return;
     }
+    info!("Sending message to client");
     q_messages.send::<GameMainChannel>(ServerMoveToUpgradesMessage);
     next.set(InGameState::SelectingUpgrades)
 }
 
-pub fn client_move_to_selecting_upgrades_on_upgrade_generation(
+pub fn client_move_to_selecting_upgrades_state_on_upgrade_generation(
     incoming: In<Result<(), BevyError>>,
     mut next: ResMut<NextState<InGameState>>,
 ) {
@@ -183,7 +242,7 @@ pub fn client_move_to_selecting_upgrades_on_upgrade_generation(
     next.set(InGameState::SelectingUpgrades)
 }
 
-pub fn client_move_to_selecting_upgrades_on_server_message(
+pub fn client_move_to_selecting_upgrades_state_on_server_message(
     mut next: ResMut<NextState<InGameState>>,
     mut q_rec: Single<&mut MessageReceiver<ServerMoveToUpgradesMessage>>,
 ) {
@@ -223,5 +282,47 @@ pub fn client_1p_move_to_in_game_state_on_upgrade_selection(
     if let Some(message) = upgrade_messages.read().next() {
         q_player.selected = Some(message.0);
         state.set(InGameState::InGame)
+    }
+}
+
+pub fn client_move_to_in_game_state_on_receive_server_start_game_message(
+    mut state: ResMut<NextState<InGameState>>,
+    mut q_message: Single<&mut MessageReceiver<ServerStartGameMessage>>,
+) {
+    if q_message.receive().next().is_some() {
+        state.set(InGameState::InGame)
+    }
+}
+
+pub fn server_send_start_game_message_on_all_selected(
+    mut state: ResMut<NextState<InGameState>>,
+    mut q_sender: Single<&mut MessageSender<ServerStartGameMessage>>,
+) {
+    q_sender.send::<GameMainChannel>(ServerStartGameMessage);
+    state.set(InGameState::InGame)
+}
+
+fn all_players_selected(q_players: Query<&UpgradeOptions>) -> bool {
+    q_players.iter().all(|comp| comp.selected.is_some())
+}
+
+pub fn apply_upgrade(
+    mut commands: Commands,
+    mut q_upgrade_options: Query<(Entity, &UpgradeOptions, &mut StatList)>,
+) {
+    for (ent, options, mut stats) in &mut q_upgrade_options {
+        let selected = options.options[options.selected.unwrap()];
+        match selected.kind {
+            UpgradeKind::UpgradeStat(sk) => {
+                let stat = match sk {
+                    StatUpgradeKind::MaxHealth => stats.list.get_mut(&StatKind::Health).unwrap(),
+                    _ => unimplemented!(),
+                };
+                stat.base_value += 10.0
+            }
+            _ => {
+                unimplemented!()
+            }
+        }
     }
 }
