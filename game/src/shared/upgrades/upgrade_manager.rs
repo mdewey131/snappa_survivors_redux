@@ -1,13 +1,22 @@
 use super::*;
 use bevy::prelude::*;
-use rand::seq::IndexedRandom;
+use rand::{
+    SeedableRng,
+    rngs::{SmallRng, ThreadRng},
+    seq::IndexedRandom,
+};
 use strum::IntoEnumIterator;
 
+/// Contains its own rng thread so that we can somewhat control the distribution for testing
 #[derive(Resource)]
-pub struct UpgradeManager;
+pub struct UpgradeManager {
+    /// Recommended by the rng book for non-crypto purposes
+    rng: SmallRng,
+    seed: [u8; 32],
+}
 
 impl UpgradeManager {
-    pub fn generate_upgrade_options(c_upgrades: &PlayerUpgradeSlots) -> UpgradeOptions {
+    pub fn generate_upgrade_options(&mut self, c_upgrades: &PlayerUpgradeSlots) -> UpgradeOptions {
         // Gather the set of currently taken upgrades in each case
         let c_weapons_iter = c_upgrades.weapons.keys();
         let weapons_len_check = c_weapons_iter.len() < c_upgrades.weapon_limit;
@@ -43,7 +52,7 @@ impl UpgradeManager {
 
         // Pick randomly from these upgrades
         let upgrades: Vec<_> = available_upgrades
-            .choose_multiple(&mut rand::rng(), 3)
+            .choose_multiple(&mut self.rng, 3)
             .collect();
 
         // Let's roll
@@ -76,5 +85,10 @@ impl UpgradeManager {
 }
 
 pub fn add_upgrade_manager(mut commands: Commands) {
-    commands.insert_resource(UpgradeManager);
+    let seed = [0; 32];
+
+    commands.insert_resource(UpgradeManager {
+        rng: SmallRng::from_seed(seed),
+        seed,
+    });
 }

@@ -248,12 +248,12 @@ pub struct StatsUpgrades(Vec<(StatKind, f32)>);
 pub fn spawn_upgrade_choices_on_level_up(
     mut reader: MessageReader<LevelUpMessage>,
     mut commands: Commands,
-    _manager: Res<UpgradeManager>,
+    mut manager: ResMut<UpgradeManager>,
     q_player: Query<(Entity, &PlayerUpgradeSlots), With<Player>>,
 ) -> Result<(), BevyError> {
     if let Some(m) = reader.read().next() {
         for (p_ent, c_upgrades) in &q_player {
-            let comp_options = UpgradeManager::generate_upgrade_options(c_upgrades);
+            let comp_options = manager.generate_upgrade_options(c_upgrades);
             commands.entity(p_ent).insert(comp_options);
         }
         Ok(())
@@ -358,16 +358,14 @@ pub fn apply_upgrade(
 ) {
     for (ent, options, mut stats) in &mut q_upgrade_options {
         let selected = options.options.get(options.selected.unwrap());
-        match selected.unwrap().kind {
-            UpgradeKind::UpgradePlayerStat(sk) => {
-                let stat = match sk {
-                    StatUpgradeKind::MaxHealth => stats.list.get_mut(&StatKind::Health).unwrap(),
-                    _ => unimplemented!(),
-                };
-                stat.base_value += 10.0
-            }
-            _ => {
-                unimplemented!()
+        let stats_to_upgrade = &selected.unwrap().stat_changes;
+        if let Some(stat_changes) = stats_to_upgrade {
+            for change in stat_changes.0.iter() {
+                let mut stat = stats
+                    .list
+                    .get_mut(&change.0)
+                    .expect(&format!("This entity is expected to have {:?}", change.0));
+                stat.base_value += change.1;
             }
         }
     }
