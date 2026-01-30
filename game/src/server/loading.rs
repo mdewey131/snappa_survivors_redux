@@ -4,10 +4,11 @@ use crate::shared::{
     players::{CharacterKind, Player},
     states::*,
     stats::{RawStatsList, xp::add_level_manager},
+    upgrades::PlayerUpgradeSlots,
     weapons::{WeaponKind, add_weapon_to_player},
 };
 use avian2d::prelude::Position;
-use bevy::prelude::*;
+use bevy::{platform::collections::HashMap, prelude::*};
 use lightyear::prelude::{
     Client, ControlledBy, Lifetime, LinkOf, NetworkTarget, PredictionTarget, RemoteId, Replicate,
 };
@@ -46,6 +47,12 @@ fn spawn_player_characters(
                 ControlledBy {
                     owner: ent,
                     lifetime: Lifetime::default(),
+                },
+                PlayerUpgradeSlots {
+                    weapons: HashMap::default(),
+                    weapon_limit: 5,
+                    stats: HashMap::default(),
+                    stats_limit: 5,
                 },
             ),
         );

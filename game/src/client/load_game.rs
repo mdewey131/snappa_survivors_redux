@@ -1,5 +1,5 @@
 use avian2d::prelude::*;
-use bevy::{ecs::system::SystemId, prelude::*};
+use bevy::{ecs::system::SystemId, platform::collections::HashMap, prelude::*};
 use lightyear::prelude::*;
 use rand::Rng;
 
@@ -12,6 +12,7 @@ use crate::shared::{
     players::*,
     states::{AppState, InGameState},
     stats::{RawStatsList, xp::add_level_manager},
+    upgrades::PlayerUpgradeSlots,
     weapons::{WeaponKind, add_weapon_to_player},
 };
 
@@ -60,7 +61,16 @@ fn spawn_player_character(mut commands: Commands, game_kinds: Res<CurrentGameKin
         game_kinds.0.unwrap(),
         Some(CharacterKind::Dewey),
         MultiPlayerComponentOptions::from(player),
-        (player, Position(Vec2::new(pos.0, pos.1))),
+        (
+            player,
+            PlayerUpgradeSlots {
+                weapons: HashMap::default(),
+                weapon_limit: 5,
+                stats: HashMap::default(),
+                stats_limit: 5,
+            },
+            Position(Vec2::new(pos.0, pos.1)),
+        ),
     );
 
     add_weapon_to_player(

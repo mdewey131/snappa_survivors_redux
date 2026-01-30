@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use lightyear::prelude::{AppComponentExt, PredictionRegistrationExt};
 use serde::{Deserialize, Serialize};
+use strum::EnumIter;
 
 use crate::{
     shared::{
@@ -53,7 +54,9 @@ impl From<Weapon> for MultiPlayerComponentOptions {
     }
 }
 
-#[derive(Clone, Copy, Serialize, Deserialize, Debug, PartialEq, Reflect, Default)]
+#[derive(
+    Clone, Copy, Serialize, Deserialize, Debug, PartialEq, Reflect, Default, Hash, Eq, EnumIter,
+)]
 pub enum WeaponKind {
     #[default]
     DiceGuard,

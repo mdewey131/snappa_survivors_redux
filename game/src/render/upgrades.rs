@@ -48,7 +48,6 @@ fn upgrade_screen_node() -> Node {
 #[require(Button, Node = upgrade_button_node())]
 pub struct UpgradeButton {
     pub upgrade_index: usize,
-    pub upgrade: Upgrade,
 }
 fn upgrade_button_node() -> Node {
     Node {
@@ -100,7 +99,6 @@ fn spawn_upgrade_screen(
                     ChildOf(screen),
                     UpgradeButton {
                         upgrade_index: idx,
-                        upgrade: *option,
                     },
                     game_button,
                 ))
@@ -128,7 +126,6 @@ fn spawn_upgrade_buttons(
                 ChildOf(*q_screen),
                 UpgradeButton {
                     upgrade_index: idx,
-                    upgrade: *option,
                 },
                 game_button,
             ))
