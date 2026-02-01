@@ -97,23 +97,10 @@ impl UpgradeManager {
             match kind {
                 UpgradeKind::AddWeapon(_w) => table_entry.unwrap().clone(),
                 _ => {
-                    let mut rewards_with_rolls = Vec::new();
-                    for reward in table_entry.unwrap().into_iter() {
-                        match reward {
-                            UpgradeReward::StatUpgrade {
-                                range: range,
-                                kind: kind,
-                                value: value,
-                            } => {
-                                let v = (&mut self.rng).random_range(range.min..range.max);
-                                rewards_with_rolls.push(UpgradeReward::StatUpgrade {
-                                    range: *range,
-                                    kind: *kind,
-                                    value: Some(v),
-                                });
-                            }
-                            r => rewards_with_rolls.push(*r),
-                        }
+                    let mut rewards_with_rolls = table_entry.unwrap().clone();
+                    for mut reward in rewards_with_rolls.iter_mut() {
+                        let r = self.create_stat_value_from_rarity(&rarity, &reward);
+                        *reward = r
                     }
 
                     let chosen_rewards = rewards_with_rolls
@@ -130,6 +117,33 @@ impl UpgradeManager {
             rarity,
             level,
             rewards: rewards,
+        }
+    }
+
+    fn create_stat_value_from_rarity(
+        &mut self,
+        rarity: &UpgradeRarity,
+        reward: &UpgradeReward,
+    ) -> UpgradeReward {
+        match reward {
+            UpgradeReward::StatUpgrade { range, kind, value } => {
+                let diff = range.max - range.min;
+                let i = match *rarity {
+                    UpgradeRarity::Common => 0,
+                    UpgradeRarity::Rare => 1,
+                    UpgradeRarity::Epic => 2,
+                    UpgradeRarity::Legendary => 3,
+                };
+                let range_min = range.min + (i as f32 * diff) / 4.0;
+                let range_max = range.min + ((i + 1) as f32 * diff) / 4.0;
+                let v = (&mut self.rng).random_range(range_min..range_max);
+                UpgradeReward::StatUpgrade {
+                    range: *range,
+                    kind: *kind,
+                    value: Some(v),
+                }
+            }
+            r => *r,
         }
     }
 }
