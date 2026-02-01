@@ -1,10 +1,10 @@
 use crate::shared::{
     GameMainChannel,
-    game_kinds::{SinglePlayer, is_single_player},
-    players::Player,
+    game_kinds::{CurrentGameKind, SinglePlayer, is_single_player},
+    players::{CharacterKind, Player},
     states::{AppState, InGameState},
     stats::{RawStatsList, StatKind, StatList, xp::LevelUpMessage},
-    weapons::WeaponKind,
+    weapons::{WeaponKind, add_weapon_to_player},
 };
 use bevy::{
     platform::collections::{HashMap, HashSet},
@@ -18,7 +18,12 @@ use rand::{
 use serde::{Deserialize, Serialize};
 use strum::EnumIter;
 
+#[cfg(feature = "dev")]
+mod editor;
 mod upgrade_manager;
+
+#[cfg(feature = "dev")]
+pub use editor::*;
 pub use upgrade_manager::*;
 
 /// TO BE MOVED to its proper folder
@@ -93,6 +98,8 @@ impl Plugin for TempUpgradePlugin {
         app.register_message::<ServerStartGameMessage>()
             .add_direction(NetworkDirection::ServerToClient);
         app.register_component::<UpgradeOptions>().add_prediction();
+        #[cfg(feature = "dev")]
+        app.add_plugins(UpgradeEditorPlugin);
     }
 }
 
@@ -125,38 +132,7 @@ pub struct Upgrade {
     pub kind: UpgradeKind,
     pub rarity: UpgradeRarity,
     pub level: u8,
-    /// We expect this value whenever our upgrade kind is Weapon w/ level > 1, or
-    /// whenever the upgrade kind is player related.
-    ///
-    /// This value gets generated once we already know the kind, the rarity, and the level,
-    /// since we'll want to roll the values for the upgrade at that point
-    pub stat_changes: Option<StatsUpgrades>,
-}
-impl Upgrade {
-    pub fn from_data(kind: UpgradeKind, rarity: UpgradeRarity, level: u8) -> Self {
-        let stat_changes = match kind {
-            UpgradeKind::AddWeapon(_w) => None,
-            UpgradeKind::UpgradeWeapon(_w) => Some(StatsUpgrades(vec![(StatKind::Damage, 5.0)])),
-            UpgradeKind::UpgradePlayerStat(s) => {
-                let sk: StatKind = s.into();
-                Some(StatsUpgrades(vec![(sk, 5.0)]))
-            }
-        };
-        Upgrade {
-            kind,
-            rarity,
-            level,
-            stat_changes,
-        }
-    }
-}
-
-#[derive(Component, Default, Reflect, Debug, Clone, Serialize, Deserialize)]
-pub struct PlayerUpgradeSlots {
-    pub weapons: HashMap<WeaponKind, u8>,
-    pub weapon_limit: usize,
-    pub stats: HashMap<StatUpgradeKind, u8>,
-    pub stats_limit: usize,
+    pub rewards: Vec<UpgradeReward>,
 }
 
 #[derive(Reflect, Debug, Clone, Copy, Serialize, Deserialize, Default, PartialEq)]
@@ -178,7 +154,8 @@ impl Distribution<UpgradeRarity> for StandardUniform {
     }
 }
 
-#[derive(Reflect, Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
+#[derive(Reflect, Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Hash, Eq)]
+#[reflect(Default)]
 pub enum UpgradeKind {
     AddWeapon(WeaponKind),
     UpgradeWeapon(WeaponKind),
@@ -193,6 +170,7 @@ impl Default for UpgradeKind {
 #[derive(
     Reflect, Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Default, Hash, Eq, EnumIter,
 )]
+#[reflect(Default)]
 pub enum StatUpgradeKind {
     #[default]
     Armor,
@@ -237,6 +215,34 @@ impl From<StatUpgradeKind> for StatKind {
 
 #[derive(Reflect, Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub struct StatsUpgrades(Vec<(StatKind, f32)>);
+
+#[derive(Component, Default, Reflect, Debug, Clone, Serialize, Deserialize)]
+pub struct PlayerUpgradeSlots {
+    pub weapons: HashMap<WeaponKind, u8>,
+    pub weapon_limit: usize,
+    pub stats: HashMap<StatUpgradeKind, u8>,
+    pub stats_limit: usize,
+}
+
+impl From<CharacterKind> for PlayerUpgradeSlots {
+    fn from(value: CharacterKind) -> Self {
+        let starting_weapon = match value {
+            CharacterKind::Dewey => WeaponKind::DiceGuard,
+            _ => {
+                todo!()
+            }
+        };
+
+        let mut weapons_map = HashMap::new();
+        weapons_map.insert(starting_weapon, 1);
+        Self {
+            weapons: weapons_map,
+            weapon_limit: 5,
+            stats: HashMap::new(),
+            stats_limit: 5,
+        }
+    }
+}
 
 /// The specific portion of the upgrades process that reads level up messages and spawns choices
 ///
@@ -354,18 +360,26 @@ fn all_players_selected(q_players: Query<&UpgradeOptions>) -> bool {
 
 pub fn apply_upgrade(
     mut commands: Commands,
+    game_kind: Res<CurrentGameKind>,
     mut q_upgrade_options: Query<(Entity, &UpgradeOptions, &mut StatList)>,
 ) {
     for (ent, options, mut stats) in &mut q_upgrade_options {
         let selected = options.options.get(options.selected.unwrap());
-        let stats_to_upgrade = &selected.unwrap().stat_changes;
-        if let Some(stat_changes) = stats_to_upgrade {
-            for change in stat_changes.0.iter() {
-                let mut stat = stats
-                    .list
-                    .get_mut(&change.0)
-                    .expect(&format!("This entity is expected to have {:?}", change.0));
-                stat.base_value += change.1;
+        let rewards = &selected.unwrap().rewards;
+        for reward in rewards {
+            match reward {
+                UpgradeReward::AddWeapon(w) => {
+                    add_weapon_to_player(ent, *w, &mut commands, game_kind.0.unwrap());
+                }
+                UpgradeReward::StatUpgrade { range, kind, value } => {
+                    let sk = StatKind::from(*kind);
+                    let mut stat = stats
+                        .list
+                        .get_mut(&sk)
+                        .expect(&format!("This entity is expected to have {:?}", sk));
+                    stat.base_value += value.unwrap();
+                }
+                _ => todo!(),
             }
         }
     }

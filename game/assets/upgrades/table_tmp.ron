@@ -1,0 +1,263 @@
+([
+    (
+        kind: UpgradePlayerStat(Armor),
+        rewards: [
+            StatUpgrade(
+                range: (
+                    min: 5.0,
+                    max: 10.0,
+                ),
+                kind: Armor,
+                value: None,
+            ),
+        ],
+    ),
+    (
+        kind: UpgradePlayerStat(CritChance),
+        rewards: [
+            StatUpgrade(
+                range: (
+                    min: 0.05,
+                    max: 0.2,
+                ),
+                kind: CritChance,
+                value: None,
+            ),
+        ],
+    ),
+    (
+        kind: UpgradePlayerStat(CDR),
+        rewards: [
+            StatUpgrade(
+                range: (
+                    min: -0.2,
+                    max: -0.05,
+                ),
+                kind: CDR,
+                value: None,
+            ),
+        ],
+    ),
+    (
+        kind: UpgradePlayerStat(Damage),
+        rewards: [
+            StatUpgrade(
+                range: (
+                    min: 0.05,
+                    max: 0.2,
+                ),
+                kind: Damage,
+                value: None,
+            ),
+        ],
+    ),
+    (
+        kind: UpgradePlayerStat(EffDuration),
+        rewards: [
+            StatUpgrade(
+                range: (
+                    min: 0.05,
+                    max: 0.2,
+                ),
+                kind: EffDuration,
+                value: None,
+            ),
+        ],
+    ),
+    (
+        kind: UpgradePlayerStat(EffSize),
+        rewards: [
+            StatUpgrade(
+                range: (
+                    min: 0.05,
+                    max: 0.2,
+                ),
+                kind: EffSize,
+                value: None,
+            ),
+        ],
+    ),
+    (
+        kind: UpgradePlayerStat(Evasion),
+        rewards: [
+            StatUpgrade(
+                range: (
+                    min: 0.05,
+                    max: 0.2,
+                ),
+                kind: Evasion,
+                value: None,
+            ),
+        ],
+    ),
+    (
+        kind: UpgradePlayerStat(MaxHealth),
+        rewards: [
+            StatUpgrade(
+                range: (
+                    min: 5.0,
+                    max: 25.0,
+                ),
+                kind: MaxHealth,
+                value: None,
+            ),
+        ],
+    ),
+    (
+        kind: UpgradePlayerStat(HealthRegen),
+        rewards: [
+            StatUpgrade(
+                range: (
+                    min: 1.0,
+                    max: 5.0,
+                ),
+                kind: HealthRegen,
+                value: None,
+            ),
+        ],
+    ),
+    (
+        kind: UpgradePlayerStat(Luck),
+        rewards: [
+            StatUpgrade(
+                range: (
+                    min: 0.05,
+                    max: 0.2,
+                ),
+                kind: Luck,
+                value: None,
+            ),
+        ],
+    ),
+    (
+        kind: UpgradePlayerStat(MoveSpeed),
+        rewards: [
+            StatUpgrade(
+                range: (
+                    min: 5.0,
+                    max: 15.0,
+                ),
+                kind: MoveSpeed,
+                value: None,
+            ),
+        ],
+    ),
+    (
+        kind: UpgradePlayerStat(PickupRadius),
+        rewards: [
+            StatUpgrade(
+                range: (
+                    min: 25.0,
+                    max: 50.0,
+                ),
+                kind: PickupRadius,
+                value: None,
+            ),
+        ],
+    ),
+    (
+        kind: UpgradePlayerStat(ProjectileCount),
+        rewards: [
+            StatUpgrade(
+                range: (
+                    min: 0.5,
+                    max: 3.0,
+                ),
+                kind: ProjectileCount,
+                value: None,
+            ),
+        ],
+    ),
+    (
+        kind: UpgradePlayerStat(Shield),
+        rewards: [
+            StatUpgrade(
+                range: (
+                    min: 10.0,
+                    max: 25.0,
+                ),
+                kind: Shield,
+                value: None,
+            ),
+        ],
+    ),
+    (
+        kind: UpgradePlayerStat(Thorns),
+        rewards: [
+            StatUpgrade(
+                range: (
+                    min: 5.0,
+                    max: 10.0,
+                ),
+                kind: Thorns,
+                value: None,
+            ),
+        ],
+    ),
+    (
+        kind: UpgradePlayerStat(XPGain),
+        rewards: [
+            StatUpgrade(
+                range: (
+                    min: 0.05,
+                    max: 0.2,
+                ),
+                kind: XPGain,
+                value: None,
+            ),
+        ],
+    ),
+    (
+        kind: AddWeapon(DiceGuard),
+        rewards: [
+            AddWeapon(DiceGuard),
+        ],
+    ),
+    (
+        kind: AddWeapon(PaddleBack),
+        rewards: [
+            AddWeapon(PaddleBack),
+        ],
+    ),
+    (
+        kind: AddWeapon(ThrowHands),
+        rewards: [
+            AddWeapon(ThrowHands),
+        ],
+    ),
+    (
+        kind: AddWeapon(FlurryOfBlows),
+        rewards: [
+            AddWeapon(FlurryOfBlows),
+        ],
+    ),
+    (
+        kind: UpgradeWeapon(DiceGuard),
+        rewards: [
+            StatUpgrade(
+                range: (
+                    min: 2.0,
+                    max: 5.0,
+                ),
+                kind: EffSize,
+                value: None,
+            ),
+            StatUpgrade(
+                range: (
+                    min: -0.5,
+                    max: -0.05,
+                ),
+                kind: CDR,
+                value: None,
+            ),
+            StatUpgrade(
+                range: (
+                    min: 1.0,
+                    max: 4.0,
+                ),
+                kind: Damage,
+                value: None,
+            ),
+        ],
+    ),
+])

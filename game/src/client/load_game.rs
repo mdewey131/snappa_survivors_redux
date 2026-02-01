@@ -61,16 +61,11 @@ fn spawn_player_character(mut commands: Commands, game_kinds: Res<CurrentGameKin
         game_kinds.0.unwrap(),
         Some(CharacterKind::Dewey),
         MultiPlayerComponentOptions::from(player),
-        (
+        (PlayerBaseBundle {
             player,
-            PlayerUpgradeSlots {
-                weapons: HashMap::default(),
-                weapon_limit: 5,
-                stats: HashMap::default(),
-                stats_limit: 5,
-            },
-            Position(Vec2::new(pos.0, pos.1)),
-        ),
+            position: Position(Vec2::new(pos.0, pos.1)),
+            upgrade_slots: PlayerUpgradeSlots::from(CharacterKind::Dewey),
+        }),
     );
 
     add_weapon_to_player(

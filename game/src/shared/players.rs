@@ -5,6 +5,7 @@ use crate::{
         game_kinds::{CurrentGameKind, MultiPlayerComponentOptions, SinglePlayer},
         inputs::Movement,
         stats::components::{MovementSpeed, PickupRadius},
+        upgrades::PlayerUpgradeSlots,
     },
     utils::AssetFolder,
 };
@@ -63,6 +64,20 @@ impl From<CharacterKind> for AssetFolder {
         };
         Self(s)
     }
+}
+
+/// Placed on a player entity at initialization.
+///
+/// Because we want to insert certain elements of a
+/// player in each environment (client, server),
+/// this bundle is just the minimum set of things that
+/// we know we can attach  at spawn
+/// (generally, that's things that can be networked)
+#[derive(Bundle)]
+pub struct PlayerBaseBundle {
+    pub player: Player,
+    pub position: Position,
+    pub upgrade_slots: PlayerUpgradeSlots,
 }
 
 /// Marker component for the pickup radius that a player has

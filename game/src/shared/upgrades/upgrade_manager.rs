@@ -1,9 +1,11 @@
+use std::path::Path;
+
 use super::*;
 use bevy::prelude::*;
 use rand::{
     SeedableRng,
     rngs::{SmallRng, ThreadRng},
-    seq::IndexedRandom,
+    seq::{IndexedRandom, IteratorRandom},
 };
 use strum::IntoEnumIterator;
 
@@ -13,6 +15,8 @@ pub struct UpgradeManager {
     /// Recommended by the rng book for non-crypto purposes
     rng: SmallRng,
     seed: [u8; 32],
+    pub table: UpgradeTable,
+    pub tmp_table: TMPUpgradeTable,
 }
 
 impl UpgradeManager {
@@ -52,7 +56,9 @@ impl UpgradeManager {
 
         // Pick randomly from these upgrades
         let upgrades: Vec<_> = available_upgrades
+            .into_iter()
             .choose_multiple(&mut self.rng, 3)
+            .into_iter()
             .collect();
 
         // Let's roll
@@ -61,7 +67,7 @@ impl UpgradeManager {
             .map(|uk| {
                 let rarity: UpgradeRarity = rand::random();
 
-                let level = match *uk {
+                let level = match uk {
                     UpgradeKind::AddWeapon(_w) => 1,
                     UpgradeKind::UpgradeWeapon(w) => c_upgrades.weapons.get(&w).unwrap() + 1,
                     UpgradeKind::UpgradePlayerStat(upgrade_stat) => {
@@ -72,7 +78,7 @@ impl UpgradeManager {
                         }
                     }
                 };
-                Upgrade::from_data(*uk, rarity, level)
+                self.make_upgrade(uk, rarity, level)
             })
             .collect::<Vec<Upgrade>>();
 
@@ -80,6 +86,51 @@ impl UpgradeManager {
         UpgradeOptions {
             options: *boxed_options,
             selected: None,
+        }
+    }
+
+    pub fn make_upgrade(&mut self, kind: UpgradeKind, rarity: UpgradeRarity, level: u8) -> Upgrade {
+        let tmp_backup_reward = UpgradeReward::default();
+        let table_entry = self.tmp_table.table.get(&kind);
+        let rewards: Vec<UpgradeReward> = if table_entry.is_none() {
+            vec![tmp_backup_reward]
+        } else {
+            match kind {
+                UpgradeKind::AddWeapon(_w) => table_entry.unwrap().clone(),
+                _ => {
+                    let mut rewards_with_rolls = Vec::new();
+                    for reward in table_entry.unwrap().into_iter() {
+                        match reward {
+                            UpgradeReward::StatUpgrade {
+                                range: range,
+                                kind: kind,
+                                value: value,
+                            } => {
+                                let v = (&mut self.rng).random_range(range.min..range.max);
+                                rewards_with_rolls.push(UpgradeReward::StatUpgrade {
+                                    range: *range,
+                                    kind: *kind,
+                                    value: Some(v),
+                                });
+                            }
+                            r => rewards_with_rolls.push(*r),
+                        }
+                    }
+
+                    let chosen_rewards = rewards_with_rolls
+                        .into_iter()
+                        .choose_multiple(&mut self.rng, 1);
+
+                    chosen_rewards
+                }
+            }
+        };
+
+        Upgrade {
+            kind,
+            rarity,
+            level,
+            rewards: rewards,
         }
     }
 }
@@ -90,5 +141,110 @@ pub fn add_upgrade_manager(mut commands: Commands) {
     commands.insert_resource(UpgradeManager {
         rng: SmallRng::from_seed(seed),
         seed,
+        table: UpgradeTable::new(),
+        tmp_table: TMPUpgradeTable::new(),
     });
+}
+
+#[derive(Serialize, Deserialize, Clone, Copy, Reflect, Default)]
+pub struct UpgradeRange {
+    min: f32,
+    max: f32,
+}
+
+/// Stores all of the possible stat upgrade choices that are available
+/// at a given level of upgrade rarity
+#[derive(Serialize, Deserialize, Clone, Reflect, Default)]
+#[reflect(Default)]
+pub struct StatUpgradePossibilities(Vec<SingleStatUpgradeChances>);
+
+#[derive(Serialize, Deserialize, Clone, Reflect, Default)]
+#[reflect(Default)]
+pub struct SingleStatUpgradeChances {
+    kind: StatUpgradeKind,
+    range: UpgradeRange,
+}
+
+#[derive(Serialize, Deserialize, Reflect, Clone, Copy, Default, PartialEq, Debug)]
+#[reflect(Default)]
+pub struct StatUpgrade {
+    min: f32,
+    max: f32,
+}
+
+#[derive(Serialize, Deserialize, Reflect, Clone, Copy, PartialEq, Debug)]
+#[reflect(Default)]
+pub enum UpgradeReward {
+    StatUpgrade {
+        range: StatUpgrade,
+        kind: StatUpgradeKind,
+        #[reflect(ignore)]
+        value: Option<f32>,
+    },
+    AddWeapon(WeaponKind),
+}
+impl Default for UpgradeReward {
+    fn default() -> Self {
+        Self::StatUpgrade {
+            range: StatUpgrade { min: 0.0, max: 1.0 },
+            kind: StatUpgradeKind::Armor,
+            value: None,
+        }
+    }
+}
+
+pub struct TMPUpgradeTable {
+    table: HashMap<UpgradeKind, Vec<UpgradeReward>>,
+}
+impl TMPUpgradeTable {
+    pub fn new() -> Self {
+        let mut upgrades = HashMap::new();
+        let raw_table =
+            crate::utils::read_ron::<TMPRawUpgradeTable>("assets/upgrades/table_tmp.ron".into());
+        for row in raw_table.0.into_iter() {
+            upgrades.insert(row.kind, row.rewards);
+        }
+        Self { table: upgrades }
+    }
+}
+
+#[derive(Serialize, Deserialize, Reflect, Clone, Default)]
+#[reflect(Default)]
+pub struct TMPRawUpgradeTable(Vec<RawUpgradeTableRow>);
+
+#[derive(Serialize, Deserialize, Reflect, Clone, Default)]
+#[reflect(Default)]
+pub struct RawUpgradeTableRow {
+    kind: UpgradeKind,
+    rewards: Vec<UpgradeReward>,
+}
+
+/// The master list of information for what kinds of things can be upgraded when a given upgrade kind is
+/// selected
+#[derive(Reflect)]
+pub struct UpgradeTable {
+    table: HashMap<UpgradeKind, [StatUpgradePossibilities; 4]>,
+}
+
+#[derive(Serialize, Deserialize, Reflect, Clone, Default)]
+#[reflect(Default)]
+pub struct RawUpgradeTable(Vec<UpgradeTableRow>);
+
+#[derive(Serialize, Deserialize, Reflect, Clone, Default)]
+#[reflect(Default)]
+pub struct UpgradeTableRow {
+    kind: UpgradeKind,
+    possibilities: [StatUpgradePossibilities; 4],
+}
+
+impl UpgradeTable {
+    pub fn new() -> UpgradeTable {
+        let mut upgrades = HashMap::new();
+        let raw_table =
+            crate::utils::read_ron::<RawUpgradeTable>("assets/upgrades/table.ron".into());
+        for row in raw_table.0.into_iter() {
+            upgrades.insert(row.kind, row.possibilities);
+        }
+        UpgradeTable { table: upgrades }
+    }
 }

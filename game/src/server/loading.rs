@@ -1,7 +1,7 @@
 use crate::shared::{
     game_kinds::{CurrentGameKind, MultiPlayerComponentOptions},
     game_object_spawning::spawn_game_object,
-    players::{CharacterKind, Player},
+    players::{CharacterKind, Player, PlayerBaseBundle},
     states::*,
     stats::{RawStatsList, xp::add_level_manager},
     upgrades::PlayerUpgradeSlots,
@@ -42,17 +42,14 @@ fn spawn_player_characters(
             Some(CharacterKind::Dewey),
             MultiPlayerComponentOptions::from(player),
             (
-                player,
-                Position(Vec2::new(pos.0, pos.1)),
+                PlayerBaseBundle {
+                    player,
+                    position: Position(Vec2::new(pos.0, pos.1)),
+                    upgrade_slots: PlayerUpgradeSlots::from(CharacterKind::Dewey),
+                },
                 ControlledBy {
                     owner: ent,
                     lifetime: Lifetime::default(),
-                },
-                PlayerUpgradeSlots {
-                    weapons: HashMap::default(),
-                    weapon_limit: 5,
-                    stats: HashMap::default(),
-                    stats_limit: 5,
                 },
             ),
         );

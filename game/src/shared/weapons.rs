@@ -57,6 +57,7 @@ impl From<Weapon> for MultiPlayerComponentOptions {
 #[derive(
     Clone, Copy, Serialize, Deserialize, Debug, PartialEq, Reflect, Default, Hash, Eq, EnumIter,
 )]
+#[reflect(Default)]
 pub enum WeaponKind {
     #[default]
     DiceGuard,

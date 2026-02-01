@@ -1,0 +1,66 @@
+([
+    (
+        kind: UpgradePlayerStat(Armor),
+        possibilities: (([
+            (
+                kind: Armor,
+                range: (
+                    min: 1.0,
+                    max: 4.9,
+                ),
+            ),
+        ]), ([
+            (
+                kind: Armor,
+                range: (
+                    min: 10.0,
+                    max: 20.0,
+                ),
+            ),
+        ]), ([
+            (
+                kind: Armor,
+                range: (
+                    min: 25.0,
+                    max: 50.0,
+                ),
+            ),
+        ]), ([
+            (
+                kind: Armor,
+                range: (
+                    min: 55.0,
+                    max: 75.0,
+                ),
+            ),
+        ])),
+    ),
+    (
+        kind: UpgradePlayerStat(CritChance),
+        possibilities: (([
+            (
+                kind: CritChance,
+                range: (
+                    min: 0.05,
+                    max: 0.075,
+                ),
+            ),
+        ]), ([
+            (
+                kind: CritChance,
+                range: (
+                    min: 0.075,
+                    max: 0.1,
+                ),
+            ),
+        ]), ([
+            (
+                kind: CritChance,
+                range: (
+                    min: 0.0,
+                    max: 0.0,
+                ),
+            ),
+        ]), ([])),
+    ),
+])
