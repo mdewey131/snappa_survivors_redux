@@ -97,16 +97,17 @@ fn spawn_upgrade_screen(
             commands
                 .spawn((
                     ChildOf(screen),
-                    UpgradeButton {
-                        upgrade_index: idx,
-                    },
+                    UpgradeButton { upgrade_index: idx },
                     game_button,
                 ))
                 .with_children(|p| {
                     p.spawn((UpgradeButtonTitle, Text::from(format!("{:?}", option.kind))));
                     p.spawn((
                         UpgradeButtonDescription,
-                        Text::from(format!("{:?}, Level {}", option.rarity, option.level)),
+                        Text::from(format!(
+                            "{:?}, Level {} \n Rewards: {:?}",
+                            option.rarity, option.level, option.rewards
+                        )),
                     ));
                 });
         }
@@ -124,9 +125,7 @@ fn spawn_upgrade_buttons(
         commands
             .spawn((
                 ChildOf(*q_screen),
-                UpgradeButton {
-                    upgrade_index: idx,
-                },
+                UpgradeButton { upgrade_index: idx },
                 game_button,
             ))
             .with_children(|p| {

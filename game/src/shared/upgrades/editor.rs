@@ -23,7 +23,7 @@ impl Plugin for UpgradeEditorPlugin {
 #[derive(Reflect, Resource)]
 pub struct UpgradeEditor {
     save: bool,
-    c_table: TMPRawUpgradeTable,
+    c_table: RawUpgradeTable,
 }
 impl Default for UpgradeEditor {
     fn default() -> Self {
@@ -35,7 +35,7 @@ impl Default for UpgradeEditor {
 }
 
 impl UpgradeEditor {
-    fn save(table: TMPRawUpgradeTable) {
+    fn save(table: RawUpgradeTable) {
         let ron_string = ron::ser::to_string_pretty(&table, PrettyConfig::new())
             .expect("Failed to serialize stats path");
         let _write = std::fs::write("assets/upgrades/table_tmp.ron", ron_string);

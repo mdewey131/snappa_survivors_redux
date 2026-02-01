@@ -16,7 +16,6 @@ pub struct UpgradeManager {
     rng: SmallRng,
     seed: [u8; 32],
     pub table: UpgradeTable,
-    pub tmp_table: TMPUpgradeTable,
 }
 
 impl UpgradeManager {
@@ -91,7 +90,7 @@ impl UpgradeManager {
 
     pub fn make_upgrade(&mut self, kind: UpgradeKind, rarity: UpgradeRarity, level: u8) -> Upgrade {
         let tmp_backup_reward = UpgradeReward::default();
-        let table_entry = self.tmp_table.table.get(&kind);
+        let table_entry = self.table.table.get(&kind);
         let rewards: Vec<UpgradeReward> = if table_entry.is_none() {
             vec![tmp_backup_reward]
         } else {
@@ -142,27 +141,7 @@ pub fn add_upgrade_manager(mut commands: Commands) {
         rng: SmallRng::from_seed(seed),
         seed,
         table: UpgradeTable::new(),
-        tmp_table: TMPUpgradeTable::new(),
     });
-}
-
-#[derive(Serialize, Deserialize, Clone, Copy, Reflect, Default)]
-pub struct UpgradeRange {
-    min: f32,
-    max: f32,
-}
-
-/// Stores all of the possible stat upgrade choices that are available
-/// at a given level of upgrade rarity
-#[derive(Serialize, Deserialize, Clone, Reflect, Default)]
-#[reflect(Default)]
-pub struct StatUpgradePossibilities(Vec<SingleStatUpgradeChances>);
-
-#[derive(Serialize, Deserialize, Clone, Reflect, Default)]
-#[reflect(Default)]
-pub struct SingleStatUpgradeChances {
-    kind: StatUpgradeKind,
-    range: UpgradeRange,
 }
 
 #[derive(Serialize, Deserialize, Reflect, Clone, Copy, Default, PartialEq, Debug)]
@@ -193,14 +172,14 @@ impl Default for UpgradeReward {
     }
 }
 
-pub struct TMPUpgradeTable {
+pub struct UpgradeTable {
     table: HashMap<UpgradeKind, Vec<UpgradeReward>>,
 }
-impl TMPUpgradeTable {
+impl UpgradeTable {
     pub fn new() -> Self {
         let mut upgrades = HashMap::new();
         let raw_table =
-            crate::utils::read_ron::<TMPRawUpgradeTable>("assets/upgrades/table_tmp.ron".into());
+            crate::utils::read_ron::<RawUpgradeTable>("assets/upgrades/table_tmp.ron".into());
         for row in raw_table.0.into_iter() {
             upgrades.insert(row.kind, row.rewards);
         }
@@ -210,41 +189,11 @@ impl TMPUpgradeTable {
 
 #[derive(Serialize, Deserialize, Reflect, Clone, Default)]
 #[reflect(Default)]
-pub struct TMPRawUpgradeTable(Vec<RawUpgradeTableRow>);
+pub struct RawUpgradeTable(Vec<RawUpgradeTableRow>);
 
 #[derive(Serialize, Deserialize, Reflect, Clone, Default)]
 #[reflect(Default)]
 pub struct RawUpgradeTableRow {
     kind: UpgradeKind,
     rewards: Vec<UpgradeReward>,
-}
-
-/// The master list of information for what kinds of things can be upgraded when a given upgrade kind is
-/// selected
-#[derive(Reflect)]
-pub struct UpgradeTable {
-    table: HashMap<UpgradeKind, [StatUpgradePossibilities; 4]>,
-}
-
-#[derive(Serialize, Deserialize, Reflect, Clone, Default)]
-#[reflect(Default)]
-pub struct RawUpgradeTable(Vec<UpgradeTableRow>);
-
-#[derive(Serialize, Deserialize, Reflect, Clone, Default)]
-#[reflect(Default)]
-pub struct UpgradeTableRow {
-    kind: UpgradeKind,
-    possibilities: [StatUpgradePossibilities; 4],
-}
-
-impl UpgradeTable {
-    pub fn new() -> UpgradeTable {
-        let mut upgrades = HashMap::new();
-        let raw_table =
-            crate::utils::read_ron::<RawUpgradeTable>("assets/upgrades/table.ron".into());
-        for row in raw_table.0.into_iter() {
-            upgrades.insert(row.kind, row.possibilities);
-        }
-        UpgradeTable { table: upgrades }
-    }
 }
