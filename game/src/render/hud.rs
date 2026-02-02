@@ -44,7 +44,8 @@ impl Plugin for HudPlugin {
         app.add_systems(OnEnter(AppState::InGame), spawn_hud_container)
             .add_systems(
                 Update,
-                (update_health_bar, update_xp_bar).run_if(in_state(InGameState::InGame)),
+                (update_health_bar, update_xp_bar, update_game_clock_display)
+                    .run_if(in_state(InGameState::InGame)),
             );
     }
 }
@@ -61,6 +62,15 @@ fn outer_hud_node() -> Node {
         ..default()
     }
 }
+
+/// Just shows the game time element. This consists of a watch icon, and text with the time running
+#[derive(Component)]
+#[require(Node = main_hud_component_node(30.0))]
+pub struct GameTimeDisplay;
+
+#[derive(Component)]
+#[require(Text)]
+pub struct GameTimeText;
 
 pub struct StatDisplayPlugin<SC: StatComponent> {
     _mark: PhantomData<SC>,
@@ -241,6 +251,12 @@ fn spawn_individual_stat_hud_elements<C: StatComponent + DisplayableStat>(
 fn spawn_hud_container(mut commands: Commands, assets: Res<AssetServer>) {
     let outer_ent = commands.spawn((OuterHudContainer)).id();
 
+    // The game clock
+    let game_clock_container = commands.spawn((GameTimeDisplay, ChildOf(outer_ent))).id();
+    let game_clock_text = commands
+        .spawn((GameTimeText, ChildOf(game_clock_container)))
+        .id();
+
     // XP Bar
     let xp_bar = commands.spawn((XPBar, ChildOf(outer_ent))).id();
     let xp_texture: Handle<Image> = assets.load("ui/health_bar_texture.png");
@@ -313,4 +329,13 @@ fn update_individual_stat_component<C: StatComponent + DisplayableStat>(
             }
         }
     }
+}
+
+pub fn update_game_clock_display(
+    time: Res<InGameTime>,
+    mut q_text: Single<&mut Text, With<GameTimeText>>,
+) {
+    let mins = (time.elapsed_secs() / 60.0).floor();
+    let secs = (time.elapsed_secs() - (60.0 * mins)).floor();
+    q_text.0 = format!("{}:{:02}", mins, secs)
 }
