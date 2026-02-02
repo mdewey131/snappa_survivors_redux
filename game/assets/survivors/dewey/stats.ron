@@ -44,6 +44,10 @@
         val: 0.0,
     ),
     (
+        kind: Luck,
+        val: 1.0,
+    ),
+    (
         kind: PickupR,
         val: 200.0,
     ),
