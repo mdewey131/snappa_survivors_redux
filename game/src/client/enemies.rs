@@ -5,7 +5,7 @@ use crate::{
         combat::CombatSystemSet,
         enemies::{spawner::*, *},
         game_kinds::{DefaultClientFilter, SinglePlayer, is_single_player},
-        states::InGameState,
+        states::{AppState, InGameState},
     },
 };
 use bevy::prelude::*;
@@ -16,7 +16,7 @@ pub struct ClientEnemyPlugin;
 impl Plugin for ClientEnemyPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
-            OnEnter(InGameState::InGame),
+            OnEnter(AppState::InGame),
             spawn_enemy_spawn_manager.run_if(is_single_player),
         )
         .add_systems(

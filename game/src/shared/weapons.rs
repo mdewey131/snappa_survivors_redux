@@ -8,6 +8,7 @@ use crate::{
         combat::{CombatSystemSet, Cooldown},
         game_kinds::{GameKinds, MultiPlayerComponentOptions},
         game_object_spawning::spawn_game_object,
+        players::PlayerWeapons,
         states::InGameState,
         stats::{RawStatsList, components::*},
     },
@@ -94,6 +95,9 @@ impl From<WeaponKind> for AssetFolder {
     fn from(value: WeaponKind) -> Self {
         match value {
             WeaponKind::DiceGuard => Self("weapons/dice_guard".into()),
+            WeaponKind::ThrowHands => Self("weapons/throw_hands".into()),
+            WeaponKind::FlurryOfBlows => Self("weapons/flurry_of_blows".into()),
+            WeaponKind::PaddleBack => Self("weapons/paddle_back".into()),
             _ => Self("unknown!".into()),
         }
     }
@@ -143,9 +147,16 @@ pub fn add_weapon_to_player(
             commands.entity(w_ent).insert(DiceGuard);
         }
         _ => {
-            todo!()
+            warn!("Weapon entity created without a marker component")
         }
     }
+    // insert this weapon into the player's weapons storage
+    commands.queue(move |world: &mut World| {
+        let mut q_storage = world.query::<&mut PlayerWeapons>();
+        let mut player_storage = q_storage.get_mut(world, player).unwrap();
+        player_storage.0.insert(weapon_kind, w_ent);
+    });
+
     w_ent
 }
 

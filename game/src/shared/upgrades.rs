@@ -1,10 +1,10 @@
 use crate::shared::{
     GameMainChannel,
     game_kinds::{CurrentGameKind, SinglePlayer, is_single_player},
-    players::{CharacterKind, Player},
+    players::{CharacterKind, Player, PlayerWeapons},
     states::{AppState, InGameState},
     stats::{RawStatsList, StatKind, StatList, xp::LevelUpMessage},
-    weapons::{WeaponKind, add_weapon_to_player},
+    weapons::{Weapon, WeaponKind, add_weapon_to_player},
 };
 use bevy::{
     platform::collections::{HashMap, HashSet},
@@ -361,19 +361,34 @@ fn all_players_selected(q_players: Query<&UpgradeOptions>) -> bool {
 pub fn apply_upgrade(
     mut commands: Commands,
     game_kind: Res<CurrentGameKind>,
-    mut q_upgrade_options: Query<(Entity, &UpgradeOptions, &mut StatList)>,
+    mut q_upgrade_options: Query<(
+        Entity,
+        &mut UpgradeOptions,
+        &PlayerUpgradeSlots,
+        &mut StatList,
+        &PlayerWeapons,
+    )>,
+    mut q_weapon_stats: Query<(&mut StatList), Without<UpgradeOptions>>,
 ) {
-    for (ent, options, mut stats) in &mut q_upgrade_options {
-        let selected = options.options.get(options.selected.unwrap());
-        let rewards = &selected.unwrap().rewards;
+    for (ent, mut options, slots, mut player_stats, weapons) in &mut q_upgrade_options {
+        let index = options.selected.unwrap();
+        let m_selected = options.options.get_mut(index);
+        let selected = m_selected.unwrap();
+        let mut stats_list = match selected.kind {
+            UpgradeKind::UpgradeWeapon(w) => q_weapon_stats
+                .get_mut(*(weapons.0.get(&w).unwrap()))
+                .unwrap(),
+            _ => player_stats,
+        };
+        let rewards = selected.rewards.drain(..);
         for reward in rewards {
             match reward {
                 UpgradeReward::AddWeapon(w) => {
-                    add_weapon_to_player(ent, *w, &mut commands, game_kind.0.unwrap());
+                    add_weapon_to_player(ent, w, &mut commands, game_kind.0.unwrap());
                 }
                 UpgradeReward::StatUpgrade { range, kind, value } => {
-                    let sk = StatKind::from(*kind);
-                    let mut stat = stats
+                    let sk = StatKind::from(kind);
+                    let mut stat = stats_list
                         .list
                         .get_mut(&sk)
                         .expect(&format!("This entity is expected to have {:?}", sk));

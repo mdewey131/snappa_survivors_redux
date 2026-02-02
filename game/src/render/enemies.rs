@@ -1,7 +1,6 @@
 use crate::{render::RenderYtoZ, shared::enemies::*};
 use avian2d::prelude::Position;
 use bevy::{ecs::query::QueryFilter, prelude::*};
-use core::marker::PhantomData;
 
 pub struct SharedEnemyRenderPlugin;
 

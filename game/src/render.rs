@@ -8,6 +8,7 @@ use bevy_inspector_egui::quick::WorldInspectorPlugin;
 pub mod animation;
 pub mod camera;
 pub mod enemies;
+pub mod hud;
 pub mod map;
 pub mod menus;
 pub mod player;
@@ -24,7 +25,9 @@ use ui::SharedUIPlugin;
 use upgrades::UpgradeRenderPlugin;
 
 #[cfg(feature = "dev")]
-use crate::shared::stats::editor::StatsEditorPlugin;
+use crate::shared::{
+    enemies::editor::EnemySpawnManagerEditorPlugin, stats::editor::StatsEditorPlugin,
+};
 
 pub struct GameSharedRenderPlugin;
 
@@ -44,6 +47,8 @@ impl Plugin for GameSharedRenderPlugin {
         app.add_plugins(PhysicsDebugPlugin::default());
         #[cfg(feature = "dev")]
         app.add_plugins(StatsEditorPlugin);
+        #[cfg(feature = "dev")]
+        app.add_plugins(EnemySpawnManagerEditorPlugin);
 
         app.add_systems(Startup, startup).add_systems(
             PostUpdate,

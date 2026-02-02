@@ -65,6 +65,7 @@ fn spawn_player_character(mut commands: Commands, game_kinds: Res<CurrentGameKin
             player,
             position: Position(Vec2::new(pos.0, pos.1)),
             upgrade_slots: PlayerUpgradeSlots::from(CharacterKind::Dewey),
+            weapons: PlayerWeapons::default(),
         }),
     );
 

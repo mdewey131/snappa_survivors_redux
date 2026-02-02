@@ -6,11 +6,12 @@ use crate::{
         inputs::Movement,
         stats::components::{MovementSpeed, PickupRadius},
         upgrades::PlayerUpgradeSlots,
+        weapons::WeaponKind,
     },
     utils::AssetFolder,
 };
 use avian2d::prelude::*;
-use bevy::{ecs::query::QueryFilter, prelude::*};
+use bevy::{ecs::query::QueryFilter, platform::collections::HashMap, prelude::*};
 use bevy_enhanced_input::prelude::*;
 use lightyear::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -66,6 +67,9 @@ impl From<CharacterKind> for AssetFolder {
     }
 }
 
+#[derive(Component, Debug, Reflect, Default)]
+pub struct PlayerWeapons(pub HashMap<WeaponKind, Entity>);
+
 /// Placed on a player entity at initialization.
 ///
 /// Because we want to insert certain elements of a
@@ -78,6 +82,7 @@ pub struct PlayerBaseBundle {
     pub player: Player,
     pub position: Position,
     pub upgrade_slots: PlayerUpgradeSlots,
+    pub weapons: PlayerWeapons,
 }
 
 /// Marker component for the pickup radius that a player has

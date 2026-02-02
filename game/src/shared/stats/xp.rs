@@ -52,7 +52,7 @@ pub fn update_xp_manager(
         level_up_messages.write(LevelUpMessage);
         q_level.c_level += 1;
         q_level.prev_max = q_level.next_max;
-        q_level.next_max = (q_level.c_level as f32 * 5.0).powf(2.0);
+        q_level.next_max = (q_level.c_level as f32 * 5.0).powf(1.15);
     }
 }
 

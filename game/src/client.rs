@@ -8,6 +8,7 @@ use crate::{
         mp_selection_menu::MPSelectionMenuPlugin,
         players::ClientPlayerRenderPlugin,
     },
+    render::hud::HudPlugin,
     shared::{
         SEND_INTERVAL,
         game_kinds::{CurrentGameKind, GameKinds, SinglePlayer},
@@ -69,6 +70,7 @@ impl Plugin for ClientRenderPlugin {
             MPSelectionMenuPlugin,
             ClientPlayerRenderPlugin,
             ClientDiceGuardRenderPlugin,
+            HudPlugin,
         ));
     }
 }

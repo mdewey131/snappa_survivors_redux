@@ -24,6 +24,10 @@
         val: 50.0,
     ),
     (
+        kind: HealthRegen,
+        val: 0.0,
+    ),
+    (
         kind: MS,
         val: 100.0,
     ),
@@ -36,6 +40,10 @@
         val: 1.0,
     ),
     (
+        kind: Evasion,
+        val: 0.0,
+    ),
+    (
         kind: PickupR,
         val: 200.0,
     ),
@@ -46,5 +54,13 @@
     (
         kind: ProjSpeed,
         val: 1.0,
+    ),
+    (
+        kind: Shield,
+        val: 0.0,
+    ),
+    (
+        kind: Thorns,
+        val: 0.0,
     ),
 ])

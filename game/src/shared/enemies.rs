@@ -17,6 +17,7 @@ use crate::{
     utils::AssetFolder,
 };
 
+pub mod editor;
 pub mod spawner;
 
 #[derive(Component, Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Reflect)]

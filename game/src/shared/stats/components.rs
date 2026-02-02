@@ -21,7 +21,7 @@ use serde::{Deserialize, Serialize, de::DeserializeOwned};
 /// every frame. Doing it this way means that we're not required to carry a mutable reference
 /// to the whole stats list anytime we want to access a particular stat. These are read-only
 /// values
-pub trait StatComponent: Component + Sized {
+pub trait StatComponent: Component + Sized + Clone + Copy {
     fn stat_kind(&self) -> StatKind;
 
     /// Returns option if there is an update (i.e., if this number is different from the current value)

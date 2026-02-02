@@ -11,7 +11,7 @@ use crate::{
         combat::CombatSystemSet,
         enemies::{spawner::*, *},
         game_kinds::{DefaultServerFilter, is_single_player},
-        states::InGameState,
+        states::{AppState, InGameState},
     },
 };
 
@@ -26,7 +26,7 @@ pub struct DedicatedServerEnemyPlugin;
 impl Plugin for DedicatedServerEnemyPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
-            OnEnter(InGameState::InGame),
+            OnEnter(AppState::InGame),
             spawn_enemy_spawn_manager.run_if(not(is_single_player)),
         )
         .add_systems(
