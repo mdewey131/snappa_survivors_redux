@@ -55,18 +55,32 @@ impl Plugin for HudPlugin {
 pub struct OuterHudContainer;
 fn outer_hud_node() -> Node {
     Node {
+        display: Display::Grid,
+        grid_template_columns: vec![RepeatedGridTrack::percent(20, 5.0)],
+        grid_template_rows: vec![RepeatedGridTrack::percent(20, 5.0)],
         width: Val::Percent(100.0),
         height: Val::Percent(100.0),
         justify_content: JustifyContent::SpaceAround,
-        align_items: AlignItems::FlexEnd,
+        align_items: AlignItems::Center,
         ..default()
     }
 }
 
 /// Just shows the game time element. This consists of a watch icon, and text with the time running
 #[derive(Component)]
-#[require(Node = main_hud_component_node(30.0))]
+#[require(Node = game_time_node())]
 pub struct GameTimeDisplay;
+fn game_time_node() -> Node {
+    Node {
+        width: Val::Percent(100.0),
+        height: Val::Percent(100.0),
+        grid_row: GridPlacement::start(2),
+        grid_column: GridPlacement::start_end(10, 11),
+        justify_self: JustifySelf::Center,
+        justify_content: JustifyContent::Center,
+        ..default()
+    }
+}
 
 #[derive(Component)]
 #[require(Text)]
@@ -95,26 +109,25 @@ impl<SC: StatComponent + DisplayableStat> Plugin for StatDisplayPlugin<SC> {
     }
 }
 
-fn main_hud_component_node(width: f32) -> Node {
+#[derive(Component)]
+#[require(Node = xp_bar_holder_node())]
+pub struct XPBar;
+fn xp_bar_holder_node() -> Node {
     Node {
-        height: Val::Percent(10.0),
-        width: Val::Percent(width),
-        justify_content: JustifyContent::Center,
-        align_items: AlignItems::FlexEnd,
+        width: Val::Percent(100.0),
+        height: Val::Percent(100.0),
+        grid_column: GridPlacement::start_end(1, 21),
+        grid_row: GridPlacement::start(1),
         ..default()
     }
 }
 
 #[derive(Component)]
-#[require(Node = main_hud_component_node(30.0))]
-pub struct XPBar;
-
-#[derive(Component)]
-#[require(Node = xp_bar_node(10.0, 100.0))]
+#[require(Node = xp_bar_node(100.0, 100.0))]
 pub struct XPBarBackground;
 
 #[derive(Component)]
-#[require(Node = xp_bar_node(100.0, 0.0))]
+#[require(Node = xp_bar_node(0.0, 100.0))]
 pub struct XPBarForeground;
 
 fn xp_bar_node(width: f32, height: f32) -> Node {
@@ -127,14 +140,25 @@ fn xp_bar_node(width: f32, height: f32) -> Node {
 }
 
 #[derive(Component)]
-#[require(Node = main_hud_component_node(30.0))]
+#[require(Node = health_bar_holder_node())]
 pub struct HealthBar {
     /// Checked against the player's actual health and steadily brought to the same value if not equal
     displayed_pct: f32,
 }
+fn health_bar_holder_node() -> Node {
+    Node {
+        width: Val::Percent(100.0),
+        height: Val::Percent(30.0),
+        justify_content: JustifyContent::Center,
+        align_items: AlignItems::Center,
+        grid_column: GridPlacement::start_end(8, 13),
+        grid_row: GridPlacement::start_end(16, 21),
+        ..default()
+    }
+}
 
 #[derive(Component)]
-#[require(Node = hp_bar_node(30.0))]
+#[require(Node = hp_bar_node(100.0))]
 pub struct HealthBarBackground;
 fn hp_bar_node(height: f32) -> Node {
     Node {
@@ -150,17 +174,19 @@ pub struct HealthBarForeground;
 /// The outer node that holds all of the individual stats, except for the ones
 /// that are kept in more prominent bars, like health and xp
 #[derive(Component)]
-#[require(Node = stat_display_container(30.0))]
+#[require(Node = stat_display_container(100.0))]
 pub struct StatDisplayContainer;
 fn stat_display_container(width: f32) -> Node {
     Node {
         display: Display::Grid,
-        height: Val::Percent(30.0),
+        height: Val::Percent(100.0),
         width: Val::Percent(width),
         justify_content: JustifyContent::SpaceEvenly,
         align_items: AlignItems::Center,
         flex_wrap: FlexWrap::Wrap,
         grid_template_columns: vec![RepeatedGridTrack::percent(2, 50.0)],
+        grid_row: GridPlacement::start_end(14, 21),
+        grid_column: GridPlacement::start_end(14, 21),
         ..default()
     }
 }
@@ -306,7 +332,7 @@ fn update_health_bar(
 
 fn update_xp_bar(mut q_bar: Single<&mut Node, With<XPBarForeground>>, q_xp: Single<&LevelManager>) {
     let pct = (q_xp.c_xp - q_xp.prev_max) / q_xp.next_max;
-    q_bar.height = Val::Percent(pct * 100.0)
+    q_bar.width = Val::Percent(pct * 100.0)
 }
 
 fn update_individual_stat_component<C: StatComponent + DisplayableStat>(
