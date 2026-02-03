@@ -46,6 +46,11 @@ impl Plugin for HudPlugin {
                 Update,
                 (update_health_bar, update_xp_bar, update_game_clock_display)
                     .run_if(in_state(InGameState::InGame)),
+            )
+            .add_systems(OnExit(InGameState::InGame), toggle_hud)
+            .add_systems(
+                OnEnter(InGameState::InGame),
+                toggle_hud.run_if(hud_not_shown),
             );
     }
 }
@@ -364,4 +369,15 @@ pub fn update_game_clock_display(
     let mins = (time.elapsed_secs() / 60.0).floor();
     let secs = (time.elapsed_secs() - (60.0 * mins)).floor();
     q_text.0 = format!("{}:{:02}", mins, secs)
+}
+
+pub fn toggle_hud(mut q_screen: Single<&mut Visibility, With<OuterHudContainer>>) {
+    q_screen.toggle_inherited_hidden();
+}
+
+fn hud_not_shown(q_screen: Single<&Visibility, With<OuterHudContainer>>) -> bool {
+    match *q_screen {
+        Visibility::Hidden => true,
+        _ => false,
+    }
 }
