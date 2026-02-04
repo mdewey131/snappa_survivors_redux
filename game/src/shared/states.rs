@@ -30,18 +30,13 @@ pub enum AppState {
     PostGame,
 }
 
-/// Provides a state to open the pause menu. This is used so as to be
-/// orthogonal to the in game state's idea of pausing, because
-/// "it's an online game, you can't pause it" needs to be true on the client
-#[derive(States, Clone, PartialEq, Eq, Hash, Debug, Default)]
-pub enum PauseState {
-    #[default]
-    Unpaused,
-    Paused,
-}
-
 #[derive(Resource, Default, Deref, DerefMut)]
 pub struct InGameTime(pub Stopwatch);
+
+#[derive(Resource, Default, Deref, DerefMut)]
+pub struct InGamePauseManager {
+    paused_from: InGameState,
+}
 
 pub struct SharedStatesPlugin;
 impl Plugin for SharedStatesPlugin {
@@ -74,4 +69,29 @@ fn spawn_game_timer(mut commands: Commands) {
 }
 fn tick_in_game_time(time: Res<Time<Virtual>>, mut timer: ResMut<InGameTime>) {
     timer.tick(time.delta());
+}
+
+pub fn pause_in_game_state(
+    mut commands: Commands,
+    c_state: Res<State<InGameState>>,
+    mut next_state: ResMut<NextState<InGameState>>,
+) {
+    let pause_state = InGamePauseManager {
+        paused_from: *(c_state.get()),
+    };
+
+    commands.insert_resource(pause_state);
+
+    next_state.set(InGameState::Paused);
+}
+
+pub fn unpause_in_game_state(
+    pause: Res<InGamePauseManager>,
+    mut commands: Commands,
+    mut next_state: ResMut<NextState<InGameState>>,
+) {
+    let next = pause.paused_from;
+
+    commands.remove_resource::<InGamePauseManager>();
+    next_state.set(next);
 }

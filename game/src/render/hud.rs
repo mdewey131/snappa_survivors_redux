@@ -281,7 +281,9 @@ fn spawn_individual_stat_hud_elements<C: StatComponent + DisplayableStat>(
 }
 
 fn spawn_hud_container(mut commands: Commands, assets: Res<AssetServer>) {
-    let outer_ent = commands.spawn((OuterHudContainer)).id();
+    let outer_ent = commands
+        .spawn((OuterHudContainer, DespawnOnExit(AppState::InGame)))
+        .id();
 
     // The game clock
     let game_clock_container = commands.spawn((GameTimeDisplay, ChildOf(outer_ent))).id();

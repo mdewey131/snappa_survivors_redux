@@ -14,7 +14,7 @@
 use bevy::prelude::*;
 
 use crate::{
-    shared::{game_kinds::*, stats::RawStatsList},
+    shared::{game_kinds::*, states::*, stats::RawStatsList},
     utils::AssetFolder,
 };
 
@@ -35,6 +35,8 @@ pub fn spawn_game_object(
     }
 
     add_game_kinds_components(commands, entity, game_kind, multiplayer_comp_options);
-    commands.entity(entity).insert(bundle);
+    commands
+        .entity(entity)
+        .insert((bundle, DespawnOnExit(AppState::InGame)));
     entity
 }

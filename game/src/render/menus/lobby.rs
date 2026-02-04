@@ -3,6 +3,7 @@ use bevy::prelude::*;
 use crate::{
     render::ui::button::*,
     shared::{
+        game_kinds::{CurrentGameKind, GameKinds},
         game_rules::{Difficulty, GameRuleField, MapKind},
         states::AppState,
     },
@@ -79,10 +80,15 @@ fn trigger_game_change_message_callback<F: GameRuleField>(
 pub fn spawn_lobby_back_button(
     trigger: On<Add, ContainerLobbyBackButton>,
     mut commands: Commands,
+    game_kind: Res<CurrentGameKind>,
     assets: Res<AssetServer>,
 ) {
     let btn = GameButton::new(GameButtonOnRelease::EventTrigger);
-    let style = GameButtonStyle::default().with_text("Back to Server Selection".into());
+    let text = match game_kind.0.unwrap() {
+        GameKinds::MultiPlayer => "Back to Server Selection".into(),
+        GameKinds::SinglePlayer => "Back to Main Menu".into(),
+    };
+    let style = GameButtonStyle::default().with_text(text);
     let button = btn.spawn(&mut commands, &assets, style);
 
     commands

@@ -35,7 +35,12 @@ fn load_map_chunks(mut commands: Commands, _rules: Res<GameRules>, assets: Res<A
     let tiles = Vec2::new(64.0, 64.0);
     let texture_size = Vec2::new(128.0, 128.0);
     let map = commands
-        .spawn((MapBackground, Transform::default(), Visibility::Visible))
+        .spawn((
+            MapBackground,
+            Transform::default(),
+            Visibility::Visible,
+            DespawnOnExit(AppState::InGame),
+        ))
         .id();
 
     let (total_size_x, total_size_y) = (tiles.x * texture_size.x, tiles.y * texture_size.y);

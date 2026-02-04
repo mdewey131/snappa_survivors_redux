@@ -27,12 +27,14 @@ pub mod load_game;
 pub mod lobby;
 pub mod main_menu;
 pub mod mp_selection_menu;
+mod pause_menu;
 pub mod players;
 pub mod projectiles;
 mod weapons;
 use camera::GameCameraClientPlugin;
 use client_states::ClientStatesPlugin;
 use enemies::ClientEnemyPlugin;
+use pause_menu::*;
 use players::ClientPlayerPlugin;
 use projectiles::ClientProjectilePlugin;
 use weapons::*;
@@ -45,6 +47,7 @@ impl Plugin for GameClientPlugin {
             ClientStatesPlugin,
             ClientGameLobbyPlugin,
             ClientGameLoadingPlugin,
+            ClientPauseMenuPlugin,
             ClientPlayerPlugin,
             ClientProjectilePlugin,
             ClientWeaponsPlugin,

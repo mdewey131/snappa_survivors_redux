@@ -6,7 +6,7 @@ use crate::{
     render::{menus::lobby::*, ui::button::*},
     shared::{
         GameMainChannel,
-        game_kinds::is_single_player,
+        game_kinds::{is_single_player, *},
         game_rules::GameRules,
         lobby::{ClientStartGameMessage, ServerStartLoadingGameMessage},
         states::AppState,
@@ -102,11 +102,16 @@ fn observe_lobby_back_button(
     trigger: On<ButtonReleased>,
     mut commands: Commands,
     mut state: ResMut<NextState<AppState>>,
+    game_kind: Res<CurrentGameKind>,
     q_client: Single<Entity, With<Client>>,
     q_back_button: Query<(), With<LobbyBackButton>>,
 ) {
     if let Ok(()) = q_back_button.get(trigger.entity) {
         commands.trigger(Disconnect { entity: *q_client });
-        state.set(AppState::MultiplayerServerSelection)
+        let next_state = match game_kind.0.unwrap() {
+            GameKinds::MultiPlayer => AppState::MultiplayerServerSelection,
+            GameKinds::SinglePlayer => AppState::MainMenu,
+        };
+        state.set(next_state)
     }
 }
