@@ -364,13 +364,13 @@ pub fn apply_upgrade(
     mut q_upgrade_options: Query<(
         Entity,
         &mut UpgradeOptions,
-        &PlayerUpgradeSlots,
+        &mut PlayerUpgradeSlots,
         &mut StatList,
         &PlayerWeapons,
     )>,
     mut q_weapon_stats: Query<(&mut StatList), Without<UpgradeOptions>>,
 ) {
-    for (ent, mut options, slots, mut player_stats, weapons) in &mut q_upgrade_options {
+    for (ent, mut options, mut slots, mut player_stats, weapons) in &mut q_upgrade_options {
         let index = options.selected.unwrap();
         let m_selected = options.options.get_mut(index);
         let selected = m_selected.unwrap();
@@ -397,5 +397,11 @@ pub fn apply_upgrade(
                 _ => todo!(),
             }
         }
+
+        match selected.kind {
+            UpgradeKind::AddWeapon(w) => slots.weapons.insert(w, selected.level),
+            UpgradeKind::UpgradeWeapon(w) => slots.weapons.insert(w, selected.level),
+            UpgradeKind::UpgradePlayerStat(s) => slots.stats.insert(s, selected.level),
+        };
     }
 }
