@@ -23,6 +23,16 @@ impl Plugin for LobbyMenuPlugin {
 #[require(Node = lobby_node())]
 pub struct LobbyScreen;
 
+/// The node that contains a button to go back to the previous screen.
+/// We just store this as a holder because we want to selectively spawn this
+/// button depending on the environment (clients should have this, servers should not)
+#[derive(Component, Debug, Clone, Copy)]
+#[require(Node = Node::default())]
+pub struct ContainerLobbyBackButton;
+
+#[derive(Component, Debug, Clone, Copy)]
+pub struct LobbyBackButton;
+
 #[derive(Component)]
 pub struct ChangeGameSettingButton<F: GameRuleField>(F);
 
@@ -40,6 +50,7 @@ fn make_lobby(mut commands: Commands, assets: Res<AssetServer>) {
     let lobby = commands
         .spawn((LobbyScreen, DespawnOnExit(AppState::Lobby)))
         .id();
+    commands.spawn((ChildOf(lobby), ContainerLobbyBackButton));
 
     for diff in [Difficulty::Easy, Difficulty::Normal, Difficulty::Hard].iter() {
         let button = GameButton::new(GameButtonOnRelease::EventTrigger);
@@ -63,4 +74,18 @@ fn trigger_game_change_message_callback<F: GameRuleField>(
     if let Ok((cb, button)) = q_cb.get(t.entity) {
         commands.run_system_with(cb.0, button.0);
     }
+}
+
+pub fn spawn_lobby_back_button(
+    trigger: On<Add, ContainerLobbyBackButton>,
+    mut commands: Commands,
+    assets: Res<AssetServer>,
+) {
+    let btn = GameButton::new(GameButtonOnRelease::EventTrigger);
+    let style = GameButtonStyle::default().with_text("Back to Server Selection".into());
+    let button = btn.spawn(&mut commands, &assets, style);
+
+    commands
+        .entity(button)
+        .insert((ChildOf(trigger.entity), LobbyBackButton));
 }

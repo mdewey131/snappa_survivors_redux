@@ -190,8 +190,8 @@ fn stat_display_container(width: f32) -> Node {
         align_items: AlignItems::Center,
         flex_wrap: FlexWrap::Wrap,
         grid_template_columns: vec![RepeatedGridTrack::percent(2, 50.0)],
-        grid_row: GridPlacement::start_end(14, 21),
-        grid_column: GridPlacement::start_end(14, 21),
+        grid_row: GridPlacement::start_end(16, 21),
+        grid_column: GridPlacement::start_end(16, 21),
         ..default()
     }
 }
@@ -225,6 +225,7 @@ impl StatDisplayIcon {
             StatKind::CDR => Some("cooldown_rate"),
             StatKind::CritChance => Some("crit_chance"),
             StatKind::CritDamage => Some("crit_damage"),
+            StatKind::Damage => Some("damage"),
             StatKind::EffDuration => Some("effect_duration"),
             _ => None,
         }

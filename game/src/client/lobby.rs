@@ -3,6 +3,7 @@ use lightyear::prelude::*;
 
 use crate::{
     client::load_game::client_transition_to_loading_state,
+    render::{menus::lobby::*, ui::button::*},
     shared::{
         GameMainChannel,
         game_kinds::is_single_player,
@@ -27,7 +28,9 @@ impl Plugin for ClientGameLobbyPlugin {
                 client_on_receive_start_game_message.run_if(is_single_player),
             )
                 .run_if(in_state(AppState::Lobby)),
-        );
+        )
+        .add_observer(spawn_lobby_back_button)
+        .add_observer(observe_lobby_back_button);
     }
 }
 
@@ -93,4 +96,17 @@ fn tmp_send_1p_game_start_message(mut messages: MessageWriter<ClientStartGameMes
 
 fn enter_pressed(button: Res<ButtonInput<KeyCode>>) -> bool {
     button.just_pressed(KeyCode::Enter)
+}
+
+fn observe_lobby_back_button(
+    trigger: On<ButtonReleased>,
+    mut commands: Commands,
+    mut state: ResMut<NextState<AppState>>,
+    q_client: Single<Entity, With<Client>>,
+    q_back_button: Query<(), With<LobbyBackButton>>,
+) {
+    if let Ok(()) = q_back_button.get(trigger.entity) {
+        commands.trigger(Disconnect { entity: *q_client });
+        state.set(AppState::MultiplayerServerSelection)
+    }
 }

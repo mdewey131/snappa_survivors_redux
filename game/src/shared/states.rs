@@ -4,7 +4,7 @@ use bevy::{prelude::*, time::Stopwatch, ui::FixedMeasure};
 use crate::shared::combat::CombatSystemSet;
 
 /// Handles all of the logic that is relevant to the game loop.
-#[derive(States, Component, Clone, PartialEq, Eq, Hash, Debug, Default)]
+#[derive(States, Component, Clone, PartialEq, Eq, Hash, Debug, Default, Copy)]
 pub enum InGameState {
     #[default]
     OutOfGame,
@@ -15,7 +15,7 @@ pub enum InGameState {
 }
 
 /// The different states of the app on the server and the client.
-#[derive(States, Clone, PartialEq, Eq, Hash, Debug, Default)]
+#[derive(States, Clone, PartialEq, Eq, Hash, Debug, Default, Copy)]
 #[states(scoped_entities)]
 pub enum AppState {
     #[default]

@@ -51,6 +51,10 @@ impl Plugin for GameClientPlugin {
             ClientUpgradePlugin,
         ))
         .add_systems(Startup, move_to_first_app_state)
+        .add_systems(
+            OnEnter(AppState::MultiplayerServerSelection),
+            delete_client.run_if(|q_client: Option<Single<&Client>>| q_client.is_some()),
+        )
         .add_observer(add_input_delay_on_client_add);
     }
 }
@@ -140,4 +144,8 @@ fn add_input_delay_on_client_add(trigger: On<Add, Client>, mut commands: Command
             ..default()
         }),
     ));
+}
+
+fn delete_client(mut commands: Commands, q_client: Single<Entity, With<Client>>) {
+    commands.entity(*q_client).despawn();
 }
