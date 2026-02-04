@@ -103,11 +103,13 @@ fn observe_lobby_back_button(
     mut commands: Commands,
     mut state: ResMut<NextState<AppState>>,
     game_kind: Res<CurrentGameKind>,
-    q_client: Single<Entity, With<Client>>,
+    q_client: Option<Single<Entity, With<Client>>>,
     q_back_button: Query<(), With<LobbyBackButton>>,
 ) {
     if let Ok(()) = q_back_button.get(trigger.entity) {
-        commands.trigger(Disconnect { entity: *q_client });
+        if let Some(client) = q_client {
+            commands.trigger(Disconnect { entity: *client });
+        }
         let next_state = match game_kind.0.unwrap() {
             GameKinds::MultiPlayer => AppState::MultiplayerServerSelection,
             GameKinds::SinglePlayer => AppState::MainMenu,
