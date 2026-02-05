@@ -5,9 +5,11 @@ use crate::shared::{
     players::Player,
     states::*,
     stats::{components::*, xp::LevelManager, *},
+    upgrades::{PlayerUpgradeSlots, StatUpgradeKind},
+    weapons::WeaponKind,
 };
 use bevy::prelude::*;
-use lightyear::prelude::Controlled;
+use lightyear::prelude::{Controlled, Predicted};
 
 mod stat_display_trait;
 use stat_display_trait::*;
@@ -44,7 +46,12 @@ impl Plugin for HudPlugin {
         app.add_systems(OnEnter(AppState::InGame), spawn_hud_container)
             .add_systems(
                 Update,
-                (update_health_bar, update_xp_bar, update_game_clock_display)
+                (
+                    update_health_bar,
+                    update_xp_bar,
+                    update_game_clock_display,
+                    update_upgrade_slot_display,
+                )
                     .run_if(in_state(InGameState::InGame)),
             )
             .add_systems(OnExit(InGameState::InGame), toggle_hud)
@@ -196,6 +203,97 @@ fn stat_display_container(width: f32) -> Node {
     }
 }
 
+#[derive(Component, Debug, Clone, Reflect)]
+#[require(Node = slot_display_node())]
+pub struct UpgradeSlotDisplay {
+    pub weapons: [(Entity, Option<WeaponKind>); 5],
+    pub stats: [(Entity, Option<StatUpgradeKind>); 5],
+}
+fn slot_display_node() -> Node {
+    Node {
+        height: Val::Percent(100.0),
+        width: Val::Percent(100.0),
+        justify_content: JustifyContent::SpaceEvenly,
+        align_items: AlignItems::Center,
+        flex_wrap: FlexWrap::Wrap,
+        grid_template_rows: vec![RepeatedGridTrack::percent(2, 50.0)],
+        grid_template_columns: vec![RepeatedGridTrack::percent(5, 20.0)],
+        grid_column: GridPlacement::start_end(1, 7),
+        grid_row: GridPlacement::start_end(16, 21),
+        display: Display::Grid,
+        ..default()
+    }
+}
+
+impl UpgradeSlotDisplay {
+    pub fn spawn(commands: &mut Commands, assets: &Res<AssetServer>) -> Entity {
+        let display_ent = commands.spawn(slot_display_node()).id();
+        let slot_image: Handle<Image> = assets.load("ui/upgrade_slot.png");
+        let weapons = (0..5)
+            .into_iter()
+            .map(|_i| {
+                let weapon_slot = commands
+                    .spawn((
+                        UpgradeSlot,
+                        ImageNode::from(slot_image.clone())
+                            .with_color(Color::srgba(1.0, 1.0, 1.0, 0.2)),
+                        ChildOf(display_ent),
+                    ))
+                    .id();
+                (weapon_slot, None)
+            })
+            .collect::<Vec<(Entity, Option<WeaponKind>)>>();
+
+        let upgrades = (0..5)
+            .into_iter()
+            .map(|_i| {
+                let upgrade_slot = commands
+                    .spawn((
+                        UpgradeSlot,
+                        ImageNode::from(slot_image.clone())
+                            .with_color(Color::srgba(1.0, 1.0, 1.0, 0.2)),
+                        ChildOf(display_ent),
+                    ))
+                    .id();
+                (upgrade_slot, None)
+            })
+            .collect::<Vec<(Entity, Option<StatUpgradeKind>)>>();
+        let boxed_weapons: Box<[(Entity, Option<WeaponKind>); 5]> =
+            weapons.into_boxed_slice().try_into().unwrap();
+        let boxed_upgrades: Box<[(Entity, Option<StatUpgradeKind>); 5]> =
+            upgrades.into_boxed_slice().try_into().unwrap();
+
+        let display_box = UpgradeSlotDisplay {
+            weapons: *boxed_weapons,
+            stats: *boxed_upgrades,
+        };
+        commands.entity(display_ent).insert(display_box);
+        display_ent
+    }
+}
+
+#[derive(Component, Debug, Clone)]
+#[require(Node = slot_node())]
+pub struct UpgradeSlot;
+fn slot_node() -> Node {
+    Node {
+        height: Val::Percent(80.0),
+        width: Val::Percent(80.0),
+        justify_content: JustifyContent::Center,
+        align_items: AlignItems::Center,
+        ..default()
+    }
+}
+
+impl WeaponKind {
+    fn to_icon_path(&self) -> Option<&str> {
+        match self {
+            WeaponKind::DiceGuard => Some("dice_guard"),
+            _ => None,
+        }
+    }
+}
+
 /// Added to give the player a snapshot of their various stats.
 /// This isn't used for things like XP or HP, which get their own
 /// bars.
@@ -227,6 +325,7 @@ impl StatDisplayIcon {
             StatKind::CritDamage => Some("crit_damage"),
             StatKind::Damage => Some("damage"),
             StatKind::EffDuration => Some("effect_duration"),
+            StatKind::MS => Some("move_speed"),
             _ => None,
         }
     }
@@ -319,6 +418,9 @@ fn spawn_hud_container(mut commands: Commands, assets: Res<AssetServer>) {
     let foreground_node = ImageNode::from(hp_texture).with_color(Color::srgb(1.0, 0.0, 0.0));
     commands.spawn((HealthBarForeground, ChildOf(bg), foreground_node));
     commands.spawn((StatDisplayContainer, ChildOf(outer_ent)));
+    // Upgrade slots display
+    let slots = UpgradeSlotDisplay::spawn(&mut commands, &assets);
+    commands.entity(slots).insert(ChildOf(outer_ent));
 }
 
 fn update_health_bar(
@@ -382,5 +484,104 @@ fn hud_not_shown(q_screen: Single<&Visibility, With<OuterHudContainer>>) -> bool
     match *q_screen {
         Visibility::Hidden => true,
         _ => false,
+    }
+}
+
+fn update_upgrade_slot_display(
+    mut commands: Commands,
+    assets: Res<AssetServer>,
+    mut q_slot_holder: Single<&mut UpgradeSlotDisplay>,
+    q_player: Option<
+        Single<
+            &PlayerUpgradeSlots,
+            (
+                Changed<PlayerUpgradeSlots>,
+                With<Player>,
+                Or<(With<SinglePlayer>, With<Predicted>)>,
+            ),
+        >,
+    >,
+) {
+    if let Some(upgrades) = q_player {
+        // Weapons first
+        let c_weapon_slots = q_slot_holder
+            .weapons
+            .iter()
+            .filter_map(|(e, m_weapon)| *m_weapon)
+            .collect::<Vec<WeaponKind>>();
+
+        // Check to see if the player weapons are present
+        let weapons_to_add = upgrades
+            .weapons
+            .keys()
+            .filter_map(|w| {
+                if c_weapon_slots.contains(w) {
+                    None
+                } else {
+                    Some(*w)
+                }
+            })
+            .collect::<Vec<WeaponKind>>();
+
+        for w in weapons_to_add {
+            let next = q_slot_holder
+                .weapons
+                .iter()
+                .position(|(e, m_w)| m_w.is_none())
+                .expect(
+                    "This should not have been an offered upgrade if we don't have a free slot",
+                );
+            let mut entry = q_slot_holder.weapons.get_mut(next).unwrap();
+            let weapon_icon_path = w.to_icon_path();
+            if let Some(name) = weapon_icon_path {
+                let path = format!("ui/weapon_icons/{}.png", name);
+                let w_icon: Handle<Image> = assets.load(path);
+                commands.entity(entry.0).with_children(|parent| {
+                    parent.spawn(ImageNode::from(w_icon));
+                });
+            }
+            entry.1 = Some(w);
+        }
+
+        // now stats
+        let c_stat_slots = q_slot_holder
+            .stats
+            .iter()
+            .filter_map(|(e, m_stat)| *m_stat)
+            .collect::<Vec<StatUpgradeKind>>();
+
+        // Check to see if the player weapons are present
+        let stats_to_add = upgrades
+            .stats
+            .keys()
+            .filter_map(|s| {
+                if c_stat_slots.contains(s) {
+                    None
+                } else {
+                    Some(*s)
+                }
+            })
+            .collect::<Vec<StatUpgradeKind>>();
+
+        for s in stats_to_add {
+            let next = q_slot_holder
+                .stats
+                .iter()
+                .position(|(e, m_s)| m_s.is_none())
+                .expect(
+                    "This should not have been an offered upgrade if we don't have a free slot",
+                );
+            let mut entry = q_slot_holder.stats.get_mut(next).unwrap();
+            let stat: StatKind = s.into();
+            let icon_name = StatDisplayIcon::path_from_stat_kind(&stat);
+            if let Some(name) = icon_name {
+                let path = format!("ui/stat_icons/{}.png", name);
+                let handle: Handle<Image> = assets.load(path);
+                commands.entity(entry.0).with_children(|parent| {
+                    parent.spawn(ImageNode::from(handle));
+                });
+            }
+            entry.1 = Some(s);
+        }
     }
 }
