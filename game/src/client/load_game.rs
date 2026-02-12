@@ -71,7 +71,7 @@ fn spawn_player_character(mut commands: Commands, game_kinds: Res<CurrentGameKin
 
     add_weapon_to_player(
         p_ent,
-        WeaponKind::DiceGuard,
+        WeaponKind::ThrowHands,
         &mut commands,
         game_kinds.0.unwrap(),
     );

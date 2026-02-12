@@ -1,10 +1,10 @@
 use crate::shared::{
-    GameMainChannel,
-    game_kinds::{CurrentGameKind, SinglePlayer, is_single_player},
+    game_kinds::{is_single_player, CurrentGameKind, SinglePlayer},
     players::{CharacterKind, Player, PlayerWeapons},
     states::{AppState, InGameState},
-    stats::{RawStatsList, StatKind, StatList, xp::LevelUpMessage},
-    weapons::{Weapon, WeaponKind, add_weapon_to_player},
+    stats::{xp::LevelUpMessage, RawStatsList, StatKind, StatList},
+    weapons::{add_weapon_to_player, Weapon, WeaponKind},
+    GameMainChannel,
 };
 use bevy::{
     platform::collections::{HashMap, HashSet},
@@ -12,8 +12,8 @@ use bevy::{
 };
 use lightyear::prelude::*;
 use rand::{
-    Rng,
     distr::{Distribution, StandardUniform},
+    Rng,
 };
 use serde::{Deserialize, Serialize};
 use strum::EnumIter;

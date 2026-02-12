@@ -121,88 +121,6 @@ impl<SC: StatComponent + DisplayableStat> Plugin for StatDisplayPlugin<SC> {
     }
 }
 
-#[derive(Component)]
-#[require(Node = xp_bar_holder_node())]
-pub struct XPBar;
-fn xp_bar_holder_node() -> Node {
-    Node {
-        width: Val::Percent(100.0),
-        height: Val::Percent(100.0),
-        grid_column: GridPlacement::start_end(1, 21),
-        grid_row: GridPlacement::start(1),
-        ..default()
-    }
-}
-
-#[derive(Component)]
-#[require(Node = xp_bar_node(100.0, 100.0))]
-pub struct XPBarBackground;
-
-#[derive(Component)]
-#[require(Node = xp_bar_node(0.0, 100.0))]
-pub struct XPBarForeground;
-
-fn xp_bar_node(width: f32, height: f32) -> Node {
-    Node {
-        width: Val::Percent(width),
-        height: Val::Percent(height),
-        align_items: AlignItems::FlexEnd,
-        ..default()
-    }
-}
-
-#[derive(Component)]
-#[require(Node = health_bar_holder_node())]
-pub struct HealthBar {
-    /// Checked against the player's actual health and steadily brought to the same value if not equal
-    displayed_pct: f32,
-}
-fn health_bar_holder_node() -> Node {
-    Node {
-        width: Val::Percent(100.0),
-        height: Val::Percent(30.0),
-        justify_content: JustifyContent::Center,
-        align_items: AlignItems::Center,
-        grid_column: GridPlacement::start_end(8, 13),
-        grid_row: GridPlacement::start_end(16, 21),
-        ..default()
-    }
-}
-
-#[derive(Component)]
-#[require(Node = hp_bar_node(100.0))]
-pub struct HealthBarBackground;
-fn hp_bar_node(height: f32) -> Node {
-    Node {
-        width: Val::Percent(100.0),
-        height: Val::Percent(height),
-        ..default()
-    }
-}
-#[derive(Component)]
-#[require(Node = hp_bar_node(100.0))]
-pub struct HealthBarForeground;
-
-/// The outer node that holds all of the individual stats, except for the ones
-/// that are kept in more prominent bars, like health and xp
-#[derive(Component)]
-#[require(Node = stat_display_container(100.0))]
-pub struct StatDisplayContainer;
-fn stat_display_container(width: f32) -> Node {
-    Node {
-        display: Display::Grid,
-        height: Val::Percent(100.0),
-        width: Val::Percent(width),
-        justify_content: JustifyContent::SpaceEvenly,
-        align_items: AlignItems::Center,
-        flex_wrap: FlexWrap::Wrap,
-        grid_template_columns: vec![RepeatedGridTrack::percent(2, 50.0)],
-        grid_row: GridPlacement::start_end(16, 21),
-        grid_column: GridPlacement::start_end(16, 21),
-        ..default()
-    }
-}
-
 #[derive(Component, Debug, Clone, Reflect)]
 #[require(Node = slot_display_node())]
 pub struct UpgradeSlotDisplay {
@@ -277,12 +195,107 @@ impl UpgradeSlotDisplay {
 pub struct UpgradeSlot;
 fn slot_node() -> Node {
     Node {
-        height: Val::Percent(80.0),
-        width: Val::Percent(80.0),
+        height: Val::Percent(100.0),
+        width: Val::Percent(100.0),
         justify_content: JustifyContent::Center,
         align_items: AlignItems::Center,
         ..default()
     }
+}
+
+#[derive(Component)]
+#[require(Node = xp_bar_holder_node())]
+pub struct XPBar;
+fn xp_bar_holder_node() -> Node {
+    Node {
+        width: Val::Percent(100.0),
+        height: Val::Percent(100.0),
+        grid_column: GridPlacement::start_end(1, 21),
+        grid_row: GridPlacement::start(1),
+        ..default()
+    }
+}
+
+#[derive(Component)]
+#[require(Node = xp_bar_node(100.0, 100.0))]
+pub struct XPBarBackground;
+
+#[derive(Component)]
+#[require(Node = xp_bar_node(0.0, 100.0))]
+pub struct XPBarForeground;
+
+fn xp_bar_node(width: f32, height: f32) -> Node {
+    Node {
+        width: Val::Percent(width),
+        height: Val::Percent(height),
+        align_items: AlignItems::FlexEnd,
+        ..default()
+    }
+}
+
+#[derive(Component)]
+#[require(Node = health_bar_holder_node())]
+pub struct HealthBar {
+    /// Checked against the player's actual health and steadily brought to the same value if not equal
+    displayed_pct: f32,
+}
+fn health_bar_holder_node() -> Node {
+    Node {
+        width: Val::Percent(100.0),
+        height: Val::Percent(30.0),
+        justify_content: JustifyContent::Center,
+        align_items: AlignItems::Center,
+        grid_column: GridPlacement::start_end(8, 13),
+        grid_row: GridPlacement::start_end(16, 21),
+        ..default()
+    }
+}
+
+#[derive(Component)]
+#[require(Node = hp_bar_node(100.0))]
+pub struct HealthBarBackground;
+fn hp_bar_node(height: f32) -> Node {
+    Node {
+        width: Val::Percent(100.0),
+        height: Val::Percent(height),
+        ..default()
+    }
+}
+#[derive(Component)]
+#[require(Node = hp_bar_node(100.0))]
+pub struct HealthBarForeground;
+
+/// The outer node that holds all of the individual stats, except for the ones
+/// that are kept in more prominent bars, like health and xp
+#[derive(Component, Debug, Clone, Reflect)]
+#[require(BackgroundColor = BackgroundColor(Color::srgba(1.0, 0.8, 0.8, 0.2)))]
+pub struct StatDisplayContainer {
+    kind: StatDisplayContainerKind,
+}
+#[derive(Debug, Clone, Reflect)]
+pub enum StatDisplayContainerKind {
+    PlayerHud,
+    NonPlayerSummary,
+}
+fn stat_display_container(kind: StatDisplayContainerKind) -> Node {
+    let mut node = Node::default();
+
+    match kind {
+        StatDisplayContainerKind::PlayerHud => {
+            node.grid_auto_flow = GridAutoFlow::Column;
+            node.grid_template_rows = vec![RepeatedGridTrack::percent(20, 5.0)];
+            node.grid_template_columns = vec![RepeatedGridTrack::percent(1, 100.0)];
+            node.width = Val::Percent(100.0);
+            node.height = Val::Percent(100.0);
+            node.grid_row = GridPlacement::start_end(4, 21);
+            node.grid_column = GridPlacement::start_end(19, 21);
+            node.flex_direction = FlexDirection::Column;
+        }
+        StatDisplayContainerKind::NonPlayerSummary => {
+            node.grid_template_columns = vec![RepeatedGridTrack::percent(2, 50.0)];
+        }
+    }
+    node
 }
 
 impl WeaponKind {
@@ -298,19 +311,23 @@ impl WeaponKind {
 /// This isn't used for things like XP or HP, which get their own
 /// bars.
 #[derive(Component)]
-#[require(Node = stat_display_container_node())]
+#[require(Node = stat_display_container_node(StatDisplayContainerKind::PlayerHud))]
 pub struct IndividualStatDisplay<C> {
     pub stat_kind: StatKind,
     pub stat_value: C,
 }
-fn stat_display_container_node() -> Node {
-    Node {
-        height: Val::Percent(10.0),
-        width: Val::Percent(50.0),
-        justify_content: JustifyContent::SpaceEvenly,
-        align_items: AlignItems::Center,
-        ..default()
+fn stat_display_container_node(kind: StatDisplayContainerKind) -> Node {
+    let mut node = Node::default();
+    match kind {
+        StatDisplayContainerKind::PlayerHud => {
+            node.height = Val::Percent(5.0);
+            node.width = Val::Percent(100.0);
+            node.justify_content = JustifyContent::SpaceEvenly;
+            node.align_items = AlignItems::Center;
+        }
+        _ => {}
     }
+    node
 }
 
 #[derive(Component)]
@@ -325,8 +342,19 @@ impl StatDisplayIcon {
             StatKind::CritDamage => Some("crit_damage"),
             StatKind::Damage => Some("damage"),
             StatKind::EffDuration => Some("effect_duration"),
+            StatKind::EffSize => Some("effect_size"),
+            StatKind::Evasion => Some("evasion"),
+            StatKind::Health => Some("max_health"),
+            StatKind::HealthRegen => Some("health_regen"),
+            StatKind::LifeSteal => Some("lifesteal"),
+            StatKind::Luck => Some("luck"),
             StatKind::MS => Some("move_speed"),
-            _ => None,
+            StatKind::PickupR => Some("pickup_radius"),
+            StatKind::ProjCount => Some("projectile_count"),
+            StatKind::ProjSpeed => Some("projectile_speed"),
+            StatKind::Shield => Some("shield"),
+            StatKind::Thorns => Some("thorns"),
+            StatKind::XPGain => Some("xp_gain"),
         }
     }
 }
@@ -417,7 +445,13 @@ fn spawn_hud_container(mut commands: Commands, assets: Res<AssetServer>) {
 
     let foreground_node = ImageNode::from(hp_texture).with_color(Color::srgb(1.0, 0.0, 0.0));
     commands.spawn((HealthBarForeground, ChildOf(bg), foreground_node));
-    commands.spawn((StatDisplayContainer, ChildOf(outer_ent)));
+    commands.spawn((
+        StatDisplayContainer {
+            kind: StatDisplayContainerKind::PlayerHud,
+        },
+        stat_display_container(StatDisplayContainerKind::PlayerHud),
+        ChildOf(outer_ent),
+    ));
     // Upgrade slots display
     let slots = UpgradeSlotDisplay::spawn(&mut commands, &assets);
     commands.entity(slots).insert(ChildOf(outer_ent));

@@ -16,12 +16,15 @@ use crate::{
 };
 
 mod dice_guard;
+mod throw_hands;
 pub use dice_guard::*;
+pub use throw_hands::*;
 
 pub struct SharedWeaponPlugin;
 
 impl Plugin for SharedWeaponPlugin {
     fn build(&self, app: &mut App) {
+        app.add_plugins(SharedThrowHandsPlugin);
         app.add_systems(
             FixedUpdate,
             (weapon_off_cooldown, tick_weapon_active_timer)
@@ -82,6 +85,10 @@ impl From<WeaponKind> for Weapon {
     fn from(value: WeaponKind) -> Self {
         let pattern = match value {
             WeaponKind::DiceGuard => WeaponActivityPattern::ActiveforDuration,
+            WeaponKind::ThrowHands => WeaponActivityPattern::ActiveForProjectiles {
+                time_btw_attacks: 0.5,
+                rem_projectiles: 0,
+            },
             _ => WeaponActivityPattern::AlwaysOn,
         };
         Weapon {
@@ -146,6 +153,12 @@ pub fn add_weapon_to_player(
         WeaponKind::DiceGuard => {
             commands.entity(w_ent).insert(DiceGuard);
         }
+        WeaponKind::ThrowHands => {
+            commands.entity(w_ent).insert(ThrowHands {
+                targets: None,
+                current: 0,
+            });
+        }
         _ => {
             warn!("Weapon entity created without a marker component")
         }
@@ -195,6 +208,7 @@ fn weapon_off_cooldown(
                     commands.trigger(ActivateWeapon { entity: ent });
                 } else {
                     commands.trigger(ActivateWeapon { entity: ent });
+                    commands.trigger(DeactivateWeapon { entity: ent });
                 }
             }
             WeaponActivityPattern::ActiveforDuration => {
@@ -225,13 +239,13 @@ fn tick_weapon_active_timer(
                     time_btw_attacks: _,
                     ref mut rem_projectiles,
                 } => {
-                    *rem_projectiles -= 1;
-                    commands.trigger(ActivateWeapon { entity: e });
-                    if *rem_projectiles == 0 {
+                    if *rem_projectiles > 0 {
+                        *rem_projectiles -= 1;
+                        commands.trigger(ActivateWeapon { entity: e });
+                        timer.reset()
+                    } else {
                         commands.entity(e).remove::<WeaponActiveTimer>();
                         commands.trigger(DeactivateWeapon { entity: e });
-                    } else {
-                        timer.reset()
                     }
                 }
                 // This gets activated off of cooldown and so is handled by the update function

@@ -4,6 +4,10 @@
         val: 1.0,
     ),
     (
+        kind: Armor,
+        val: 0.0,
+    ),
+    (
         kind: CritChance,
         val: 0.0,
     ),
@@ -48,6 +52,10 @@
         val: 1.0,
     ),
     (
+        kind: LifeSteal,
+        val: 0.0,
+    ),
+    (
         kind: PickupR,
         val: 200.0,
     ),
@@ -66,5 +74,9 @@
     (
         kind: Thorns,
         val: 0.0,
+    ),
+    (
+        kind: XPGain,
+        val: 1.0,
     ),
 ])
