@@ -1,16 +1,3 @@
-//! Game Object Spawning
-//!
-//! "Game Object" in this context just refers to the entities that will be a part of
-//! the actual gameplay (so, players, enemies, projectiles, weapons, pickups, etc)
-//!
-//! These entities share in common the idea that they need to either have lightyear
-//! components like "Replicate" or "Predicted", or they need to have "SinglePlayer"
-//! (collectively called "game kinds components")
-//!
-//! Because we want to have trigger systems that work off of the addition of the
-//! game-relevant components, but we need the game kinds components for the filters,
-//! the way to spawn these entities is to first add the game kinds components, then
-//! to spawn the relevant bundle
 use bevy::prelude::*;
 
 use crate::{
@@ -18,8 +5,26 @@ use crate::{
     utils::AssetFolder,
 };
 
-/// Spawns the entity with the given bundle, ensuring that is happens in the order that is required
-/// so that triggers can function correctly off of the DefaultClientFilter and DefaultServerFilter
+/// Game Object Spawning
+///
+/// "Game Object" in this context just refers to the entities that will be a part of
+/// the actual gameplay (so, players, enemies, projectiles, weapons, pickups, etc)
+///
+/// These entities share in common the idea that they need to either have lightyear
+/// components like "Replicate" or "Predicted", or they need to have "SinglePlayer")
+///
+/// Spawns the entity with the given bundle, ensuring that is happens in the required order.
+///
+/// Because we want to have trigger systems that work off of the addition of the
+/// game-relevant components (e.g. stats), but we need the game kinds components for the filters to those triggers,
+/// the way to spawn these entities is to first add the game kinds components, then
+/// to spawn the relevant bundle
+///
+///
+/// Inserting the stats on the entity as it spawns is important for other spawn triggers that run on this
+/// entity which require the stats, which we'll miss if we delay inserting the stats.
+///
+/// The same is true for replication components, so we take those settings as well
 pub fn spawn_game_object(
     commands: &mut Commands,
     game_kind: GameKinds,

@@ -45,6 +45,20 @@ pub struct MultiPlayerComponentOptions {
     pub pred: bool,
     pub interp: bool,
 }
+impl MultiPlayerComponentOptions {
+    pub const PREDICTED: Self = Self {
+        pred: true,
+        interp: false,
+    };
+    pub const INTERPOLATED: Self = Self {
+        pred: false,
+        interp: true,
+    };
+    pub const BOTH: Self = Self {
+        pred: true,
+        interp: true,
+    };
+}
 /// Inserts the compoonents that this entity needs related to the game kind
 pub fn add_game_kinds_components(
     comms: &mut Commands,

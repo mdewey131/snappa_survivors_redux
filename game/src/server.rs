@@ -131,6 +131,7 @@ impl Plugin for DedicatedServerRendererPlugin {
             ServerPlayerRenderPlugin,
             ServerEnemyRenderPlugin,
             DedicatedServerDiceGuardRenderPlugin,
+            DedicatedServerThrowHandsRenderPlugin,
         ));
     }
 }

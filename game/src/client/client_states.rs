@@ -1,14 +1,8 @@
 use bevy::prelude::*;
-use lightyear::{
-    connection::client::ClientState,
-    prelude::{Client, Server, server::Start},
-};
+use lightyear::{connection::client::ClientState, prelude::Client};
 
 use super::GameClient;
-use crate::shared::{
-    game_kinds::{CurrentGameKind, GameKinds},
-    states::AppState,
-};
+use crate::shared::states::AppState;
 pub struct ClientStatesPlugin;
 impl Plugin for ClientStatesPlugin {
     fn build(&self, app: &mut App) {

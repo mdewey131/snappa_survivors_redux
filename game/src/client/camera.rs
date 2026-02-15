@@ -1,4 +1,3 @@
-use avian2d::prelude::Position;
 use bevy::{prelude::*, render::RenderSystems};
 
 use crate::render::camera::*;

@@ -3,15 +3,13 @@ use crate::shared::{
     game_object_spawning::spawn_game_object,
     players::{CharacterKind, Player, PlayerBaseBundle, PlayerWeapons},
     states::*,
-    stats::{RawStatsList, xp::add_level_manager},
+    stats::xp::add_level_manager,
     upgrades::PlayerUpgradeSlots,
     weapons::{WeaponKind, add_weapon_to_player},
 };
 use avian2d::prelude::Position;
-use bevy::{platform::collections::HashMap, prelude::*};
-use lightyear::prelude::{
-    Client, ControlledBy, Lifetime, LinkOf, NetworkTarget, PredictionTarget, RemoteId, Replicate,
-};
+use bevy::prelude::*;
+use lightyear::prelude::{ControlledBy, Lifetime, LinkOf, RemoteId};
 use rand::Rng;
 
 pub struct DedicatedServerLoadingPlugin;
@@ -45,7 +43,7 @@ fn spawn_player_characters(
                 PlayerBaseBundle {
                     player,
                     position: Position(Vec2::new(pos.0, pos.1)),
-                    upgrade_slots: PlayerUpgradeSlots::from(CharacterKind::Dewey),
+                    upgrade_slots: PlayerUpgradeSlots::new(5, 5),
                     weapons: PlayerWeapons::default(),
                 },
                 ControlledBy {

@@ -1,10 +1,12 @@
+use std::fmt::Display;
+
 use crate::shared::{
-    game_kinds::{is_single_player, CurrentGameKind, SinglePlayer},
+    GameMainChannel,
+    game_kinds::{CurrentGameKind, SinglePlayer, is_single_player},
     players::{CharacterKind, Player, PlayerWeapons},
     states::{AppState, InGameState},
-    stats::{xp::LevelUpMessage, RawStatsList, StatKind, StatList},
-    weapons::{add_weapon_to_player, Weapon, WeaponKind},
-    GameMainChannel,
+    stats::{RawStatsList, StatKind, StatList, xp::LevelUpMessage},
+    weapons::{Weapon, WeaponKind, add_weapon_to_player},
 };
 use bevy::{
     platform::collections::{HashMap, HashSet},
@@ -12,8 +14,8 @@ use bevy::{
 };
 use lightyear::prelude::*;
 use rand::{
-    distr::{Distribution, StandardUniform},
     Rng,
+    distr::{Distribution, StandardUniform},
 };
 use serde::{Deserialize, Serialize};
 use strum::EnumIter;
@@ -216,30 +218,20 @@ impl From<StatUpgradeKind> for StatKind {
 #[derive(Reflect, Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub struct StatsUpgrades(Vec<(StatKind, f32)>);
 
-#[derive(Component, Default, Reflect, Debug, Clone, Serialize, Deserialize)]
+#[derive(Component, Reflect, Debug, Clone, Serialize, Deserialize)]
 pub struct PlayerUpgradeSlots {
     pub weapons: HashMap<WeaponKind, u8>,
     pub weapon_limit: usize,
     pub stats: HashMap<StatUpgradeKind, u8>,
     pub stats_limit: usize,
 }
-
-impl From<CharacterKind> for PlayerUpgradeSlots {
-    fn from(value: CharacterKind) -> Self {
-        let starting_weapon = match value {
-            CharacterKind::Dewey => WeaponKind::DiceGuard,
-            _ => {
-                todo!()
-            }
-        };
-
-        let mut weapons_map = HashMap::new();
-        weapons_map.insert(starting_weapon, 1);
+impl PlayerUpgradeSlots {
+    pub fn new(weapon_limit: usize, stats_limit: usize) -> Self {
         Self {
-            weapons: weapons_map,
-            weapon_limit: 5,
+            weapons: HashMap::new(),
+            weapon_limit,
             stats: HashMap::new(),
-            stats_limit: 5,
+            stats_limit,
         }
     }
 }

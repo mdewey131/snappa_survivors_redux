@@ -2,30 +2,20 @@ use crate::shared::{
     combat::{CombatSystemSet, Cooldown},
     damage::{DamageBuffer, DamageInstance},
     enemies::Enemy,
+    game_kinds::{CurrentGameKind, MultiPlayerComponentOptions},
+    game_object_spawning::spawn_game_object,
     players::Player,
     states::InGameState,
     stats::components::*,
     weapons::DeactivateWeapon,
 };
 use avian2d::prelude::*;
-use bevy::prelude::*;
+use bevy::{ecs::query::QueryFilter, prelude::*};
 use serde::{Deserialize, Serialize};
+const BASE_WINDUP_TIME: f32 = 0.2;
+const BASE_WINDDOWN_TIME: f32 = 0.2;
 
 use super::ActivateWeapon;
-
-pub struct SharedThrowHandsPlugin;
-impl Plugin for SharedThrowHandsPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_systems(
-            FixedUpdate,
-            update_attack
-                .run_if(in_state(InGameState::InGame))
-                .in_set(CombatSystemSet::Combat),
-        )
-        .add_observer(on_activate)
-        .add_observer(on_deactivate);
-    }
-}
 
 #[derive(Component, Debug, Clone, Serialize, Deserialize, Reflect)]
 pub struct ThrowHands {
@@ -41,25 +31,36 @@ pub struct ThrowHandsAttack {
 }
 impl ThrowHandsAttack {
     fn new(target: Entity) -> Self {
+        let state = ThrowHandsAttackState::Windup;
+        let timer = Self::timer_from_state(state);
         Self {
             target,
-            state: ThrowHandsAttackState::Windup,
-            timer: Timer::from_seconds(0.5, TimerMode::Once),
+            state,
+            timer,
         }
+    }
+    fn timer_from_state(state: ThrowHandsAttackState) -> Timer {
+        let time = match state {
+            ThrowHandsAttackState::Attack => unimplemented!(),
+            ThrowHandsAttackState::Windup => BASE_WINDUP_TIME,
+            ThrowHandsAttackState::Winddown => BASE_WINDDOWN_TIME,
+        };
+        Timer::from_seconds(time, TimerMode::Once)
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Reflect)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, Reflect)]
 pub enum ThrowHandsAttackState {
     Windup,
     Attack,
     Winddown,
 }
 
-pub fn on_activate(
+pub fn on_activate<QF: QueryFilter>(
     trigger: On<ActivateWeapon>,
+    game_kind: Res<CurrentGameKind>,
     mut commands: Commands,
-    mut q_weapon: Query<(&ChildOf, &mut ThrowHands, &ProjectileCount, &Damage)>,
+    mut q_weapon: Query<(&ChildOf, &mut ThrowHands, &ProjectileCount, &Damage), QF>,
     q_player: Query<&Position, With<Player>>,
     q_enemy: Query<(Entity, &Position), (With<Enemy>, Without<Player>)>,
 ) {
@@ -79,7 +80,13 @@ pub fn on_activate(
         };
 
         throw.current += 1;
-        commands.spawn((ThrowHandsAttack::new(target), *damage));
+        spawn_game_object(
+            &mut commands,
+            game_kind.0.unwrap(),
+            None::<()>,
+            MultiPlayerComponentOptions::PREDICTED,
+            (ThrowHandsAttack::new(target), *damage),
+        );
     }
 }
 
@@ -108,10 +115,10 @@ fn find_targets(
     targets
 }
 
-pub fn on_deactivate(
+pub fn on_deactivate<QF: QueryFilter>(
     trigger: On<DeactivateWeapon>,
     mut commands: Commands,
-    mut q_weapon: Query<(&mut ThrowHands, &CooldownRate)>,
+    mut q_weapon: Query<(&mut ThrowHands, &CooldownRate), QF>,
 ) {
     if let Ok((mut weapon, cdr)) = q_weapon.get_mut(trigger.entity) {
         weapon.targets = None;
@@ -120,10 +127,10 @@ pub fn on_deactivate(
     }
 }
 
-pub fn update_attack(
+pub fn update_attack<QF: QueryFilter>(
     mut commands: Commands,
     time: Res<Time<Fixed>>,
-    mut q_attack: Query<(Entity, &mut ThrowHandsAttack, &Damage)>,
+    mut q_attack: Query<(Entity, &mut ThrowHandsAttack, &Damage), QF>,
     mut q_target: Query<(&mut DamageBuffer)>,
 ) {
     for (attack_ent, mut throw, damage) in &mut q_attack {
@@ -136,12 +143,13 @@ pub fn update_attack(
             }
             ThrowHandsAttackState::Attack => {
                 throw.state = ThrowHandsAttackState::Winddown;
-                throw.timer = Timer::from_seconds(0.2, TimerMode::Once);
-                let mut t_buffer = q_target.get_mut(throw.target).expect("Not Found!");
-                t_buffer.push(DamageInstance {
-                    damage_source: attack_ent,
-                    amount: damage.0,
-                });
+                throw.timer = ThrowHandsAttack::timer_from_state(throw.state);
+                if let Ok(mut t_buffer) = q_target.get_mut(throw.target) {
+                    t_buffer.push(DamageInstance {
+                        damage_source: attack_ent,
+                        amount: damage.0,
+                    });
+                };
             }
             ThrowHandsAttackState::Winddown => {
                 throw.timer.tick(time.delta());

@@ -4,14 +4,12 @@ use lightyear::prelude::*;
 use rand::Rng;
 
 use crate::shared::{
-    GameMainChannel,
     game_kinds::*,
-    game_object_spawning::{self, spawn_game_object},
+    game_object_spawning::spawn_game_object,
     game_rules::GameRules,
-    lobby::{ClientStartGameMessage, ServerStartLoadingGameMessage},
     players::*,
     states::{AppState, InGameState},
-    stats::{RawStatsList, xp::add_level_manager},
+    stats::xp::add_level_manager,
     upgrades::PlayerUpgradeSlots,
     weapons::{WeaponKind, add_weapon_to_player},
 };
@@ -64,7 +62,7 @@ fn spawn_player_character(mut commands: Commands, game_kinds: Res<CurrentGameKin
         (PlayerBaseBundle {
             player,
             position: Position(Vec2::new(pos.0, pos.1)),
-            upgrade_slots: PlayerUpgradeSlots::from(CharacterKind::Dewey),
+            upgrade_slots: PlayerUpgradeSlots::new(5, 5),
             weapons: PlayerWeapons::default(),
         }),
     );

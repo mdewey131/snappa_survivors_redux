@@ -302,6 +302,7 @@ impl WeaponKind {
     fn to_icon_path(&self) -> Option<&str> {
         match self {
             WeaponKind::DiceGuard => Some("dice_guard"),
+            WeaponKind::ThrowHands => Some("throw_hands"),
             _ => None,
         }
     }
@@ -475,7 +476,7 @@ fn update_health_bar(
 }
 
 fn update_xp_bar(mut q_bar: Single<&mut Node, With<XPBarForeground>>, q_xp: Single<&LevelManager>) {
-    let pct = (q_xp.c_xp - q_xp.prev_max) / q_xp.next_max;
+    let pct = (q_xp.c_xp - q_xp.prev_max) / (q_xp.next_max - q_xp.prev_max);
     q_bar.width = Val::Percent(pct * 100.0)
 }
 

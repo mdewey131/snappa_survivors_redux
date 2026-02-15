@@ -11,12 +11,13 @@ use crate::{
         players::PlayerWeapons,
         states::InGameState,
         stats::{RawStatsList, components::*},
+        upgrades::PlayerUpgradeSlots,
     },
     utils::AssetFolder,
 };
 
-mod dice_guard;
-mod throw_hands;
+pub mod dice_guard;
+pub mod throw_hands;
 pub use dice_guard::*;
 pub use throw_hands::*;
 
@@ -24,7 +25,6 @@ pub struct SharedWeaponPlugin;
 
 impl Plugin for SharedWeaponPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(SharedThrowHandsPlugin);
         app.add_systems(
             FixedUpdate,
             (weapon_off_cooldown, tick_weapon_active_timer)
@@ -51,10 +51,7 @@ pub struct Weapon {
 
 impl From<Weapon> for MultiPlayerComponentOptions {
     fn from(value: Weapon) -> Self {
-        Self {
-            pred: true,
-            interp: false,
-        }
+        Self::PREDICTED
     }
 }
 
@@ -168,6 +165,16 @@ pub fn add_weapon_to_player(
         let mut q_storage = world.query::<&mut PlayerWeapons>();
         let mut player_storage = q_storage.get_mut(world, player).unwrap();
         player_storage.0.insert(weapon_kind, w_ent);
+
+        // Special case where this is the first weapon for the player: we have
+        // to add this to their upgrade slots, because there hasn't been
+        // a level up event for each player, and I don't want to go the route
+        // of devising a system where they level up on init
+        let mut q_upgrades = world.query::<&mut PlayerUpgradeSlots>();
+        let mut slots = q_upgrades.get_mut(world, player).unwrap();
+        if slots.weapons.is_empty() {
+            slots.weapons.insert(weapon_kind, 1);
+        }
     });
 
     w_ent

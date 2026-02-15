@@ -1,7 +1,6 @@
 use crate::{
     render::enemies::rendering_on_enemy_add,
     shared::{
-        colliders::CommonColliderBundle,
         combat::CombatSystemSet,
         enemies::{spawner::*, *},
         game_kinds::{DefaultClientFilter, SinglePlayer, is_single_player},

@@ -5,7 +5,7 @@
     ),
     (
         kind: CDR,
-        val: 1.0,
+        val: 0.25,
     ),
     (
         kind: Damage,
@@ -21,10 +21,6 @@
     ),
     (
         kind: ProjCount,
-        val: 1.0,
-    ),
-    (
-        kind: ProjSpeed,
-        val: 50.0,
+        val: 2.0,
     ),
 ])
