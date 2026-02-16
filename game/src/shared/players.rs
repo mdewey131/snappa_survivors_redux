@@ -1,6 +1,7 @@
 use crate::{
     shared::{
         colliders::{ColliderTypes, CommonColliderBundle, RecentlyCollided},
+        combat::CharacterFacing,
         damage::Dead,
         game_kinds::{CurrentGameKind, MultiPlayerComponentOptions, SinglePlayer},
         inputs::Movement,
@@ -83,6 +84,7 @@ pub struct PlayerBaseBundle {
     pub position: Position,
     pub upgrade_slots: PlayerUpgradeSlots,
     pub weapons: PlayerWeapons,
+    pub facing: CharacterFacing,
 }
 
 /// Marker component for the pickup radius that a player has
@@ -158,3 +160,21 @@ pub fn on_death(
 ) {
 }
  */
+
+pub fn update_player_facing_direction<QF: QueryFilter>(
+    mut q_player: Query<(&mut CharacterFacing, &Actions<Player>), QF>,
+    q_movement: Query<&ActionValue, With<Action<Movement>>>,
+) {
+    for (mut facing, actions) in &mut q_player {
+        for a_ent in actions.iter() {
+            if let Ok(a_val) = q_movement.get(a_ent) {
+                let dir = a_val.as_axis2d();
+                let next = facing.next_direction(dir);
+                let current = facing.c_dir;
+                if current != next {
+                    facing.c_dir = next;
+                }
+            }
+        }
+    }
+}

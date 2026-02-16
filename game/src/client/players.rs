@@ -21,7 +21,10 @@ impl Plugin for ClientPlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             FixedUpdate,
-            (player_movement::<Or<(With<Predicted>, With<SinglePlayer>)>>)
+            (
+                player_movement::<DefaultClientFilter>,
+                update_player_facing_direction::<DefaultClientFilter>,
+            )
                 .in_set(CombatSystemSet::Combat)
                 .run_if(in_state(InGameState::InGame)),
         )

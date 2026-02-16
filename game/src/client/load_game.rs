@@ -4,6 +4,7 @@ use lightyear::prelude::*;
 use rand::Rng;
 
 use crate::shared::{
+    combat::CharacterFacing,
     game_kinds::*,
     game_object_spawning::spawn_game_object,
     game_rules::GameRules,
@@ -64,6 +65,7 @@ fn spawn_player_character(mut commands: Commands, game_kinds: Res<CurrentGameKin
             position: Position(Vec2::new(pos.0, pos.1)),
             upgrade_slots: PlayerUpgradeSlots::new(5, 5),
             weapons: PlayerWeapons::default(),
+            facing: CharacterFacing::default(),
         }),
     );
 

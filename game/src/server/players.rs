@@ -15,7 +15,10 @@ impl Plugin for ServerPlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             FixedUpdate,
-            (player_movement::<With<Replicate>>)
+            (
+                player_movement::<DefaultServerFilter>,
+                update_player_facing_direction::<DefaultServerFilter>,
+            )
                 .in_set(CombatSystemSet::Combat)
                 .run_if(in_state(InGameState::InGame)),
         )

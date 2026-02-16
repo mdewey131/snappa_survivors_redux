@@ -1,4 +1,5 @@
 use crate::shared::{
+    combat::CharacterFacing,
     game_kinds::{CurrentGameKind, MultiPlayerComponentOptions},
     game_object_spawning::spawn_game_object,
     players::{CharacterKind, Player, PlayerBaseBundle, PlayerWeapons},
@@ -45,6 +46,7 @@ fn spawn_player_characters(
                     position: Position(Vec2::new(pos.0, pos.1)),
                     upgrade_slots: PlayerUpgradeSlots::new(5, 5),
                     weapons: PlayerWeapons::default(),
+                    facing: CharacterFacing::default(),
                 },
                 ControlledBy {
                     owner: ent,

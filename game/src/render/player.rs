@@ -1,12 +1,12 @@
 use std::marker::PhantomData;
 
-use avian2d::prelude::Position;
+use avian2d::prelude::{LinearVelocity, Position};
 use bevy::{ecs::query::QueryFilter, prelude::*, render::RenderSystems};
 use bevy_enhanced_input::prelude::*;
 
 use crate::{
     render::{RenderYtoZ, animation::*},
-    shared::{inputs::Movement, players::Player, states::InGameState},
+    shared::{combat::CharacterFacing, inputs::Movement, players::Player, states::InGameState},
 };
 
 /// Handles the rendering of the player.
@@ -21,7 +21,7 @@ impl Plugin for SharedPlayerRenderPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             Update,
-            ((animate::<Player>, update_player_facing_direction)
+            ((animate::<Player>, update_player_animation_facing)
                 .chain()
                 .before(RenderSystems::ExtractCommands)
                 .run_if(in_state(InGameState::InGame)),),
@@ -62,32 +62,25 @@ pub fn rendering_on_player_add<QF: QueryFilter>(
     }
 }
 
-pub fn update_player_facing_direction(
+pub fn update_player_animation_facing(
     mut q_animation: Query<
         (
+            &CharacterFacing,
             &mut AnimationFacing,
             &mut AnimationConfig,
             &mut Sprite,
-            &Actions<Player>,
+            &LinearVelocity,
         ),
-        With<Player>,
+        (With<Player>, Changed<CharacterFacing>),
     >,
-    q_movement: Query<&ActionValue, With<Action<Movement>>>,
 ) {
-    for (mut facing, mut config, mut sprite, actions) in &mut q_animation {
-        // Find the movement
-        for a_ent in actions.iter() {
-            if let Ok(av) = q_movement.get(a_ent) {
-                let velo = av.as_axis2d();
-                facing.derive_next_direction(velo);
-                // TODO: Move this elsewhere
-                if velo == Vec2::ZERO {
-                    config.frame_timer.pause()
-                } else if config.frame_timer.is_paused() {
-                    config.frame_timer.unpause()
-                }
-                facing.update_facing(&mut config, &mut sprite)
-            }
+    for (c_facing, mut facing, mut config, mut sprite, velo) in &mut q_animation {
+        // TODO: Move this elsewhere
+        if velo.0 == Vec2::ZERO {
+            config.frame_timer.pause()
+        } else if config.frame_timer.is_paused() {
+            config.frame_timer.unpause()
         }
+        facing.update_facing(c_facing.c_dir, &mut config, &mut sprite)
     }
 }
