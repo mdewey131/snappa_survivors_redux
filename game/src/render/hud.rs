@@ -351,6 +351,7 @@ impl StatDisplayIcon {
             StatKind::Luck => Some("luck"),
             StatKind::MS => Some("move_speed"),
             StatKind::PickupR => Some("pickup_radius"),
+            StatKind::ProjBounces => Some("projectile_bounces"),
             StatKind::ProjCount => Some("projectile_count"),
             StatKind::ProjSpeed => Some("projectile_speed"),
             StatKind::Shield => Some("shield"),

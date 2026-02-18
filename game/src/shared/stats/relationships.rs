@@ -34,7 +34,7 @@ fn relate_weapon_stats_to_player(
         for (sk, handle) in todo.drain(..) {
             if let Some(ref mut weapon_stat) = weapon_stats.list.get_mut(&sk) {
                 let modifier = match sk {
-                    StatKind::ProjCount => StatModifierMethod::FlatAdd,
+                    StatKind::ProjBounces | StatKind::ProjCount => StatModifierMethod::FlatAdd,
                     _ => StatModifierMethod::MultipliyWithBase { coefficient: 1.0 },
                 };
                 let modifier = StatModifier::new(handle, modifier);

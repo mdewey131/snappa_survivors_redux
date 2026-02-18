@@ -45,3 +45,54 @@ pub fn spawn_game_object(
         .insert((bundle, DespawnOnExit(AppState::InGame)));
     entity
 }
+
+/// Trying this in a slightly different approach - Looking to make a custom command
+pub struct SpawnGameObject<B: Bundle> {
+    bundle: B,
+    stats: Option<AssetFolder>,
+    multiplayer_options: MultiPlayerComponentOptions,
+}
+
+impl<B: Bundle> SpawnGameObject<B> {
+    pub fn new(options: MultiPlayerComponentOptions, bundle: B) -> Self {
+        Self {
+            bundle,
+            stats: None,
+            multiplayer_options: options,
+        }
+    }
+
+    pub fn with_stats(&mut self, s: impl Into<AssetFolder>) -> &mut Self {
+        let asset_folder = s.into();
+        self.stats = Some(asset_folder);
+        self
+    }
+}
+
+impl<B: Bundle> Command for SpawnGameObject<B> {
+    fn apply(self, world: &mut World) -> () {
+        let entity = world.spawn_empty().id();
+
+        if let Some(stat_path) = self.stats {
+            let stats = RawStatsList::import_stats(stat_path);
+            stats.apply_to_character(entity, &mut world.commands());
+        }
+
+        let game_kind = world
+            .resource::<CurrentGameKind>()
+            .0
+            .expect("You should have a current game kind whenever you're spawning a game object");
+
+        add_game_kinds_components(
+            &mut world.commands(),
+            entity,
+            game_kind,
+            self.multiplayer_options,
+        );
+
+        world
+            .commands()
+            .entity(entity)
+            .insert((self.bundle, DespawnOnExit(AppState::InGame)));
+    }
+}

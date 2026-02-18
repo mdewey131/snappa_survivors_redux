@@ -76,7 +76,7 @@ impl Plugin for ClientRenderPlugin {
             MainMenuPlugin,
             MPSelectionMenuPlugin,
             ClientPlayerRenderPlugin,
-            ClientDiceGuardRenderPlugin,
+            ClientWeaponsRenderPlugin,
             HudPlugin,
         ));
     }

@@ -14,7 +14,6 @@ pub mod relationships;
 pub mod xp;
 
 use components::*;
-use xp::LevelManager;
 
 use crate::utils::AssetFolder;
 
@@ -38,6 +37,7 @@ pub enum StatKind {
     LifeSteal,
     MS,
     PickupR,
+    ProjBounces,
     ProjCount,
     ProjSpeed,
     Shield,
@@ -78,9 +78,6 @@ impl StatKind {
             StatKind::Health => {
                 ec.insert(Health::new(input));
             }
-            StatKind::Evasion => {
-                ec.insert(Evasion(input));
-            }
             StatKind::HealthRegen => {
                 ec.insert(HealthRegen(input));
             }
@@ -98,6 +95,9 @@ impl StatKind {
             }
             StatKind::PickupR => {
                 ec.insert(PickupRadius(input));
+            }
+            StatKind::ProjBounces => {
+                ec.insert(ProjectileBounces(input));
             }
             StatKind::ProjCount => {
                 ec.insert(ProjectileCount(input));

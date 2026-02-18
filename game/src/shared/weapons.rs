@@ -16,8 +16,10 @@ use crate::{
     utils::AssetFolder,
 };
 
+pub mod bouncing_dice;
 pub mod dice_guard;
 pub mod throw_hands;
+pub use bouncing_dice::*;
 pub use dice_guard::*;
 pub use throw_hands::*;
 
@@ -65,6 +67,7 @@ pub enum WeaponKind {
     ThrowHands,
     PaddleBack,
     FlurryOfBlows,
+    BouncingDice,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Reflect, Clone, Copy)]
@@ -86,6 +89,10 @@ impl From<WeaponKind> for Weapon {
                 time_btw_attacks: 0.5,
                 rem_projectiles: 0,
             },
+            WeaponKind::BouncingDice => WeaponActivityPattern::ActiveForProjectiles {
+                time_btw_attacks: 0.5,
+                rem_projectiles: 0,
+            },
             _ => WeaponActivityPattern::AlwaysOn,
         };
         Weapon {
@@ -102,6 +109,7 @@ impl From<WeaponKind> for AssetFolder {
             WeaponKind::ThrowHands => Self("weapons/throw_hands".into()),
             WeaponKind::FlurryOfBlows => Self("weapons/flurry_of_blows".into()),
             WeaponKind::PaddleBack => Self("weapons/paddle_back".into()),
+            WeaponKind::BouncingDice => Self("weapons/bouncing_dice".into()),
             _ => Self("unknown!".into()),
         }
     }
@@ -156,6 +164,9 @@ pub fn add_weapon_to_player(
                 current: 0,
             });
         }
+        WeaponKind::BouncingDice => {
+            commands.entity(w_ent).insert(WeaponBouncingDice);
+        }
         _ => {
             warn!("Weapon entity created without a marker component")
         }
@@ -183,11 +194,16 @@ pub fn add_weapon_to_player(
 fn weapon_off_cooldown(
     mut commands: Commands,
     mut q_weapon: Query<
-        (Entity, &mut Weapon, Option<&EffectDuration>),
+        (
+            Entity,
+            &mut Weapon,
+            Option<&EffectDuration>,
+            Option<&ProjectileCount>,
+        ),
         (Without<WeaponActiveTimer>, Without<Cooldown>),
     >,
 ) {
-    for (ent, mut weapon, m_dur) in &mut q_weapon {
+    for (ent, mut weapon, m_dur, m_proj_c) in &mut q_weapon {
         match weapon.activity_pattern {
             WeaponActivityPattern::AlwaysOn => {
                 commands
@@ -202,7 +218,7 @@ fn weapon_off_cooldown(
                 time_btw_attacks,
                 ref mut rem_projectiles,
             } => {
-                let mut proj = 4; //**(stats.get_current(StatKind::ProjectileCount).unwrap()) as u8;
+                let mut proj = m_proj_c.unwrap().0 as u8;
                 if proj > 1 {
                     proj -= 1;
                     *rem_projectiles = proj;

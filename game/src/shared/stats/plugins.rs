@@ -30,6 +30,8 @@ impl Plugin for StatsProtocolPlugin {
         app.register_component::<LifeSteal>().add_prediction();
         app.register_component::<MovementSpeed>().add_prediction();
         app.register_component::<PickupRadius>().add_prediction();
+        app.register_component::<ProjectileBounces>()
+            .add_prediction();
         app.register_component::<ProjectileCount>().add_prediction();
         app.register_component::<ProjectileSpeed>().add_prediction();
         app.register_component::<Shield>().add_prediction();
@@ -61,6 +63,7 @@ impl Plugin for StatComponentPlugin {
         app.add_plugins((
             StatComponentInnerPlugin::<MovementSpeed>::new(),
             StatComponentInnerPlugin::<PickupRadius>::new(),
+            StatComponentInnerPlugin::<ProjectileBounces>::new(),
             StatComponentInnerPlugin::<ProjectileCount>::new(),
             StatComponentInnerPlugin::<ProjectileSpeed>::new(),
             StatComponentInnerPlugin::<Shield>::new(),

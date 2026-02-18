@@ -43,3 +43,16 @@ pub fn throwing_hands_sprite_follow<QF: QueryFilter>(
         }
     }
 }
+
+pub fn add_bouncing_dice_rendering_components<QF: QueryFilter>(
+    t: On<Add, BouncingDiceAttack>,
+    mut commands: Commands,
+    assets: Res<AssetServer>,
+    q_projectile: Query<(), QF>,
+) {
+    if let Ok(()) = q_projectile.get(t.entity) {
+        info!("Adding render component");
+        let handle: Handle<Image> = assets.load("weapons/bouncing_dice/projectile.png");
+        commands.entity(t.entity).insert(Sprite::from(handle));
+    }
+}

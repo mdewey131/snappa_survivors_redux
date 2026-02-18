@@ -130,8 +130,7 @@ impl Plugin for DedicatedServerRendererPlugin {
         app.add_plugins((
             ServerPlayerRenderPlugin,
             ServerEnemyRenderPlugin,
-            DedicatedServerDiceGuardRenderPlugin,
-            DedicatedServerThrowHandsRenderPlugin,
+            DedicatedServerWeaponsRenderPlugin,
         ));
     }
 }

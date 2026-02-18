@@ -267,6 +267,17 @@ impl StatComponent for PickupRadius {
         if self.0 != val { Some(Self(val)) } else { None }
     }
 }
+#[derive(Component, Debug, Clone, Copy, Deserialize, Serialize, Default, Reflect, PartialEq)]
+#[reflect(Default)]
+pub struct ProjectileBounces(pub f32);
+impl StatComponent for ProjectileBounces {
+    fn stat_kind(&self) -> StatKind {
+        StatKind::ProjBounces
+    }
+    fn update_self_from_current_stat_value(&self, val: f32) -> Option<Self> {
+        if self.0 != val { Some(Self(val)) } else { None }
+    }
+}
 
 #[derive(Component, Debug, Clone, Copy, Deserialize, Serialize, Default, Reflect, PartialEq)]
 #[reflect(Default)]

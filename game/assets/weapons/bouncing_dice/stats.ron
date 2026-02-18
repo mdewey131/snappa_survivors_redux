@@ -1,0 +1,22 @@
+([
+    (
+        kind: Damage,
+        val: 15.0,
+    ),
+    (
+        kind: CDR,
+        val: 15.0,
+    ),
+    (
+        kind: EffSize,
+        val: 50.0,
+    ),
+    (
+        kind: ProjCount,
+        val: 1.0,
+    ),
+    (
+        kind: ProjBounces,
+        val: 3.0,
+    ),
+])
