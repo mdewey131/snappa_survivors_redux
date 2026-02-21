@@ -1,0 +1,2 @@
+Bounces to a nearby location in the direction the player is facing.
+The distance of the throw is determined by the projectile speed.

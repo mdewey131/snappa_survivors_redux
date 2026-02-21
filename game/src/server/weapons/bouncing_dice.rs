@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use lightyear::prelude::*;
 
 use crate::{
-    render::weapons::add_bouncing_dice_rendering_components,
+    render::weapons::*,
     shared::{game_kinds::DefaultServerFilter, weapons::*},
 };
 pub struct DedicatedServerBouncingDicePlugin;
@@ -17,6 +17,10 @@ impl Plugin for DedicatedServerBouncingDicePlugin {
 pub struct DedicatedServerBouncingDiceRenderPlugin;
 impl Plugin for DedicatedServerBouncingDiceRenderPlugin {
     fn build(&self, app: &mut App) {
-        app.add_observer(add_bouncing_dice_rendering_components::<DefaultServerFilter>);
+        app.add_systems(
+            Update,
+            update_bouncing_dice_render_components::<DefaultServerFilter>,
+        )
+        .add_observer(add_bouncing_dice_rendering_components::<DefaultServerFilter>);
     }
 }

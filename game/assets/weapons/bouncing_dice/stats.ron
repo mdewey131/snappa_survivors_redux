@@ -5,7 +5,7 @@
     ),
     (
         kind: CDR,
-        val: 15.0,
+        val: 1.0,
     ),
     (
         kind: EffSize,
@@ -18,5 +18,9 @@
     (
         kind: ProjBounces,
         val: 3.0,
+    ),
+    (
+        kind: ProjSpeed,
+        val: 200.0,
     ),
 ])
