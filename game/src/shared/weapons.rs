@@ -39,6 +39,7 @@ impl Plugin for SharedWeaponPlugin {
 pub struct WeaponProtocolPlugin;
 impl Plugin for WeaponProtocolPlugin {
     fn build(&self, app: &mut App) {
+        app.add_plugins(ThrowHandsProtocolPlugin);
         app.register_component::<Weapon>().add_prediction();
         app.register_component::<DiceGuardProjectile>()
             .add_prediction();

@@ -11,11 +11,20 @@ use crate::shared::{
 };
 use avian2d::prelude::*;
 use bevy::{ecs::query::QueryFilter, prelude::*};
+use lightyear::prelude::*;
 use serde::{Deserialize, Serialize};
 const BASE_WINDUP_TIME: f32 = 0.2;
 const BASE_WINDDOWN_TIME: f32 = 0.2;
 
 use super::ActivateWeapon;
+
+pub struct ThrowHandsProtocolPlugin;
+
+impl Plugin for ThrowHandsProtocolPlugin {
+    fn build(&self, app: &mut App) {
+        app.register_component::<ThrowHandsAttack>();
+    }
+}
 
 #[derive(Component, Debug, Clone, Serialize, Deserialize, Reflect)]
 pub struct ThrowHands {
@@ -23,7 +32,7 @@ pub struct ThrowHands {
     pub current: u8,
 }
 
-#[derive(Component, Debug, Clone, Serialize, Deserialize, Reflect)]
+#[derive(Component, Debug, Clone, Serialize, Deserialize, Reflect, PartialEq)]
 pub struct ThrowHandsAttack {
     pub target: Entity,
     pub state: ThrowHandsAttackState,
@@ -49,7 +58,7 @@ impl ThrowHandsAttack {
     }
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, Reflect)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, Reflect, PartialEq)]
 pub enum ThrowHandsAttackState {
     Windup,
     Attack,

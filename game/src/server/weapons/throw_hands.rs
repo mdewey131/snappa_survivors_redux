@@ -16,7 +16,7 @@ impl Plugin for DedicatedServerThrowHandsPlugin {
         app.add_systems(
             FixedUpdate,
             update_attack::<DefaultServerFilter>
-                .run_if(in_state(InGameState::InGame).and(is_single_player))
+                .run_if(in_state(InGameState::InGame))
                 .in_set(CombatSystemSet::Combat),
         )
         .add_observer(on_activate::<DefaultServerFilter>)
