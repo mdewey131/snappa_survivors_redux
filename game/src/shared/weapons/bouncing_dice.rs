@@ -3,7 +3,7 @@ use std::f32::consts::TAU;
 use super::*;
 use crate::shared::{
     combat::{CharacterFacing, FacingDirection},
-    damage::DamageBuffer,
+    damage::{DamageBuffer, DamageInstance},
     game_kinds::CurrentGameKind,
     game_object_spawning::SpawnGameObject,
     stats::components::*,
@@ -120,12 +120,13 @@ pub fn bouncing_dice_attack<QF: QueryFilter>(
             &mut BouncingDiceAttack,
             &Damage,
             &ProjectileSpeed,
+            &EffectSize,
         ),
         QF,
     >,
     mut q_enemies: Query<(Entity, &mut DamageBuffer, &Position), Without<BouncingDiceAttack>>,
 ) {
-    for (ent, mut pos, mut attack, dam, p_speed) in &mut q_dice {
+    for (ent, mut pos, mut attack, dam, p_speed, eff_size) in &mut q_dice {
         attack.time_to_bounce.tick(time.delta());
         let pct = attack.time_to_bounce.fraction();
         /*
@@ -138,6 +139,22 @@ pub fn bouncing_dice_attack<QF: QueryFilter>(
         pos.y = pct * attack.c_target.y + (1.0 - pct) * attack.init_pos.y;
 
         if attack.time_to_bounce.is_finished() {
+            let mut entities_to_damage = Vec::new();
+            // Damage enemies in an area
+            for (ent, _buff, e_pos) in &q_enemies {
+                if pos.0.distance(e_pos.0) <= eff_size.0 {
+                    entities_to_damage.push(ent.clone())
+                } else {
+                }
+            }
+
+            for e_ent in entities_to_damage {
+                let (_, mut buff, _) = q_enemies.get_mut(e_ent).unwrap();
+                buff.push(DamageInstance {
+                    damage_source: ent,
+                    amount: dam.0,
+                });
+            }
             attack.rem_bounces -= 1;
             if attack.rem_bounces == 0 {
                 commands.entity(ent).despawn()

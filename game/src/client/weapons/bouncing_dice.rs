@@ -2,14 +2,21 @@ use bevy::prelude::*;
 
 use crate::{
     render::weapons::*,
-    shared::{game_kinds::DefaultClientFilter, weapons::*},
+    shared::{
+        combat::CombatSystemSet, game_kinds::DefaultClientFilter, states::InGameState, weapons::*,
+    },
 };
 pub struct ClientBouncingDicePlugin;
 impl Plugin for ClientBouncingDicePlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(FixedUpdate, bouncing_dice_attack::<DefaultClientFilter>)
-            .add_observer(bouncing_dice::on_activate::<DefaultClientFilter>)
-            .add_observer(bouncing_dice::on_deactivate::<DefaultClientFilter>);
+        app.add_systems(
+            FixedUpdate,
+            bouncing_dice_attack::<DefaultClientFilter>
+                .run_if(in_state(InGameState::InGame))
+                .in_set(CombatSystemSet::Combat),
+        )
+        .add_observer(bouncing_dice::on_activate::<DefaultClientFilter>)
+        .add_observer(bouncing_dice::on_deactivate::<DefaultClientFilter>);
     }
 }
 

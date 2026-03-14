@@ -121,10 +121,33 @@ impl CharacterFacing {
         let new_dir = direction_vec.normalize_or_zero();
         let prev_angle = prev_dir.to_angle();
         let new_angle = new_dir.to_angle();
-        if (new_angle - prev_angle).abs() > (PI / 8.0) {
-            FacingDirection::from_vec(&new_dir)
-        } else {
+        info!("New angle {:?}", new_angle);
+        if new_angle == 0.0 && new_dir != Vec2::X {
             self.c_dir
+        } else if (new_angle - prev_angle).abs() <= (PI / 8.0) {
+            self.c_dir
+        } else {
+            if new_dir.x >= 0.0 {
+                if new_dir.x > 0.5 {
+                    FacingDirection::Right
+                } else {
+                    if new_dir.y > 0.0 {
+                        FacingDirection::Up
+                    } else {
+                        FacingDirection::Down
+                    }
+                }
+            } else {
+                if new_dir.x < -0.5 {
+                    FacingDirection::Left
+                } else {
+                    if new_dir.y > 0.0 {
+                        FacingDirection::Up
+                    } else {
+                        FacingDirection::Down
+                    }
+                }
+            }
         }
     }
 }
