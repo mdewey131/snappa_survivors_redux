@@ -59,22 +59,33 @@ impl Plugin for GameSharedRenderPlugin {
     }
 }
 
-/// This marker component indicates that the entity should be treated with its z position equal to its y position.
+/// This component indicates that the entity should be treated with its z position equal to its y position.
 ///
-/// That allows for proper sprite layering in theory
+/// That allows for proper sprite layering in theory,
+/// with the allotment for some things to offset themselves in cases where they need to be drawn ahead/behind of nearby things
+/// (e.g. when trying to show something in the air)
 #[derive(Component, Default)]
-pub struct RenderYtoZ;
+pub struct RenderYtoZ {
+    offset: f32,
+}
+
+impl RenderYtoZ {
+    fn new(offset: f32) -> Self {
+        Self { offset }
+    }
+}
 
 fn startup(mut commands: Commands) {
     commands.spawn((Camera2d::default(), GameMainCamera::default()));
 }
 
-fn render_y_to_z(mut q_pos: Query<&mut Transform, (With<RenderYtoZ>, Changed<Transform>)>) {
+fn render_y_to_z(mut q_pos: Query<(&mut Transform, &RenderYtoZ), Changed<Transform>>) {
     let _span = info_span!("Render Y to Z system").entered();
-    for mut pos in &mut q_pos {
+    for (mut pos, render) in &mut q_pos {
         // We have to rebase to the amount allowed by the 2d camera, which seems to be -1000.
         // Since that's the case, I think it will be okay to just bring this down by a few orders of magnitude
-        pos.translation.z = pos.translation.y * -0.001
+        let new_z = pos.translation.y * -0.001 + render.offset;
+        pos.translation.z = new_z;
     }
 }
 

@@ -57,7 +57,7 @@ pub fn rendering_on_player_add<QF: QueryFilter>(
             facing,
             animation,
             Transform::from_translation(pos.0.extend(pos.0.y)),
-            RenderYtoZ,
+            RenderYtoZ::default(),
         ));
     }
 }

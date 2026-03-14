@@ -53,7 +53,7 @@ pub fn rendering_on_enemy_add<QF: QueryFilter>(
             animation,
             */
             Transform::from_translation(pos.0.extend(pos.0.y)),
-            RenderYtoZ,
+            RenderYtoZ::default(),
         ));
     }
 }

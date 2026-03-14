@@ -16,7 +16,7 @@ pub fn add_dice_guard_rendering_components<QF: QueryFilter>(
         let img: Handle<Image> = assets.load("weapons/dice_guard/projectile.png");
         commands
             .entity(t.entity)
-            .insert((Sprite::from(img), RenderYtoZ));
+            .insert((Sprite::from(img), RenderYtoZ::default()));
     }
 }
 
@@ -32,7 +32,7 @@ pub fn add_throwing_hands_attack_sprite<QF: QueryFilter>(
         if let Ok(t_pos) = q_target.get(atk.target) {
             commands
                 .entity(t.entity)
-                .insert((Sprite::from(img), RenderYtoZ, *t_pos));
+                .insert((Sprite::from(img), RenderYtoZ::new(0.05), *t_pos));
         }
     }
 }
@@ -79,7 +79,7 @@ pub fn add_bouncing_dice_rendering_components<QF: QueryFilter>(
             .spawn((
                 Sprite::from(target_handle),
                 Transform::from_translation(attack.c_target.extend(attack.c_target.y)),
-                RenderYtoZ,
+                RenderYtoZ::new(10.0),
                 BouncingDiceTarget {
                     target_of: dice_entity,
                 },

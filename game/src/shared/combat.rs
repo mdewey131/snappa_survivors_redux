@@ -131,7 +131,7 @@ impl CharacterFacing {
         let new_dir = direction_vec.normalize_or_zero();
         let prev_angle = prev_dir.to_angle();
         let new_angle = new_dir.to_angle();
-        info!("New angle {:?}", new_angle);
+        trace!("New angle {:?}", new_angle);
         if new_angle == 0.0 && new_dir != Vec2::X {
             self.c_dir
         } else if (new_angle - prev_angle).abs() <= (PI / 8.0) {
