@@ -4,6 +4,8 @@ use bevy_enhanced_input::{
     action::Action,
     prelude::{ActionValue, Actions},
 };
+use lightyear::prelude::*;
+use serde::{Deserialize, Serialize};
 
 use crate::shared::{inputs::Movement, players::Player};
 #[derive(SystemSet, Hash, Eq, PartialEq, Debug, Clone, Copy, Default)]
@@ -50,6 +52,14 @@ impl Plugin for CombatPlugin {
     }
 }
 
+pub struct CombatProtocolPlugin;
+
+impl Plugin for CombatProtocolPlugin {
+    fn build(&self, app: &mut App) {
+        app.register_component::<CharacterFacing>().add_prediction();
+    }
+}
+
 /// To be used anytime something is on cooldown (duh)
 #[derive(Component, Clone, Deref, DerefMut)]
 pub struct Cooldown(Timer);
@@ -59,7 +69,7 @@ impl Cooldown {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Default, Reflect)]
+#[derive(Debug, Clone, Copy, PartialEq, Default, Reflect, Serialize, Deserialize)]
 pub enum FacingDirection {
     #[default]
     Down,
@@ -110,7 +120,7 @@ impl FacingDirection {
     }
 }
 
-#[derive(Component, Debug, Clone, Copy, Reflect, Default)]
+#[derive(Component, Debug, Clone, Copy, Reflect, Default, PartialEq, Serialize, Deserialize)]
 pub struct CharacterFacing {
     pub c_dir: FacingDirection,
 }
