@@ -45,7 +45,7 @@ use weapons::{SharedWeaponPlugin, WeaponProtocolPlugin};
 
 use crate::{
     shared::{
-        pickups::SharedPickupsPlugin,
+        pickups::{PickupsProtocolPlugin, SharedPickupsPlugin},
         players::{Player, PlayerProtocolPlugin},
     },
     utils::CreatedBy,
@@ -118,6 +118,7 @@ impl Plugin for GameProtocolPlugin {
             LobbyProtocolPlugin,
             PlayerProtocolPlugin,
             GameInputProtocolPlugin,
+            PickupsProtocolPlugin,
             ProjectileProtocolPlugin,
             StatsProtocolPlugin,
             WeaponProtocolPlugin,

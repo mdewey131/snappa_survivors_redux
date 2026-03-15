@@ -5,10 +5,11 @@ use crate::shared::{
     stats::{components::XPGain, xp::LevelManager},
 };
 use avian2d::prelude::*;
-use bevy::prelude::*;
+use bevy::{ecs::entity::MapEntities, prelude::*};
+use lightyear::prelude::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Component)]
+#[derive(Component, Serialize, Deserialize, PartialEq, Clone, Copy, Debug)]
 pub struct XPPickup {
     pub val: f32,
     pub targeting: Option<Entity>,
@@ -18,6 +19,14 @@ impl XPPickup {
         Self {
             val: v,
             targeting: None,
+        }
+    }
+}
+impl MapEntities for XPPickup {
+    fn map_entities<E: EntityMapper>(&mut self, entity_mapper: &mut E) {
+        if self.targeting.is_some() {
+            self.targeting = Some(entity_mapper.get_mapped(self.targeting.unwrap()))
+        } else {
         }
     }
 }
@@ -49,6 +58,15 @@ impl CollisionEffect for XPPickupFollowPlayer {
                     .remove::<AppliesCollisionEffect<XPPickupFollowPlayer>>();
             }
         });
+    }
+}
+
+pub struct PickupsProtocolPlugin;
+impl Plugin for PickupsProtocolPlugin {
+    fn build(&self, app: &mut App) {
+        app.register_component::<XPPickup>()
+            .add_prediction()
+            .add_map_entities();
     }
 }
 

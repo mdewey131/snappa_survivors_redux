@@ -210,15 +210,9 @@ pub fn on_enemy_death(
 
         enemy.state = EnemyState::Dying;
 
-        let _xp = spawn_game_object(
-            &mut commands,
-            gk.0.unwrap(),
-            None::<()>,
-            MultiPlayerComponentOptions {
-                pred: true,
-                interp: false,
-            },
+        commands.queue(SpawnGameObject::new(
+            MultiPlayerComponentOptions::PREDICTED,
             (pos.clone(), XPPickup::new(xp_amt)),
-        );
+        ));
     }
 }

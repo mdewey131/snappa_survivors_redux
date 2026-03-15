@@ -3,7 +3,7 @@ use crate::shared::{
     damage::{DamageBuffer, DamageInstance},
     enemies::Enemy,
     game_kinds::{CurrentGameKind, MultiPlayerComponentOptions},
-    game_object_spawning::spawn_game_object,
+    game_object_spawning::{SpawnGameObject, spawn_game_object},
     players::Player,
     states::InGameState,
     stats::components::*,
@@ -22,7 +22,8 @@ pub struct ThrowHandsProtocolPlugin;
 
 impl Plugin for ThrowHandsProtocolPlugin {
     fn build(&self, app: &mut App) {
-        app.register_component::<ThrowHandsAttack>();
+        app.register_component::<ThrowHandsAttack>()
+            .add_prediction();
     }
 }
 
@@ -67,7 +68,6 @@ pub enum ThrowHandsAttackState {
 
 pub fn on_activate<QF: QueryFilter>(
     trigger: On<ActivateWeapon>,
-    game_kind: Res<CurrentGameKind>,
     mut commands: Commands,
     mut q_weapon: Query<(&ChildOf, &mut ThrowHands, &ProjectileCount, &Damage), QF>,
     q_player: Query<&Position, With<Player>>,
@@ -89,13 +89,10 @@ pub fn on_activate<QF: QueryFilter>(
         };
 
         throw.current += 1;
-        spawn_game_object(
-            &mut commands,
-            game_kind.0.unwrap(),
-            None::<()>,
+        commands.queue(SpawnGameObject::new(
             MultiPlayerComponentOptions::PREDICTED,
             (ThrowHandsAttack::new(target), *damage),
-        );
+        ));
     }
 }
 
