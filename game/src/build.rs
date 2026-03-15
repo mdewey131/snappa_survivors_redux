@@ -58,8 +58,10 @@ pub fn build_game_client_app(app: &mut App, c_id: Option<u64>, render: bool) {
     add_shared_game_plugin(app);
 
     add_game_client_plugin(app);
+
+    // TODO: Remove the below if nothing breaks
     // We want the ability to add a server to the client, because that's how single player will work
-    add_game_server_plugin(app);
+    // add_game_server_plugin(app);
 }
 
 pub fn build_game_server_app(app: &mut App, render: bool) {

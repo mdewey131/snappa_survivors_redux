@@ -10,7 +10,10 @@ use crate::shared::{
     weapons::DeactivateWeapon,
 };
 use avian2d::prelude::*;
-use bevy::{ecs::query::QueryFilter, prelude::*};
+use bevy::{
+    ecs::{entity::MapEntities, query::QueryFilter},
+    prelude::*,
+};
 use lightyear::prelude::*;
 use serde::{Deserialize, Serialize};
 const BASE_WINDUP_TIME: f32 = 0.2;
@@ -23,7 +26,8 @@ pub struct ThrowHandsProtocolPlugin;
 impl Plugin for ThrowHandsProtocolPlugin {
     fn build(&self, app: &mut App) {
         app.register_component::<ThrowHandsAttack>()
-            .add_prediction();
+            .add_prediction()
+            .add_map_entities();
     }
 }
 
@@ -56,6 +60,11 @@ impl ThrowHandsAttack {
             ThrowHandsAttackState::Winddown => BASE_WINDDOWN_TIME,
         };
         Timer::from_seconds(time, TimerMode::Once)
+    }
+}
+impl MapEntities for ThrowHandsAttack {
+    fn map_entities<E: EntityMapper>(&mut self, entity_mapper: &mut E) {
+        self.target = entity_mapper.get_mapped(self.target);
     }
 }
 
