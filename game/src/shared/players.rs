@@ -53,10 +53,17 @@ impl From<Player> for MultiPlayerComponentOptions {
     }
 }
 
-#[derive(Debug, Clone, Copy, Default, PartialEq, Reflect)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Reflect, Serialize, Deserialize)]
 pub enum CharacterKind {
     #[default]
     Dewey,
+    Matthew,
+    Paul,
+    Shaunt,
+    Mark,
+    Ryan,
+    Gabe,
+    Finn,
 }
 
 impl From<CharacterKind> for AssetFolder {
