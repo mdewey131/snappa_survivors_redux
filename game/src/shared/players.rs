@@ -70,6 +70,13 @@ impl From<CharacterKind> for AssetFolder {
     fn from(value: CharacterKind) -> Self {
         let s = match value {
             CharacterKind::Dewey => "survivors/dewey".into(),
+            CharacterKind::Finn => "survivors/finn".into(),
+            CharacterKind::Gabe => "survivors/gabe".into(),
+            CharacterKind::Mark => "survivors/mark".into(),
+            CharacterKind::Matthew => "survivors/matthew".into(),
+            CharacterKind::Paul => "survivors/paul".into(),
+            CharacterKind::Ryan => "survivors/ryan".into(),
+            CharacterKind::Shaunt => "survivors/shaunt".into(),
         };
         Self(s)
     }

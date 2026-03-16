@@ -72,17 +72,16 @@ pub struct LobbyPlayerInfoContainer;
 #[require(Node = lobby_subcontainer(50.0, 100.0))]
 pub struct LobbyCharacterSelection;
 
-#[derive(Component, Debug, Clone, Serialize, Deserialize)]
+#[derive(Component, Debug, Clone, Serialize, Deserialize, Default)]
+#[relationship_target(relationship = SelectedCharacterButton)]
 pub struct CharacterSelectionButton {
     pub kind: CharacterKind,
+    #[relationship]
+    selected_by: Vec<Entity>,
 }
 
 #[derive(Component, Debug, Clone, Serialize, Deserialize)]
-#[relationship_target(relationship = SelectedCharacterButton)]
-pub struct CharacterButtonSelectedBy(Vec<Entity>);
-
-#[derive(Component, Debug, Clone, Serialize, Deserialize)]
-#[relationship(relationship_target = CharacterButtonSelectedBy)]
+#[relationship(relationship_target = CharacterSelectionButton)]
 pub struct SelectedCharacterButton(Entity);
 
 #[derive(Component, Debug, Clone, Copy)]

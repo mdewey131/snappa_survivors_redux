@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     client::load_game::client_transition_to_loading_state,
-    shared::{GameMainChannel, game_rules::GameRules, states::AppState},
+    shared::{GameMainChannel, game_rules::GameRules, players::CharacterKind, states::AppState},
 };
 
 pub struct LobbyProtocolPlugin;
@@ -16,7 +16,17 @@ impl Plugin for LobbyProtocolPlugin {
         app.register_message::<ServerStartLoadingGameMessage>()
             .add_direction(NetworkDirection::ServerToClient);
         app.add_message::<ClientStartGameMessage>();
+        app.register_message::<ClientChangeCharacterMessage>()
+            .add_direction(NetworkDirection::ClientToServer);
     }
+}
+
+#[derive(Component, Clone, Copy, Serialize, Deserialize)]
+pub struct SelectedCharacter(Option<CharacterKind>);
+
+#[derive(Message, Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct ClientChangeCharacterMessage {
+    char: CharacterKind,
 }
 
 /// Sent from the client to the server to indicate that is time to start the game
