@@ -9,7 +9,10 @@ impl Plugin for DedicatedServerLobbyPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             Update,
-            (server_on_receive_start_game_message.run_if(in_state(AppState::Lobby))),
+            (
+                server_on_receive_start_game_message.run_if(in_state(AppState::Lobby)),
+                server_on_receive_character_change_message.run_if(in_state(AppState::Lobby)),
+            ),
         );
     }
 }
@@ -43,6 +46,23 @@ pub fn server_on_receive_start_game_message(
         for mut send in &mut q_sender {
             send.send::<GameMainChannel>(ServerStartLoadingGameMessage { rules: *rules });
             server_move_to_loading_state(&mut state);
+        }
+    }
+}
+
+fn server_on_receive_character_change_message(
+    mut q_receiver: Query<(&LocalId, &mut MessageReceiver<ClientChangeCharacterMessage>)>,
+    mut q_players: Query<&mut PlayerInLobby>,
+    q_lobby: Single<&Lobby>,
+) {
+    for (local, mut rec) in &mut q_receiver {
+        for message in rec.receive() {
+            let player_ent = q_lobby
+                .players
+                .get(&local.0)
+                .expect("Peer id not found in lobby!");
+            let mut player = q_players.get_mut(*player_ent).expect("Not found!");
+            player.selected_character = Some(message.char);
         }
     }
 }

@@ -10,7 +10,7 @@ use crate::{
     },
     shared::{
         SEND_INTERVAL, SERVER_PORT, SHARED_SETTINGS, SINGLE_PLAYER_SERVER_PORT,
-        SharedNetworkingSettings, game_kinds::CurrentGameKind, states::AppState,
+        SharedNetworkingSettings, game_kinds::CurrentGameKind, lobby::Lobby, states::AppState,
         upgrades::DedicatedServerUpgradePlugin,
     },
 };
@@ -24,6 +24,7 @@ use lightyear::{
     prelude::{
         LinkOf, LocalAddr, Replicate, ReplicationReceiver, ReplicationSender,
         server::{NetcodeConfig, ServerUdpIo, Start},
+        *,
     },
 };
 use serde::{Deserialize, Serialize};
@@ -150,15 +151,30 @@ fn server_startup(mut commands: Commands, mut state: ResMut<NextState<AppState>>
     state.set(AppState::Lobby);
 }
 
-pub fn handle_new_client(trigger: On<Add, LinkOf>, mut commands: Commands) {
-    commands.entity(trigger.entity).insert((
-        ReplicationSender::new(
-            SEND_INTERVAL,
-            lightyear::prelude::SendUpdatesMode::SinceLastAck,
-            false,
-        ),
-        ReplicationReceiver::default(),
-    ));
+pub fn handle_new_client(
+    trigger: On<Add, LinkOf>,
+    mut commands: Commands,
+    q_peer: Query<&LocalId>,
+    q_lobby: Query<&mut Lobby>,
+) -> Option<Entity> {
+    if let Ok(local) = q_peer.get(trigger.entity) {
+        let client = commands
+            .entity(trigger.entity)
+            .insert((
+                ReplicationSender::new(
+                    SEND_INTERVAL,
+                    lightyear::prelude::SendUpdatesMode::SinceLastAck,
+                    false,
+                ),
+                ReplicationReceiver::default(),
+            ))
+            .id();
+
+        let lobby_player_ent = lobby.add_player(&local.0, &mut commands);
+        Some(client)
+    } else {
+        None
+    }
 }
 
 fn update_game_kind_resource(mut r: ResMut<CurrentGameKind>) {
