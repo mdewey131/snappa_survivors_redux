@@ -16,6 +16,7 @@ use bevy::{ecs::query::QueryFilter, platform::collections::HashMap, prelude::*};
 use bevy_enhanced_input::prelude::*;
 use lightyear::prelude::*;
 use serde::{Deserialize, Serialize};
+use strum::EnumIter;
 
 /// The component that describes a player.
 /// This holds a record of the peer id so that,
@@ -53,7 +54,9 @@ impl From<Player> for MultiPlayerComponentOptions {
     }
 }
 
-#[derive(Debug, Clone, Copy, Default, PartialEq, Reflect, Serialize, Deserialize)]
+#[derive(
+    Debug, Clone, Copy, Default, PartialEq, Reflect, Serialize, Deserialize, EnumIter, Hash, Eq,
+)]
 pub enum CharacterKind {
     #[default]
     Dewey,

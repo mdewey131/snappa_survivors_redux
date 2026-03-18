@@ -51,17 +51,14 @@ pub fn server_on_receive_start_game_message(
 }
 
 fn server_on_receive_character_change_message(
-    mut q_receiver: Query<(&LocalId, &mut MessageReceiver<ClientChangeCharacterMessage>)>,
-    mut q_players: Query<&mut PlayerInLobby>,
-    q_lobby: Single<&Lobby>,
+    mut q_receiver: Query<(
+        &LocalId,
+        &mut MessageReceiver<ClientChangeCharacterMessage>,
+        &mut PlayerInLobby,
+    )>,
 ) {
-    for (local, mut rec) in &mut q_receiver {
+    for (local, mut rec, mut player) in &mut q_receiver {
         for message in rec.receive() {
-            let player_ent = q_lobby
-                .players
-                .get(&local.0)
-                .expect("Peer id not found in lobby!");
-            let mut player = q_players.get_mut(*player_ent).expect("Not found!");
             player.selected_character = Some(message.char);
         }
     }

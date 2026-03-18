@@ -10,7 +10,10 @@ use crate::{
     },
     shared::{
         SEND_INTERVAL, SERVER_PORT, SHARED_SETTINGS, SINGLE_PLAYER_SERVER_PORT,
-        SharedNetworkingSettings, game_kinds::CurrentGameKind, lobby::Lobby, states::AppState,
+        SharedNetworkingSettings,
+        game_kinds::CurrentGameKind,
+        lobby::{Lobby, PlayerInLobby},
+        states::AppState,
         upgrades::DedicatedServerUpgradePlugin,
     },
 };
@@ -44,7 +47,8 @@ pub struct GameServerPlugin;
 impl Plugin for GameServerPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((ServerPlayerPlugin))
-            .add_observer(handle_new_client);
+            .add_observer(handle_new_client)
+            .add_observer(add_player_to_lobby);
     }
 }
 
@@ -154,26 +158,31 @@ fn server_startup(mut commands: Commands, mut state: ResMut<NextState<AppState>>
 pub fn handle_new_client(
     trigger: On<Add, LinkOf>,
     mut commands: Commands,
-    q_peer: Query<&LocalId>,
-    q_lobby: Query<&mut Lobby>,
-) -> Option<Entity> {
-    if let Ok(local) = q_peer.get(trigger.entity) {
-        let client = commands
-            .entity(trigger.entity)
-            .insert((
-                ReplicationSender::new(
-                    SEND_INTERVAL,
-                    lightyear::prelude::SendUpdatesMode::SinceLastAck,
-                    false,
-                ),
-                ReplicationReceiver::default(),
-            ))
-            .id();
+    q_peer: Query<&RemoteId>,
+) {
+    let client = commands.entity(trigger.entity).insert((
+        ReplicationSender::new(
+            SEND_INTERVAL,
+            lightyear::prelude::SendUpdatesMode::SinceLastAck,
+            false,
+        ),
+        ReplicationReceiver::default(),
+    ));
+}
 
-        let lobby_player_ent = lobby.add_player(&local.0, &mut commands);
-        Some(client)
-    } else {
-        None
+fn add_player_to_lobby(
+    trigger: On<Add, RemoteId>,
+    mut commands: Commands,
+    q_peer: Query<&RemoteId>,
+) {
+    info!("Running");
+    if let Ok(p_id) = q_peer.get(trigger.entity) {
+        commands.entity(trigger.entity).insert(PlayerInLobby {
+            peer_id: p_id.0,
+            selected_character: None,
+            color: Color::srgb(1.0, 0.7, 0.7),
+            name: format!("{:?}", p_id),
+        });
     }
 }
 

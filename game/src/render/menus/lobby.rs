@@ -1,5 +1,6 @@
-use bevy::prelude::*;
+use bevy::{platform::collections::HashMap, prelude::*};
 use serde::{Deserialize, Serialize};
+use strum::IntoEnumIterator;
 
 use crate::{
     render::ui::button::*,
@@ -68,25 +69,49 @@ fn lobby_main() -> Node {
 #[require(Node = lobby_subcontainer(20.0, 100.0))]
 pub struct LobbyPlayerInfoContainer;
 
-#[derive(Component, Debug, Clone, Copy)]
-#[require(Node = lobby_subcontainer(50.0, 100.0))]
-pub struct LobbyCharacterSelection;
+#[derive(Component, Debug, Clone)]
+#[require(Node = character_selection_container(50.0, 100.0))]
+pub struct LobbyCharacterSelection {
+    pub buttons: HashMap<CharacterKind, Entity>,
+}
 
 #[derive(Component, Debug, Clone, Serialize, Deserialize, Default)]
-#[relationship_target(relationship = SelectedCharacterButton)]
+#[require(Node = char_sel_button())]
 pub struct CharacterSelectionButton {
     pub kind: CharacterKind,
     #[relationship]
     selected_by: Vec<Entity>,
 }
 
-#[derive(Component, Debug, Clone, Serialize, Deserialize)]
-#[relationship(relationship_target = CharacterSelectionButton)]
-pub struct SelectedCharacterButton(Entity);
+fn char_sel_button() -> Node {
+    Node {
+        height: Val::Percent(30.0),
+        width: Val::Percent(20.0),
+        flex_direction: FlexDirection::Column,
+        justify_content: JustifyContent::SpaceEvenly,
+        align_items: AlignItems::Center,
+        ..default()
+    }
+}
+
+#[derive(Component, Debug, Clone, Serialize, Deserialize, Default)]
+pub struct CharacterSelectionIcon;
+
+#[derive(Component, Debug, Clone, Serialize, Deserialize, Default)]
+#[require(Text = Text::from("NO TEXT COMPONENT"))]
+pub struct CharacterSelectionText;
 
 #[derive(Component, Debug, Clone, Copy)]
 #[require(Node = lobby_subcontainer(20.0, 100.0))]
 pub struct LobbySettingsSection;
+
+fn character_selection_container(width: f32, height: f32) -> Node {
+    let mut base = lobby_subcontainer(width, height);
+    base.display = Display::Grid;
+    base.grid_template_rows = vec![RepeatedGridTrack::auto(2)];
+    base.grid_template_columns = vec![RepeatedGridTrack::auto(4)];
+    base
+}
 
 fn lobby_subcontainer(width: f32, height: f32) -> Node {
     Node {
@@ -141,9 +166,33 @@ fn make_lobby(mut commands: Commands, assets: Res<AssetServer>) {
     let player_info = commands
         .spawn((LobbyPlayerInfoContainer, ChildOf(lobby_main)))
         .id();
-    let character_selection = commands
-        .spawn((LobbyCharacterSelection, ChildOf(lobby_main)))
-        .id();
+
+    let char_selection = commands.spawn_empty().id();
+    let mut button_map = HashMap::new();
+    for character in CharacterKind::iter() {
+        let entity = commands
+            .spawn((
+                CharacterSelectionButton {
+                    kind: character,
+                    selected_by: vec![],
+                },
+                ChildOf(char_selection),
+            ))
+            .with_children(|p| {
+                p.spawn((CharacterSelectionIcon));
+                p.spawn((CharacterSelectionText));
+            })
+            .id();
+        button_map.insert(character, entity);
+    }
+
+    commands.entity(char_selection).insert((
+        LobbyCharacterSelection {
+            buttons: button_map,
+        },
+        ChildOf(lobby_main),
+    ));
+
     let settings_section = commands
         .spawn((LobbySettingsSection, ChildOf(lobby_main)))
         .id();
