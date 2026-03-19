@@ -12,7 +12,7 @@ use crate::{
         SEND_INTERVAL, SERVER_PORT, SHARED_SETTINGS, SINGLE_PLAYER_SERVER_PORT,
         SharedNetworkingSettings,
         game_kinds::CurrentGameKind,
-        lobby::{Lobby, PlayerInLobby},
+        lobby::{Lobby, LobbyCaptain, PlayerInLobby},
         states::AppState,
         upgrades::DedicatedServerUpgradePlugin,
     },
@@ -174,15 +174,20 @@ fn add_player_to_lobby(
     trigger: On<Add, RemoteId>,
     mut commands: Commands,
     q_peer: Query<&RemoteId>,
+    mut q_lobby: Single<&mut Lobby>,
 ) {
     info!("Running");
     if let Ok(p_id) = q_peer.get(trigger.entity) {
+        let player_pos = q_lobby.add_player(trigger.entity);
         commands.entity(trigger.entity).insert(PlayerInLobby {
             peer_id: p_id.0,
             selected_character: None,
             color: Color::srgb(1.0, 0.7, 0.7),
             name: format!("{:?}", p_id),
         });
+        if let Some(0) = player_pos {
+            commands.entity(trigger.entity).insert(LobbyCaptain);
+        }
     }
 }
 

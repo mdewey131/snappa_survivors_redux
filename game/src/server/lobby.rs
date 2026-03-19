@@ -7,14 +7,24 @@ use lightyear::prelude::*;
 pub struct DedicatedServerLobbyPlugin;
 impl Plugin for DedicatedServerLobbyPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(
-            Update,
-            (
-                server_on_receive_start_game_message.run_if(in_state(AppState::Lobby)),
-                server_on_receive_character_change_message.run_if(in_state(AppState::Lobby)),
-            ),
-        );
+        app.add_systems(OnEnter(AppState::Lobby), server_spawn_lobby)
+            .add_systems(
+                Update,
+                (
+                    server_on_receive_start_game_message.run_if(in_state(AppState::Lobby)),
+                    server_on_receive_character_change_message.run_if(in_state(AppState::Lobby)),
+                ),
+            );
     }
+}
+
+fn server_spawn_lobby(mut commands: Commands) {
+    commands.spawn(
+        (Lobby {
+            players: vec![],
+            max_players: 8,
+        }),
+    );
 }
 
 pub fn server_move_to_loading_state(state: &mut ResMut<NextState<AppState>>) {

@@ -1,4 +1,4 @@
-use bevy::{ecs::system::SystemId, platform::collections::HashMap, prelude::*};
+use bevy::{ecs::entity::MapEntities, prelude::*};
 use lightyear::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -11,6 +11,11 @@ pub struct LobbyProtocolPlugin;
 
 impl Plugin for LobbyProtocolPlugin {
     fn build(&self, app: &mut App) {
+        app.register_component::<Lobby>()
+            .add_prediction()
+            .add_map_entities();
+
+        app.register_component::<LobbyCaptain>();
         app.register_component::<PlayerInLobby>().add_prediction();
         app.register_message::<ClientStartGameMessage>()
             .add_direction(NetworkDirection::ClientToServer);
@@ -22,13 +27,43 @@ impl Plugin for LobbyProtocolPlugin {
     }
 }
 
-/// A component that is only held on the server to manage the different peer ids.
-/// The clients will primarily work with the `PlayerInLobby` idea, so that we don't
-/// need to do any peer id stuff and can just get to the point in single player,
-/// and so that we don't have to replicate this over the network in multiplayer
-#[derive(Component, Debug, Clone)]
+/// The component that is used to understand which players are in the lobby, and in what order.
+/// It's generally expected that the first person in will be the lobby captain when initializing,
+/// but we're not enforcing that with the lobby because this can change
+#[derive(Component, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Lobby {
-    pub players: [Option<Entity>; 8],
+    pub players: Vec<Entity>,
+    pub max_players: usize,
+}
+
+impl Lobby {
+    pub fn add_player(&mut self, ent: Entity) -> Option<usize> {
+        let lobby_has_capacity = self.max_players > self.players.len();
+        let player_not_in_lobby = !self.players.contains(&ent);
+        if lobby_has_capacity && player_not_in_lobby {
+            self.players.push(ent);
+            let new_len = self.players.len();
+            Some(new_len - 1)
+        } else {
+            None
+        }
+    }
+    pub fn rm_player(&mut self, ent: Entity) {
+        let player_pos = self.players.iter().position(|e| *e == ent);
+        if let Some(p) = player_pos {
+            self.players.remove(p);
+        }
+    }
+}
+
+impl MapEntities for Lobby {
+    fn map_entities<E: EntityMapper>(&mut self, entity_mapper: &mut E) {
+        self.players = self
+            .players
+            .iter()
+            .map(|e| entity_mapper.get_mapped(*e))
+            .collect::<Vec<Entity>>()
+    }
 }
 
 /// The game needs a way of representing each player in the lobby.
@@ -51,7 +86,7 @@ pub struct PlayerInLobby {
 /// A marker component for the entity that has the power to make changes.
 /// In multiplayer scenarios, this is used to selectively show ui elements,
 /// and for the server to know who has the authority to do what (including transfer ownership of LobbyCaptain)
-#[derive(Component, Debug, Clone)]
+#[derive(Component, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct LobbyCaptain;
 
 #[derive(Message, Debug, Clone, Copy, Serialize, Deserialize)]
