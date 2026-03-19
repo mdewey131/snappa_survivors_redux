@@ -74,7 +74,7 @@ impl MapEntities for Lobby {
 ///
 /// The other convenience is that this component can be put on the entity representing the client, and we'll just remove it
 /// once its time to build a player from this
-#[derive(Component, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Component, Debug, Clone, PartialEq, Serialize, Deserialize, Reflect)]
 #[require(Replicate = Replicate::to_clients(NetworkTarget::All))]
 pub struct PlayerInLobby {
     pub peer_id: PeerId,

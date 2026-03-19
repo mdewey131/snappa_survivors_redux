@@ -1,12 +1,15 @@
 use bevy::{platform::collections::HashMap, prelude::*};
+use lightyear::prelude::{Client, MessageSender};
 use serde::{Deserialize, Serialize};
 use strum::IntoEnumIterator;
 
 use crate::{
     render::ui::button::*,
     shared::{
-        game_kinds::{CurrentGameKind, GameKinds},
+        GameMainChannel,
+        game_kinds::{CurrentGameKind, GameKinds, SinglePlayer, is_single_player},
         game_rules::{Difficulty, GameRuleField, MapKind},
+        lobby::{ClientChangeCharacterMessage, PlayerInLobby},
         players::CharacterKind,
         states::AppState,
     },
@@ -17,7 +20,13 @@ pub struct LobbyMenuPlugin;
 
 impl Plugin for LobbyMenuPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(AppState::Lobby), make_lobby)
+        app.add_message::<ClientChangeCharacterMessage>()
+            .add_systems(OnEnter(AppState::Lobby), make_lobby)
+            .add_systems(
+                Update,
+                mp_propagate_client_change_character_message_to_server
+                    .run_if(in_state(AppState::Lobby).and(not(is_single_player))),
+            )
             .add_observer(trigger_game_change_message_callback::<Difficulty>)
             .add_observer(trigger_game_change_message_callback::<MapKind>);
     }
@@ -76,11 +85,16 @@ pub struct LobbyCharacterSelection {
 }
 
 #[derive(Component, Debug, Clone, Serialize, Deserialize, Default)]
-#[require(Node = char_sel_button())]
+#[require(Node = char_sel_button(), Button = Button, Pickable = char_button_picking())]
 pub struct CharacterSelectionButton {
     pub kind: CharacterKind,
-    #[relationship]
     selected_by: Vec<Entity>,
+}
+fn char_button_picking() -> Pickable {
+    Pickable {
+        should_block_lower: true,
+        is_hoverable: true,
+    }
 }
 
 fn char_sel_button() -> Node {
@@ -151,7 +165,7 @@ pub struct LobbyBackButton;
 #[derive(Component)]
 pub struct ChangeGameSettingButton<F: GameRuleField>(F);
 
-fn make_lobby(mut commands: Commands, assets: Res<AssetServer>) {
+fn make_lobby(mut commands: Commands, assets: Res<AssetServer>, game_kind: Res<CurrentGameKind>) {
     let lobby = commands
         .spawn((LobbyScreen, DespawnOnExit(AppState::Lobby)))
         .id();
@@ -178,6 +192,7 @@ fn make_lobby(mut commands: Commands, assets: Res<AssetServer>) {
                 },
                 ChildOf(char_selection),
             ))
+            .observe(character_selection_button_observer)
             .with_children(|p| {
                 p.spawn((CharacterSelectionIcon));
                 p.spawn((CharacterSelectionText));
@@ -201,6 +216,7 @@ fn make_lobby(mut commands: Commands, assets: Res<AssetServer>) {
         .spawn((LobbyDifficulty, ChildOf(settings_section)))
         .id();
 
+    // TODO: Change the callback to work regardless of the game type (single or multiplayer)
     for diff in [Difficulty::Easy, Difficulty::Normal, Difficulty::Hard].iter() {
         let color = match *diff {
             Difficulty::Easy => Color::srgb(0.5, 0.5, 0.9),
@@ -251,4 +267,40 @@ pub fn spawn_lobby_back_button(
     commands
         .entity(button)
         .insert((ChildOf(trigger.entity), LobbyBackButton));
+}
+
+fn character_selection_button_observer(
+    trigger: On<Pointer<Release>>,
+    mut messages: MessageWriter<ClientChangeCharacterMessage>,
+    q_button_well: Single<&LobbyCharacterSelection>,
+    mut q_buttons: Query<&mut CharacterSelectionButton>,
+    mut q_player: Single<(Entity, &mut PlayerInLobby), Or<(With<SinglePlayer>, With<Client>)>>,
+) {
+    info!("System triggered");
+    if let Some(ref mut char) = q_player.1.selected_character {
+        // Get the previous button selected by this person to update the selection vector
+        let prev_ent = q_button_well.buttons.get(char).expect("Not Found!");
+        let mut prev_button = q_buttons.get_mut(*prev_ent).unwrap();
+        let pos = prev_button
+            .selected_by
+            .iter()
+            .position(|e| *e == q_player.0)
+            .unwrap();
+        prev_button.selected_by.remove(pos);
+    }
+
+    if let Ok(mut b) = q_buttons.get_mut(trigger.entity) {
+        q_player.1.selected_character = Some(b.kind);
+        b.selected_by.push(q_player.0);
+        messages.write(ClientChangeCharacterMessage { char: b.kind });
+    }
+}
+
+fn mp_propagate_client_change_character_message_to_server(
+    mut reader: MessageReader<ClientChangeCharacterMessage>,
+    mut q_client: Single<&mut MessageSender<ClientChangeCharacterMessage>>,
+) {
+    for e in reader.read() {
+        q_client.send::<GameMainChannel>(*e);
+    }
 }

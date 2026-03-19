@@ -1,3 +1,5 @@
+use std::path::{Path, PathBuf};
+
 use crate::{
     shared::{
         colliders::{ColliderTypes, CommonColliderBundle, RecentlyCollided},
@@ -68,6 +70,40 @@ pub enum CharacterKind {
     Gabe,
     Finn,
 }
+
+impl From<CharacterKind> for String {
+    fn from(value: CharacterKind) -> Self {
+        let s = match value {
+            CharacterKind::Dewey => "Dewey".into(),
+            CharacterKind::Finn => "Finn".into(),
+            CharacterKind::Gabe => "Gabe".into(),
+            CharacterKind::Mark => "Mark".into(),
+            CharacterKind::Matthew => "Matthew".into(),
+            CharacterKind::Paul => "Paul".into(),
+            CharacterKind::Ryan => "Ryan".into(),
+            CharacterKind::Shaunt => "Shaunt".into(),
+        };
+        s
+    }
+}
+
+/*
+impl From<CharacterKind> for Path {
+    fn from(value: CharacterKind) -> Self {
+        let s: String = match value {
+            CharacterKind::Dewey => "survivors/dewey".into(),
+            CharacterKind::Finn => "survivors/finn".into(),
+            CharacterKind::Gabe => "survivors/gabe".into(),
+            CharacterKind::Mark => "survivors/mark".into(),
+            CharacterKind::Matthew => "survivors/matthew".into(),
+            CharacterKind::Paul => "survivors/paul".into(),
+            CharacterKind::Ryan => "survivors/ryan".into(),
+            CharacterKind::Shaunt => "survivors/shaunt".into(),
+        };
+        Self::new(&s)
+    }
+}
+*/
 
 impl From<CharacterKind> for AssetFolder {
     fn from(value: CharacterKind) -> Self {
