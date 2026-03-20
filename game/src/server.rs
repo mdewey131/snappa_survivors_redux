@@ -176,7 +176,6 @@ fn add_player_to_lobby(
     q_peer: Query<&RemoteId>,
     mut q_lobby: Single<&mut Lobby>,
 ) {
-    info!("Running");
     if let Ok(p_id) = q_peer.get(trigger.entity) {
         let player_pos = q_lobby.add_player(trigger.entity);
         commands.entity(trigger.entity).insert(PlayerInLobby {

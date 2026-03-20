@@ -20,8 +20,7 @@ pub struct LobbyMenuPlugin;
 
 impl Plugin for LobbyMenuPlugin {
     fn build(&self, app: &mut App) {
-        app.add_message::<ClientChangeCharacterMessage>()
-            .add_systems(OnEnter(AppState::Lobby), make_lobby)
+        app.add_systems(OnEnter(AppState::Lobby), make_lobby)
             .add_systems(
                 Update,
                 mp_propagate_client_change_character_message_to_server

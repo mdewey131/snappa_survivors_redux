@@ -17,11 +17,15 @@ impl Plugin for LobbyProtocolPlugin {
 
         app.register_component::<LobbyCaptain>();
         app.register_component::<PlayerInLobby>().add_prediction();
+
+        app.add_message::<ClientStartGameMessage>();
         app.register_message::<ClientStartGameMessage>()
             .add_direction(NetworkDirection::ClientToServer);
+
         app.register_message::<ServerStartLoadingGameMessage>()
             .add_direction(NetworkDirection::ServerToClient);
-        app.add_message::<ClientStartGameMessage>();
+
+        app.add_message::<ClientChangeCharacterMessage>();
         app.register_message::<ClientChangeCharacterMessage>()
             .add_direction(NetworkDirection::ClientToServer);
     }

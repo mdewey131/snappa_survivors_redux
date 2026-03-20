@@ -137,7 +137,7 @@ pub struct DeactivateWeapon {
 #[derive(Component, Deref, DerefMut, Reflect)]
 pub struct WeaponActiveTimer(pub Timer);
 
-pub fn add_weapon_to_player(
+pub fn add_weapon_to_character(
     player: Entity,
     weapon_kind: WeaponKind,
     commands: &mut Commands,

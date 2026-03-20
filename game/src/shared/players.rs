@@ -28,6 +28,7 @@ use strum::EnumIter;
 #[derive(Component, Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Reflect)]
 pub struct Player {
     pub client: PeerId,
+    pub character: CharacterKind,
 }
 
 impl From<Player> for CommonColliderBundle {
@@ -118,6 +119,21 @@ impl From<CharacterKind> for AssetFolder {
             CharacterKind::Shaunt => "survivors/shaunt".into(),
         };
         Self(s)
+    }
+}
+
+impl CharacterKind {
+    pub fn starting_weapon(&self) -> WeaponKind {
+        match self {
+            CharacterKind::Dewey => WeaponKind::ThrowHands,
+            CharacterKind::Finn => WeaponKind::DiceGuard,
+            CharacterKind::Gabe => WeaponKind::DiceGuard,
+            CharacterKind::Mark => WeaponKind::FlurryOfBlows,
+            CharacterKind::Matthew => WeaponKind::BouncingDice,
+            CharacterKind::Paul => WeaponKind::PaddleBack,
+            CharacterKind::Ryan => WeaponKind::ThrowHands,
+            CharacterKind::Shaunt => WeaponKind::ThrowHands,
+        }
     }
 }
 

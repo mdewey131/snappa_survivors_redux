@@ -12,12 +12,14 @@ use crate::{
     shared::{
         SEND_INTERVAL,
         game_kinds::{CurrentGameKind, GameKinds, SinglePlayer},
+        lobby::{LobbyCaptain, PlayerInLobby},
         states::AppState,
         upgrades::ClientUpgradePlugin,
     },
 };
 use bevy::prelude::*;
-use lightyear::prelude::{Client, Predicted, ReplicationSender, Server, Timeline};
+use lightyear::prelude::{Client, PeerId, Predicted, ReplicationSender, Server, Timeline};
+use rand::Rng;
 
 pub mod camera;
 pub mod client_states;
@@ -93,10 +95,12 @@ fn move_to_first_app_state(mut state: ResMut<NextState<AppState>>) {
     }
 }
 
-/// When we make the move to single player, we need to spawn both a game client and a game server.
+/// When we make the move to single player, we spawn a spoofed lobby controller that will behave
+/// similarly to the multiplayer version, so that control of character selection and game rules
+/// is unified between game types.
 /// The state AppState::AwaitingServerConnection will be the thing that actually attempts to make
 /// the connection to the server, and that state will be responsible for figuring out when its time
-/// to move to the lobby
+/// to move to the lobby in a multiplayer scenario
 pub fn transition_to_single_player(
     mut commands: Commands,
     mut game_choice: ResMut<CurrentGameKind>,
@@ -110,12 +114,24 @@ pub fn transition_to_single_player(
     if let Some(s) = q_server {
         commands.entity(*s).despawn();
     }
-    /*
-    commands.spawn((GameClient::SINGLE_PLAYER));
-    commands.spawn(GameServer::SINGLE_PLAYER);
-    */
     game_choice.0 = Some(GameKinds::SinglePlayer);
     state.set(AppState::Lobby);
+    // for funsies
+    let mut rng = rand::rng();
+    let r = rng.random_range(0.0..1.0);
+    let b = rng.random_range(0.0..1.0);
+    let g = rng.random_range(0.0..1.0);
+    // spawn the player character representation
+    commands.spawn((
+        SinglePlayer,
+        PlayerInLobby {
+            peer_id: PeerId::Local(0),
+            selected_character: None,
+            color: Color::srgba(r, b, g, 1.0),
+            name: String::from("Single Player"),
+        },
+        LobbyCaptain,
+    ));
 }
 
 pub fn transition_to_multi_player(

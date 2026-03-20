@@ -6,7 +6,7 @@ use crate::shared::{
     players::{CharacterKind, Player, PlayerWeapons},
     states::{AppState, InGameState},
     stats::{RawStatsList, StatKind, StatList, xp::LevelUpMessage},
-    weapons::{Weapon, WeaponKind, add_weapon_to_player},
+    weapons::{Weapon, WeaponKind, add_weapon_to_character},
 };
 use bevy::{
     platform::collections::{HashMap, HashSet},
@@ -378,7 +378,7 @@ pub fn apply_upgrade(
         for reward in rewards {
             match reward {
                 UpgradeReward::AddWeapon(w) => {
-                    add_weapon_to_player(ent, w, &mut commands, game_kind.0.unwrap());
+                    add_weapon_to_character(ent, w, &mut commands, game_kind.0.unwrap());
                 }
                 UpgradeReward::StatUpgrade { range, kind, value } => {
                     let sk = StatKind::from(kind);
