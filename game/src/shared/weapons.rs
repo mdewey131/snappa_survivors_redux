@@ -43,6 +43,8 @@ impl Plugin for WeaponProtocolPlugin {
         app.register_component::<Weapon>().add_prediction();
         app.register_component::<DiceGuardProjectile>()
             .add_prediction();
+        app.register_component::<BouncingDiceAttack>()
+            .add_prediction();
     }
 }
 

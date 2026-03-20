@@ -15,7 +15,7 @@ use rand::Rng;
 #[derive(Component)]
 pub struct WeaponBouncingDice;
 
-#[derive(Component, Reflect, Debug, Clone)]
+#[derive(Component, Reflect, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct BouncingDiceAttack {
     pub init_pos: Vec2,
     pub c_target: Vec2,
@@ -29,7 +29,7 @@ pub struct BouncingDiceAttack {
 /// we have to solve for x_offset and the
 /// mult constant (which are related) based on the values of the max height offset that
 /// we want, and the destination
-#[derive(Reflect, Debug, Clone, Copy)]
+#[derive(Reflect, Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct BouncingDiceAttackCurve;
 
 impl Curve<f32> for BouncingDiceAttackCurve {

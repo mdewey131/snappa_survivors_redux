@@ -13,7 +13,7 @@ use crate::{
         players::CharacterKind,
         states::AppState,
     },
-    utils::CallbackWithInput,
+    utils::{AssetFolder, CallbackWithInput},
 };
 
 pub struct LobbyMenuPlugin;
@@ -183,6 +183,11 @@ fn make_lobby(mut commands: Commands, assets: Res<AssetServer>, game_kind: Res<C
     let char_selection = commands.spawn_empty().id();
     let mut button_map = HashMap::new();
     for character in CharacterKind::iter() {
+        let sprite_path: AssetFolder = character.into();
+        let handle: Handle<Image> =
+            assets.load(format!("{}/{}", sprite_path.0, "lobby_portrait.png"));
+
+        let char_string: String = character.into();
         let entity = commands
             .spawn((
                 CharacterSelectionButton {
@@ -193,8 +198,8 @@ fn make_lobby(mut commands: Commands, assets: Res<AssetServer>, game_kind: Res<C
             ))
             .observe(character_selection_button_observer)
             .with_children(|p| {
-                p.spawn((CharacterSelectionIcon));
-                p.spawn((CharacterSelectionText));
+                p.spawn((CharacterSelectionIcon, ImageNode::from(handle)));
+                p.spawn((CharacterSelectionText, Text::from(char_string)));
             })
             .id();
         button_map.insert(character, entity);
