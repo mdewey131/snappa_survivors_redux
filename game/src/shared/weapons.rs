@@ -12,11 +12,13 @@ use crate::{
         states::InGameState,
         stats::{RawStatsList, components::*},
         upgrades::PlayerUpgradeSlots,
+        weapons::bumpin_tunes::BumpinTunes,
     },
     utils::AssetFolder,
 };
 
 pub mod bouncing_dice;
+pub mod bumpin_tunes;
 pub mod dice_guard;
 pub mod throw_hands;
 pub use bouncing_dice::*;
@@ -71,6 +73,7 @@ pub enum WeaponKind {
     PaddleBack,
     FlurryOfBlows,
     BouncingDice,
+    BumpinTunes,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Reflect, Clone, Copy)]
@@ -113,6 +116,7 @@ impl From<WeaponKind> for AssetFolder {
             WeaponKind::FlurryOfBlows => Self("weapons/flurry_of_blows".into()),
             WeaponKind::PaddleBack => Self("weapons/paddle_back".into()),
             WeaponKind::BouncingDice => Self("weapons/bouncing_dice".into()),
+            WeaponKind::BumpinTunes => Self("weapons/bumpin_tunes".into()),
             _ => Self("unknown!".into()),
         }
     }
@@ -170,6 +174,9 @@ pub fn add_weapon_to_character(
         WeaponKind::BouncingDice => {
             commands.entity(w_ent).insert(WeaponBouncingDice);
         }
+        WeaponKind::BumpinTunes => {
+            commands.entity(w_ent).insert(BumpinTunes);
+        }
         _ => {
             warn!("Weapon entity created without a marker component")
         }
@@ -202,17 +209,18 @@ fn weapon_off_cooldown(
             &mut Weapon,
             Option<&EffectDuration>,
             Option<&ProjectileCount>,
+            Option<&CooldownRate>,
         ),
         (Without<WeaponActiveTimer>, Without<Cooldown>),
     >,
 ) {
-    for (ent, mut weapon, m_dur, m_proj_c) in &mut q_weapon {
+    for (ent, mut weapon, m_dur, m_proj_c, m_cd) in &mut q_weapon {
         match weapon.activity_pattern {
             WeaponActivityPattern::AlwaysOn => {
                 commands
                     .entity(ent)
                     .insert(WeaponActiveTimer(Timer::from_seconds(
-                        5.0, //**(stats.get_current(StatKind::CooldownRate).unwrap()),
+                        m_cd.expect("weapon should have cd").0,
                         TimerMode::Repeating,
                     )));
                 commands.trigger(ActivateWeapon { entity: ent });
