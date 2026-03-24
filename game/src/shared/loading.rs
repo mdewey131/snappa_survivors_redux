@@ -7,6 +7,7 @@ use bevy::prelude::*;
 use lightyear::prelude::*;
 use rand::Rng;
 
+// In single player, we spawn just a single entity. Very simple
 pub fn spawn_player_character(
     mut commands: Commands,
     game_kinds: Res<CurrentGameKind>,
@@ -46,6 +47,7 @@ pub fn spawn_player_character(
     commands.entity(player_ent).remove::<PlayerInLobby>();
 }
 
+// In multiplayer, we spawn just a variety of entities based on their user attributes and the chosen player
 pub fn spawn_characters_in_multiplayer(
     mut commands: Commands,
     game_kinds: Res<CurrentGameKind>,
