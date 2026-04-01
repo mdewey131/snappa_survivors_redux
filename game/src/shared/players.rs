@@ -125,7 +125,7 @@ impl From<CharacterKind> for AssetFolder {
 impl CharacterKind {
     pub fn starting_weapon(&self) -> WeaponKind {
         match self {
-            CharacterKind::Dewey => WeaponKind::BumpinTunes,
+            CharacterKind::Dewey => WeaponKind::ShiftyShot,
             CharacterKind::Finn => WeaponKind::DiceGuard,
             CharacterKind::Gabe => WeaponKind::DiceGuard,
             CharacterKind::Mark => WeaponKind::FlurryOfBlows,

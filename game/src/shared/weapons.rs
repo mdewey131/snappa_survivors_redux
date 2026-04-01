@@ -1,3 +1,4 @@
+use avian2d::prelude::Position;
 use bevy::prelude::*;
 use lightyear::prelude::{AppComponentExt, PredictionRegistrationExt};
 use serde::{Deserialize, Serialize};
@@ -6,9 +7,10 @@ use strum::EnumIter;
 use crate::{
     shared::{
         combat::{CombatSystemSet, Cooldown},
+        enemies::Enemy,
         game_kinds::{GameKinds, MultiPlayerComponentOptions},
         game_object_spawning::spawn_game_object,
-        players::PlayerWeapons,
+        players::{Player, PlayerWeapons},
         states::InGameState,
         stats::{RawStatsList, components::*},
         upgrades::PlayerUpgradeSlots,
@@ -20,9 +22,12 @@ use crate::{
 pub mod bouncing_dice;
 pub mod bumpin_tunes;
 pub mod dice_guard;
+pub mod shifty_shot;
 pub mod throw_hands;
+
 pub use bouncing_dice::*;
 pub use dice_guard::*;
+pub use shifty_shot::*;
 pub use throw_hands::*;
 
 pub struct SharedWeaponPlugin;
@@ -74,6 +79,7 @@ pub enum WeaponKind {
     FlurryOfBlows,
     BouncingDice,
     BumpinTunes,
+    ShiftyShot,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Reflect, Clone, Copy)]
@@ -99,6 +105,10 @@ impl From<WeaponKind> for Weapon {
                 time_btw_attacks: 0.5,
                 rem_projectiles: 0,
             },
+            WeaponKind::ShiftyShot => WeaponActivityPattern::ActiveForProjectiles {
+                time_btw_attacks: 0.5,
+                rem_projectiles: 0,
+            },
             _ => WeaponActivityPattern::AlwaysOn,
         };
         Weapon {
@@ -117,6 +127,7 @@ impl From<WeaponKind> for AssetFolder {
             WeaponKind::PaddleBack => Self("weapons/paddle_back".into()),
             WeaponKind::BouncingDice => Self("weapons/bouncing_dice".into()),
             WeaponKind::BumpinTunes => Self("weapons/bumpin_tunes".into()),
+            WeaponKind::ShiftyShot => Self("weapons/shifty_shot".into()),
             _ => Self("unknown!".into()),
         }
     }
@@ -176,6 +187,9 @@ pub fn add_weapon_to_character(
         }
         WeaponKind::BumpinTunes => {
             commands.entity(w_ent).insert(BumpinTunes);
+        }
+        WeaponKind::ShiftyShot => {
+            commands.entity(w_ent).insert(WeaponShiftyShot);
         }
         _ => {
             warn!("Weapon entity created without a marker component")
@@ -294,4 +308,29 @@ fn tick_weapon_active_timer(
             }
         }
     }
+}
+
+pub fn find_closest_enemy_targets_to_position(
+    num_to_find: u8,
+    player_pos: Vec2,
+    q_enemy_pos: &Query<(Entity, &Position), With<Enemy>>,
+) -> Vec<Entity> {
+    let mut sorted = q_enemy_pos
+        .iter()
+        .map(|(ent, pos)| {
+            let dist = pos.0.distance(player_pos);
+            (ent, pos, dist)
+        })
+        .collect::<Vec<(Entity, &Position, f32)>>();
+
+    sorted.sort_by(|q1, q2| q1.2.partial_cmp(&q2.2).unwrap());
+    sorted.reverse();
+    let mut targets = Vec::new();
+    for _i in (0..num_to_find) {
+        let m_enemy = sorted.pop();
+        if let Some(record) = m_enemy {
+            targets.push(record.0)
+        }
+    }
+    targets
 }
