@@ -195,6 +195,19 @@
         ],
     ),
     (
+        kind: UpgradePlayerStat(ProjectileBounces),
+        rewards: [
+            StatUpgrade(
+                range: (
+                    min: 0.8,
+                    max: 2.0,
+                ),
+                kind: ProjectileBounces,
+                value: None,
+            ),
+        ],
+    ),
+    (
         kind: UpgradePlayerStat(XPGain),
         rewards: [
             StatUpgrade(

@@ -17,7 +17,7 @@
     ),
     (
         kind: ProjSpeed,
-        val: 1000.0,
+        val: 400.0,
     ),
     (
         kind: ProjBounces,

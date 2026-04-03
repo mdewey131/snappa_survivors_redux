@@ -79,4 +79,8 @@
         kind: XPGain,
         val: 1.0,
     ),
+    (
+        kind: ProjBounces,
+        val: 0.0,
+    ),
 ])
