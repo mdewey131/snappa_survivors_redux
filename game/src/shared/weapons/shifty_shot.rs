@@ -107,12 +107,6 @@ pub fn update_shifty_shot_attack<QF: QueryFilter>(
         if let Ok((e_ent, enemy_pos)) = enemy_data {
             let direction_vec = (enemy_pos.0 - pos.0).normalize_or_zero();
             let new_vec = direction_vec * velo.0.length();
-            info!(
-                "direction_vec: {:?}, velo_mangitude: {:?}, new_vec: {:?}",
-                direction_vec,
-                velo.0.length(),
-                new_vec
-            );
             velo.0 = new_vec;
 
             if pos.0.distance(enemy_pos.0) <= ATTACK_DISTANCE_THRESHOLD {
