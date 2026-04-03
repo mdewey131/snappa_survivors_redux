@@ -1,3 +1,5 @@
+use crate::utils::SpawnPattern;
+
 use super::*;
 use bevy::prelude::*;
 
@@ -14,6 +16,7 @@ pub enum EnemySpawnStyle {
     Manual {
         kind: EnemyKind,
         should_fire: bool,
+        pattern: SpawnPattern,
     },
 }
 
@@ -23,11 +26,7 @@ pub fn spawn_enemy_spawn_manager(mut commands: Commands) {
     })
 }
 
-pub fn update_enemy_spawn_manager(
-    mut commands: Commands,
-    mut manager: ResMut<EnemySpawnManager>,
-    game_kinds: Res<CurrentGameKind>,
-) {
+pub fn update_enemy_spawn_manager(mut commands: Commands, mut manager: ResMut<EnemySpawnManager>) {
     match manager.spawn_style {
         EnemySpawnStyle::Automatic => {
             /*
@@ -58,9 +57,13 @@ pub fn update_enemy_spawn_manager(
         EnemySpawnStyle::Manual {
             kind,
             ref mut should_fire,
+            pattern,
         } => {
             if *should_fire {
-                spawn_enemy(&mut commands, kind, game_kinds.0.unwrap());
+                let positions = pattern.to_positions();
+                for position in positions {
+                    spawn_enemy(&mut commands, kind, position);
+                }
                 *should_fire = false;
             }
         }

@@ -92,25 +92,23 @@ impl Plugin for EnemyProtocolPlugin {
     }
 }
 
-pub fn spawn_enemy(commands: &mut Commands, e_kind: EnemyKind, game_kind: GameKinds) {
+pub fn spawn_enemy(commands: &mut Commands, e_kind: EnemyKind, position: Vec2) {
     let enemy = Enemy {
         kind: e_kind,
         state: EnemyState::Spawning,
     };
-    let mut rng = rand::rng();
-    let pos = (rng.random_range(-50.0..50.0), rng.random_range(-50.0..50.0));
-    let e_ent = spawn_game_object(
-        commands,
-        game_kind,
-        Some(e_kind),
-        MultiPlayerComponentOptions::from(enemy),
+
+    let mut command = SpawnGameObject::new(
+        MultiPlayerComponentOptions::PREDICTED,
         (
             enemy,
-            Position(Vec2::new(pos.0, pos.1)),
+            Position(Vec2::new(position.x, position.y)),
             EnemySpawnTimer::default(),
             AppliesCollisionEffect::new([ColliderTypes::Player].into(), ApplyDamage),
         ),
     );
+    command.stats = Some(enemy.kind.into());
+    commands.queue(command);
 }
 
 pub fn enemy_state_machine<EnemyQF: QueryFilter, PlayerQF: QueryFilter>(

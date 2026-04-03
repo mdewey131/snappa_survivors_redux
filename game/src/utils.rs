@@ -1,3 +1,5 @@
+use std::f32::consts::TAU;
+
 use bevy::{
     ecs::{
         entity::MapEntities,
@@ -6,6 +8,7 @@ use bevy::{
     prelude::*,
     state::state::FreelyMutableState,
 };
+use rand::Rng;
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 /// Reads the path that is provided and imports RON, returning
 /// a concrete instance of type T
@@ -48,5 +51,57 @@ pub struct CreatorOf(Vec<Entity>);
 impl MapEntities for CreatedBy {
     fn map_entities<E: EntityMapper>(&mut self, entity_mapper: &mut E) {
         self.0 = entity_mapper.get_mapped(self.0);
+    }
+}
+
+/// Describes how to spawn a group of things, returning the positions at which to spawn them.
+/// Because this is a utility for spawning groups, there is no single option
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, Reflect)]
+#[reflect(Default)]
+pub enum SpawnPattern {
+    Circle {
+        amount: u8,
+        center: Vec2,
+        radius: f32,
+        radius_only: bool,
+    },
+}
+
+impl Default for SpawnPattern {
+    fn default() -> Self {
+        Self::Circle {
+            amount: 1,
+            center: Vec2::ZERO,
+            radius: 0.0,
+            radius_only: true,
+        }
+    }
+}
+
+impl SpawnPattern {
+    pub fn to_positions(&self) -> Vec<Vec2> {
+        match self {
+            Self::Circle {
+                amount,
+                center,
+                radius,
+                radius_only,
+            } => {
+                let mut rng = rand::rng();
+                let mut to_ret = Vec::new();
+
+                for _ in 0..(*amount) {
+                    let angle = rng.random_range(-TAU..TAU);
+                    let length = if *radius_only {
+                        *radius
+                    } else {
+                        rng.random_range(0.0..*radius)
+                    };
+                    let new_vec = (Vec2::from_angle(angle) * length) + center;
+                    to_ret.push(new_vec)
+                }
+                to_ret
+            }
+        }
     }
 }

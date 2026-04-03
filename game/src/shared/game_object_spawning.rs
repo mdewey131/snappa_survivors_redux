@@ -49,7 +49,7 @@ pub fn spawn_game_object(
 /// Trying this in a slightly different approach - Looking to make a custom command
 pub struct SpawnGameObject<B: Bundle> {
     bundle: B,
-    stats: Option<AssetFolder>,
+    pub stats: Option<AssetFolder>,
     multiplayer_options: MultiPlayerComponentOptions,
 }
 
