@@ -20,12 +20,9 @@ impl Plugin for ClientShiftyShotPlugin {
     }
 }
 
-/*
 pub struct ClientShiftyShotRenderPlugin;
 impl Plugin for ClientShiftyShotRenderPlugin {
     fn build(&self, app: &mut App) {
-        app.add_observer(add_throwing_hands_attack_sprite::<DefaultClientFilter>)
-            .add_systems(Update, throwing_hands_sprite_follow::<DefaultClientFilter>);
+        app.add_observer(add_shifty_shot_attack_sprite::<DefaultClientFilter>);
     }
 }
-*/

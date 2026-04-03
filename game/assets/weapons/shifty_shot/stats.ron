@@ -5,7 +5,7 @@
     ),
     (
         kind: CDR,
-        val: 0.25,
+        val: 4.0,
     ),
     (
         kind: Damage,
@@ -17,7 +17,7 @@
     ),
     (
         kind: ProjSpeed,
-        val: 50.0,
+        val: 1000.0,
     ),
     (
         kind: ProjBounces,

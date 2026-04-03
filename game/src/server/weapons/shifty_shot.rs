@@ -24,12 +24,9 @@ impl Plugin for DedicatedServerShiftyShotPlugin {
     }
 }
 
-/*
-pub struct DedicatedServerThrowHandsRenderPlugin;
-impl Plugin for DedicatedServerThrowHandsRenderPlugin {
+pub struct DedicatedServerShiftyShotRenderPlugin;
+impl Plugin for DedicatedServerShiftyShotRenderPlugin {
     fn build(&self, app: &mut App) {
-        app.add_observer(add_throwing_hands_attack_sprite::<DefaultServerFilter>)
-            .add_systems(Update, throwing_hands_sprite_follow::<DefaultServerFilter>);
+        app.add_observer(add_shifty_shot_attack_sprite::<DefaultServerFilter>);
     }
 }
- */

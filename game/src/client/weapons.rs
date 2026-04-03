@@ -32,6 +32,7 @@ impl Plugin for ClientWeaponsRenderPlugin {
             ClientBouncingDiceRenderPlugin,
             ClientDiceGuardRenderPlugin,
             ClientThrowHandsRenderPlugin,
+            ClientShiftyShotRenderPlugin,
         ));
     }
 }

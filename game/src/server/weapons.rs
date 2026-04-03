@@ -32,6 +32,7 @@ impl Plugin for DedicatedServerWeaponsRenderPlugin {
             DedicatedServerDiceGuardRenderPlugin,
             DedicatedServerThrowHandsRenderPlugin,
             DedicatedServerBouncingDiceRenderPlugin,
+            DedicatedServerShiftyShotRenderPlugin,
         ));
     }
 }

@@ -1,9 +1,12 @@
-use crate::shared::{
-    colliders::CollisionEffect,
-    damage::{DamageBuffer, DamageInstance},
-    despawn_timer::DespawnTimer,
-    game_object_spawning::SpawnGameObject,
-    weapons::ActivateWeapon,
+use crate::{
+    render::RenderYtoZ,
+    shared::{
+        colliders::CollisionEffect,
+        damage::{DamageBuffer, DamageInstance},
+        despawn_timer::DespawnTimer,
+        game_object_spawning::SpawnGameObject,
+        weapons::ActivateWeapon,
+    },
 };
 use avian2d::prelude::*;
 use bevy::{
@@ -104,6 +107,12 @@ pub fn update_shifty_shot_attack<QF: QueryFilter>(
         if let Ok((e_ent, enemy_pos)) = enemy_data {
             let direction_vec = (enemy_pos.0 - pos.0).normalize_or_zero();
             let new_vec = direction_vec * velo.0.length();
+            info!(
+                "direction_vec: {:?}, velo_mangitude: {:?}, new_vec: {:?}",
+                direction_vec,
+                velo.0.length(),
+                new_vec
+            );
             velo.0 = new_vec;
 
             if pos.0.distance(enemy_pos.0) <= ATTACK_DISTANCE_THRESHOLD {
@@ -153,6 +162,7 @@ pub fn update_shifty_shot_attack<QF: QueryFilter>(
 /// We don't handle this with collisions because it gets real hard to manage real fast, and it's likely going to be chaos to
 /// orchestrate without causing many bugs
 #[derive(Component, Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Reflect)]
+#[require(RigidBody::Dynamic)]
 pub struct ShiftyShotAttack {
     pub target: Entity,
     pub remaining_bounces: u8,
@@ -161,5 +171,21 @@ pub struct ShiftyShotAttack {
 impl MapEntities for ShiftyShotAttack {
     fn map_entities<E: EntityMapper>(&mut self, entity_mapper: &mut E) {
         self.target = entity_mapper.get_mapped(self.target);
+    }
+}
+
+pub fn add_shifty_shot_attack_sprite<QF: QueryFilter>(
+    trigger: On<Add, ShiftyShotAttack>,
+    mut commands: Commands,
+    assets: Res<AssetServer>,
+    q_attack: Query<(&Position), (With<ShiftyShotAttack>, QF)>,
+) {
+    if let Ok(pos) = q_attack.get(trigger.entity) {
+        let image: Handle<Image> = assets.load("weapons/shifty_shot/projectile.png");
+        commands.entity(trigger.entity).insert((
+            Sprite::from(image),
+            Transform::from_translation(pos.0.extend(pos.0.y)),
+            RenderYtoZ::default(),
+        ));
     }
 }
