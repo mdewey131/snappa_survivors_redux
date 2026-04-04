@@ -1,9 +1,12 @@
 use bevy::prelude::*;
 
+#[cfg(feature = "dev")]
+use crate::utils::zoo::*;
 use crate::{
     render::ui::{button::*, screen_transition::ScreenTransition},
     shared::{despawn_timer::DespawnTimer, states::AppState},
 };
+
 #[derive(Component, Debug, Clone, Copy)]
 #[require(Node = node_main_menu_screen())]
 pub struct MainMenuScreen;
@@ -127,6 +130,17 @@ fn spawn_main_menu(mut commands: Commands, assets: Res<AssetServer>, systems: Re
     commands
         .entity(mp_btn_ent)
         .insert((ButtonMultiPlayerGame, ChildOf(button_well)));
+
+    // Dev zoo
+    if cfg!(feature = "dev") {
+        let launch_zoo = commands.register_system(launch_zoo_level);
+        let zoo_button = GameButton::new(GameButtonOnRelease::TriggerSystem(launch_zoo));
+        let zoo_btn_style = GameButtonStyle::new(GameButtonImage::default())
+            .with_color(Color::srgb(1.0, 0.0, 0.0))
+            .with_text("Zoo".into());
+        let zoo_btn_ent = zoo_button.spawn(&mut commands, &assets, zoo_btn_style);
+        commands.entity(zoo_btn_ent).insert(ChildOf(button_well));
+    }
 
     /*
     let open_settings_sys = systems.get("open_settings").unwrap();

@@ -2,6 +2,7 @@ use crate::shared::{
     combat::CharacterFacing,
     game_kinds::{CurrentGameKind, MultiPlayerComponentOptions},
     game_object_spawning::spawn_game_object,
+    game_rules::GameRules,
     loading::spawn_characters_in_multiplayer,
     players::{CharacterKind, Player, PlayerBaseBundle, PlayerWeapons},
     states::*,
@@ -29,6 +30,8 @@ impl Plugin for DedicatedServerLoadingPlugin {
         );
     }
 }
+
+fn load_level(mut commands: Commands, game_rules: Res<GameRules>) {}
 
 fn tmp_move_to_game(
     mut app_state: ResMut<NextState<AppState>>,

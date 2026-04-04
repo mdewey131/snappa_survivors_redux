@@ -1,5 +1,11 @@
 use std::f32::consts::TAU;
 
+#[cfg(feature = "dev")]
+pub mod zoo;
+
+#[cfg(feature = "dev")]
+use zoo::*;
+
 use bevy::{
     ecs::{
         entity::MapEntities,
@@ -8,6 +14,7 @@ use bevy::{
     prelude::*,
     state::state::FreelyMutableState,
 };
+
 use rand::Rng;
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 /// Reads the path that is provided and imports RON, returning

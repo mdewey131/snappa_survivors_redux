@@ -47,6 +47,8 @@ pub struct GameRules {
 pub enum MapKind {
     #[default]
     TheGreens,
+    #[cfg(feature = "dev")]
+    DevZoo,
 }
 impl GameRuleField for MapKind {
     fn set_field(&self, rules: &mut GameRules) {

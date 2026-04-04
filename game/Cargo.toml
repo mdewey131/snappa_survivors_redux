@@ -12,7 +12,7 @@ opt-level = 3
 
 
 [features]
-default = ["lightyear", "avian"]
+default = ["lightyear", "avian", "dev"]
 dev = [
     "avian_debug",
     "inspector",
