@@ -38,9 +38,9 @@ fn load_game(mut commands: Commands, game_kinds: Res<CurrentGameKind>, rules: Re
             MapKind::DevZoo => {
                 info!("Loading Level");
                 let load_zoo_player_dummies = commands.register_system(spawn_zoo_characters);
-                //let load_zoo_weapon_dummies = commands.register_system(spawn_zoo_weapon_dummies);
+                let load_zoo_weapons = commands.register_system(spawn_zoo_weapons);
                 commands.run_system(load_zoo_player_dummies);
-                //commands.run_system(load_zoo_weapon_dummies);
+                commands.run_system(load_zoo_weapons);
             }
             _ => {
                 let player_character_spawn_sys = commands.register_system(spawn_player_character);

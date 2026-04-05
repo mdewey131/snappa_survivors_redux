@@ -1,6 +1,6 @@
 ([
     (
-        kind: Armor,
-        val: 50.0,
+        kind: CDR,
+        val: 5.0,
     ),
 ])

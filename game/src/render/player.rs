@@ -9,12 +9,6 @@ use crate::{
     shared::{combat::CharacterFacing, inputs::Movement, players::Player, states::InGameState},
 };
 
-/// Handles the rendering of the player.
-///
-/// This is parameterized by a component because
-/// a dedicated server might want to render according to
-/// the replicated component, but the client only wants
-/// to render on the basis of predicted
 pub struct SharedPlayerRenderPlugin;
 
 impl Plugin for SharedPlayerRenderPlugin {
@@ -33,7 +27,7 @@ pub fn rendering_on_player_add(
     mut commands: Commands,
     assets: Res<AssetServer>,
     mut layouts: ResMut<Assets<TextureAtlasLayout>>,
-    q_player: Query<(Entity, &Position), (Added<Player> /*QF*/,)>,
+    q_player: Query<(Entity, &Position), Added<Player>>,
 ) {
     for (e, pos) in &q_player {
         let handle: Handle<Image> = assets.load("survivors/dewey/sprite_2-Sheet.png");
