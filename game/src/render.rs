@@ -1,3 +1,4 @@
+use crate::shared::states::AppState;
 use avian2d::prelude::Position;
 #[cfg(feature = "avian_debug")]
 use avian2d::prelude::*;
@@ -16,7 +17,7 @@ pub mod ui;
 pub mod upgrades;
 pub mod weapons;
 
-use camera::GameMainCamera;
+use camera::*;
 use enemies::SharedEnemyRenderPlugin;
 use map::MapRenderPlugin;
 use menus::lobby::LobbyMenuPlugin;
@@ -50,12 +51,17 @@ impl Plugin for GameSharedRenderPlugin {
         #[cfg(feature = "dev")]
         app.add_plugins(EnemySpawnManagerEditorPlugin);
 
-        app.add_systems(Startup, startup).add_systems(
-            PostUpdate,
-            (render_y_to_z, sync_transform_to_pos)
-                .chain()
-                .before(RenderSystems::Prepare),
-        );
+        app.add_systems(Startup, startup)
+            .add_systems(
+                PostUpdate,
+                (render_y_to_z, sync_transform_to_pos)
+                    .chain()
+                    .before(RenderSystems::Prepare),
+            )
+            .add_systems(
+                Update,
+                update_free_cam_position.run_if(in_state(AppState::InGame)),
+            );
     }
 }
 

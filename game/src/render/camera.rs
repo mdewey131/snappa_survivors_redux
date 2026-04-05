@@ -3,8 +3,9 @@ use lightyear::prelude::Controlled;
 
 use crate::shared::{game_kinds::SinglePlayer, players::Player};
 
-pub struct GameCameraPlugin;
+pub const FREE_CAM_SPEED: f32 = 10.0;
 
+pub struct GameCameraPlugin;
 impl Plugin for GameCameraPlugin {
     fn build(&self, app: &mut App) {
         app;
@@ -46,4 +47,31 @@ pub fn update_camera_pos_client(
         }
         _ => {}
     }
+}
+
+pub fn update_free_cam_position(
+    input: Res<ButtonInput<KeyCode>>,
+    mut q_camera: Single<(&mut Transform, &GameMainCamera)>,
+) {
+    match q_camera.1.mode {
+        GameCameraMode::Following(_) => {
+            return;
+        }
+        _ => {}
+    }
+    let mut to_move = Vec2::ZERO;
+    if input.pressed(KeyCode::KeyW) {
+        to_move += Vec2::Y
+    };
+    if input.pressed(KeyCode::KeyA) {
+        to_move += Vec2::NEG_X
+    }
+    if input.pressed(KeyCode::KeyS) {
+        to_move += Vec2::NEG_Y
+    }
+    if input.pressed(KeyCode::KeyD) {
+        to_move += Vec2::X
+    }
+
+    q_camera.0.translation += (to_move * FREE_CAM_SPEED).extend(0.0)
 }

@@ -45,6 +45,8 @@ use stats::{plugins::*, xp::SharedXPPlugin};
 use upgrades::TempUpgradePlugin;
 use weapons::{SharedWeaponPlugin, WeaponProtocolPlugin};
 
+#[cfg(feature = "dev")]
+use crate::utils::zoo::ZooLevelPlugin;
 use crate::{
     shared::{
         pickups::{PickupsProtocolPlugin, SharedPickupsPlugin},
@@ -87,6 +89,9 @@ impl Plugin for GameSharedPlugin {
             SharedWeaponPlugin,
             SharedXPPlugin,
         ));
+
+        #[cfg(feature = "dev")]
+        app.add_plugins(ZooLevelPlugin);
 
         app.add_plugins((
             LightyearAvianPlugin {
