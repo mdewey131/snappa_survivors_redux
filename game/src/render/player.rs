@@ -29,11 +29,11 @@ impl Plugin for SharedPlayerRenderPlugin {
     }
 }
 
-pub fn rendering_on_player_add<QF: QueryFilter>(
+pub fn rendering_on_player_add(
     mut commands: Commands,
     assets: Res<AssetServer>,
     mut layouts: ResMut<Assets<TextureAtlasLayout>>,
-    q_player: Query<(Entity, &Position), (Added<Player>, QF)>,
+    q_player: Query<(Entity, &Position), (Added<Player> /*QF*/,)>,
 ) {
     for (e, pos) in &q_player {
         let handle: Handle<Image> = assets.load("survivors/dewey/sprite_2-Sheet.png");

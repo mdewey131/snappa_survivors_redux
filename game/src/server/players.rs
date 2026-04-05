@@ -29,6 +29,9 @@ impl Plugin for ServerPlayerPlugin {
 pub struct ServerPlayerRenderPlugin;
 impl Plugin for ServerPlayerRenderPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, rendering_on_player_add::<With<Replicate>>);
+        app.add_systems(
+            Update,
+            rendering_on_player_add, /* ::<With<Replicate>>*/
+        );
     }
 }

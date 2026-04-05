@@ -1,10 +1,11 @@
 use crate::shared::{
     combat::CharacterFacing,
-    game_kinds::{CurrentGameKind, GameKinds},
-    game_object_spawning::SpawnGameObject,
+    game_kinds::{CurrentGameKind, GameKinds, MultiPlayerComponentOptions},
+    game_object_spawning::{SpawnGameObject, spawn_game_object},
     game_rules::GameRules,
     players::{CharacterKind, Player, PlayerBaseBundle, PlayerWeapons},
     states::AppState,
+    stats::RawStatsList,
     upgrades::PlayerUpgradeSlots,
 };
 use avian2d::prelude::*;
@@ -12,8 +13,8 @@ use bevy::prelude::*;
 use lightyear::prelude::PeerId;
 use strum::IntoEnumIterator;
 
-const CHARACTER_DISPLAY_PEN_WIDTH: f32 = 50.0;
-const CHARACTER_DISPLAY_PEN_HEIGHT: f32 = 50.0;
+const CHARACTER_DISPLAY_PEN_WIDTH: f32 = 200.0;
+const CHARACTER_DISPLAY_PEN_HEIGHT: f32 = 200.0;
 
 pub fn launch_zoo_level(
     mut commands: Commands,
@@ -32,13 +33,13 @@ pub fn spawn_zoo_characters(mut commands: Commands) {
     info!("Spawning Characters");
     let iter = CharacterKind::iter();
     let len = iter.len();
+    let num_cols = 4;
+    // 1 for padding, may not be necessary
+    let num_rows = (len / num_cols);
+    info!("Num rows: {}, num cols: {}", num_rows, num_cols);
     for (i, char) in iter.enumerate() {
-        info!("Indiviudual loop");
-        let num_rows = 4;
-        // 1 for padding, may not be necessary
-        let num_cols = (len / num_rows) + 1;
-        let row_pos = i % num_rows;
-        let col_pos = (i / num_cols);
+        let col_pos = (i % num_cols);
+        let row_pos = (i * num_rows) / len;
         info!("Found col_pos: {}, row_pos: {}", col_pos, row_pos);
         let total_width = CHARACTER_DISPLAY_PEN_WIDTH * num_rows as f32;
         let total_height = CHARACTER_DISPLAY_PEN_HEIGHT * num_cols as f32;
@@ -53,16 +54,27 @@ pub fn spawn_zoo_characters(mut commands: Commands) {
             client: PeerId::Local(0),
             character: char,
         };
+        let player_stats = RawStatsList::import_stats(player.character);
+        let player_ent = commands
+            .spawn(
+                (PlayerBaseBundle {
+                    player,
+                    position: Position(Vec2::new(pos_x, pos_y)),
+                    upgrade_slots: PlayerUpgradeSlots::new(5, 5),
+                    weapons: PlayerWeapons::default(),
+                    facing: CharacterFacing::default(),
+                }),
+            )
+            .id();
 
-        commands.queue(SpawnGameObject::new(
-            crate::shared::game_kinds::MultiPlayerComponentOptions::PREDICTED,
-            (PlayerBaseBundle {
-                player,
-                position: Position(Vec2::new(pos_x, pos_y)),
-                upgrade_slots: PlayerUpgradeSlots::new(5, 5),
-                weapons: PlayerWeapons::default(),
-                facing: CharacterFacing::default(),
-            }),
-        ));
+        player_stats.apply_to_character(player_ent, &mut commands);
+
+        let text = commands
+            .spawn((
+                Text2d::new(format!("{:?}", player.character)),
+                Transform::from_translation(Vec3::NEG_Y * 10.0),
+            ))
+            .id();
+        commands.entity(player_ent).add_child(text);
     }
 }

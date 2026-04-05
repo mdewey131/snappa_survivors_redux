@@ -35,6 +35,9 @@ impl Plugin for ClientPlayerPlugin {
 pub struct ClientPlayerRenderPlugin;
 impl Plugin for ClientPlayerRenderPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, rendering_on_player_add::<DefaultClientFilter>);
+        app.add_systems(
+            Update,
+            rendering_on_player_add, /*::<DefaultClientFilter>*/
+        );
     }
 }
