@@ -3,9 +3,35 @@ use crate::shared::{
     players::*, upgrades::PlayerUpgradeSlots, weapons::*,
 };
 use avian2d::prelude::*;
-use bevy::prelude::*;
+use bevy::{asset::LoadState, prelude::*};
 use lightyear::prelude::*;
 use rand::Rng;
+
+#[derive(Resource, Debug)]
+pub struct LoadingAssets {
+    pub handles: Vec<UntypedHandle>,
+}
+
+pub fn check_loading_assets(mut loading: ResMut<LoadingAssets>, assets: Res<AssetServer>) {
+    let _span = trace_span!("Checking Loading Status").entered();
+    let mut to_rm = Vec::new();
+    for (i, handle) in loading.handles.iter().enumerate() {
+        let load_state = assets
+            .get_load_state(handle)
+            .expect("Looking for a handle that doesn't exist!");
+
+        match load_state {
+            LoadState::Loaded => to_rm.push(i),
+            LoadState::Loading => {}
+            LoadState::NotLoaded => {}
+            LoadState::Failed(_error) => {}
+        }
+    }
+
+    for i in to_rm.iter().rev() {
+        loading.handles.remove(*i);
+    }
+}
 
 // In single player, we spawn just a single entity. Very simple
 pub fn spawn_player_character(
