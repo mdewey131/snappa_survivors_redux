@@ -86,6 +86,7 @@ impl Plugin for GameSharedPlugin {
             SharedStatesPlugin,
             SharedGameRulesPlugin,
             SharedStatsPlugin,
+            SharedLoadingPlugin,
             SharedWeaponPlugin,
             SharedXPPlugin,
         ));

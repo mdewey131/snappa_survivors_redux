@@ -24,6 +24,7 @@ impl Plugin for SharedLoadingPlugin {
     fn build(&self, app: &mut App) {
         app.init_state::<LevelLoadingState>()
             .insert_resource(LoadingAssets::new(EXPECTED_LOADING_CONFIRMATION_FRAMES))
+            .add_systems(OnEnter(AppState::LoadingLevel), start_level_loading_state)
             .add_systems(
                 Update,
                 (check_loading_assets,).run_if(
@@ -57,8 +58,12 @@ pub fn track_loading_asset(
 #[derive(States, Default, Clone, Copy, Hash, Eq, PartialEq, Debug)]
 pub enum LevelLoadingState {
     #[default]
+    NotLoading,
     LevelReady,
     LevelLoading,
+}
+fn start_level_loading_state(mut state: ResMut<NextState<LevelLoadingState>>) {
+    state.set(LevelLoadingState::LevelLoading);
 }
 
 impl LoadingAssets {

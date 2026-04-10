@@ -42,13 +42,16 @@ pub struct SharedStatesPlugin;
 impl Plugin for SharedStatesPlugin {
     fn build(&self, app: &mut App) {
         app.init_state::<AppState>().init_state::<InGameState>();
-        app.add_systems(OnEnter(AppState::InGame), spawn_game_timer)
-            .add_systems(
-                FixedUpdate,
-                tick_in_game_time
-                    .run_if(in_state(InGameState::InGame))
-                    .in_set(CombatSystemSet::PreCombat),
-            );
+        app.add_systems(
+            OnEnter(AppState::InGame),
+            (spawn_game_timer, set_game_state_in_game),
+        )
+        .add_systems(
+            FixedUpdate,
+            tick_in_game_time
+                .run_if(in_state(InGameState::InGame))
+                .in_set(CombatSystemSet::PreCombat),
+        );
         app.add_systems(OnExit(InGameState::InGame), pause_combat);
         app.add_systems(OnEnter(InGameState::InGame), resume_combat);
     }
@@ -94,4 +97,12 @@ pub fn unpause_in_game_state(
 
     commands.remove_resource::<InGamePauseManager>();
     next_state.set(next);
+}
+
+pub fn set_app_state_in_game(mut app_state: ResMut<NextState<AppState>>) {
+    app_state.set(AppState::InGame);
+}
+/// This follows after the app state to prevent race conditions from one of these being enabled before the other
+pub fn set_game_state_in_game(mut game_state: ResMut<NextState<InGameState>>) {
+    game_state.set(InGameState::InGame);
 }

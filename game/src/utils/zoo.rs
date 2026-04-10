@@ -125,15 +125,16 @@ pub fn spawn_zoo_characters(mut commands: Commands) {
         };
         let player_stats = RawStatsList::import_stats(player.character);
         let player_ent = commands
-            .spawn(
-                (PlayerBaseBundle {
+            .spawn((
+                PlayerBaseBundle {
                     player,
                     position: Position(Vec2::new(pos_x, pos_y)),
                     upgrade_slots: PlayerUpgradeSlots::new(5, 5),
                     weapons: PlayerWeapons::default(),
                     facing: CharacterFacing::default(),
-                }),
-            )
+                },
+                DespawnOnExit(AppState::InGame),
+            ))
             .id();
 
         player_stats.apply_to_character(player_ent, &mut commands);
@@ -149,6 +150,7 @@ pub fn spawn_zoo_characters(mut commands: Commands) {
 
     commands.spawn((
         CharacterDisplayGroup,
+        DespawnOnExit(AppState::InGame),
         Transform::from_translation(Vec3::new(
             CHARACTER_DISPLAY_GROUP_CENTERPOINT.0,
             CHARACTER_DISPLAY_GROUP_CENTERPOINT.1,
@@ -185,15 +187,16 @@ pub fn spawn_zoo_weapons(mut commands: Commands) {
         };
         let player_stats = RawStatsList::import_stats(player.character);
         let player_ent = commands
-            .spawn(
-                (PlayerBaseBundle {
+            .spawn((
+                PlayerBaseBundle {
                     player,
                     position: Position(Vec2::new(pos_x, pos_y)),
                     upgrade_slots: PlayerUpgradeSlots::new(5, 5),
                     weapons: PlayerWeapons::default(),
                     facing: CharacterFacing::default(),
-                }),
-            )
+                },
+                DespawnOnExit(AppState::InGame),
+            ))
             .id();
 
         player_stats.apply_to_character(player_ent, &mut commands);
@@ -202,6 +205,7 @@ pub fn spawn_zoo_weapons(mut commands: Commands) {
     }
     commands.spawn((
         WeaponDisplayGroup,
+        DespawnOnExit(AppState::InGame),
         Transform::from_translation(Vec3::new(
             WEAPON_DISPLAY_GROUP_CENTERPOINT.0,
             WEAPON_DISPLAY_GROUP_CENTERPOINT.1,

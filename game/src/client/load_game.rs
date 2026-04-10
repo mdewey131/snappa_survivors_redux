@@ -3,8 +3,8 @@ use bevy::prelude::*;
 use crate::shared::{
     game_kinds::*,
     game_rules::{GameRules, MapKind},
-    loading::spawn_player_character,
-    states::{AppState, InGameState},
+    loading::{LevelLoadingState, spawn_player_character},
+    states::{AppState, InGameState, set_app_state_in_game},
     stats::xp::add_level_manager,
 };
 
@@ -16,8 +16,8 @@ pub struct ClientGameLoadingPlugin;
 impl Plugin for ClientGameLoadingPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
-            OnEnter(AppState::LoadingLevel),
-            ((start_loading), tmp_move_to_game),
+            OnEnter(LevelLoadingState::LevelReady),
+            ((assemble_level), set_app_state_in_game).run_if(in_state(AppState::LoadingLevel)),
         );
     }
 }
@@ -31,16 +31,16 @@ pub fn client_transition_to_loading_state(
     state.set(AppState::LoadingLevel)
 }
 
-fn start_loading(mut commands: Commands, game_kinds: Res<CurrentGameKind>, rules: Res<GameRules>) {
+fn assemble_level(mut commands: Commands, game_kinds: Res<CurrentGameKind>, rules: Res<GameRules>) {
     match game_kinds.0.unwrap() {
         GameKinds::SinglePlayer => match rules.map_type {
             #[cfg(feature = "dev")]
             MapKind::DevZoo => {
                 info!("Loading Level");
-                let load_zoo_player_dummies = commands.register_system(spawn_zoo_characters);
-                let load_zoo_weapons = commands.register_system(spawn_zoo_weapons);
-                commands.run_system(load_zoo_player_dummies);
-                commands.run_system(load_zoo_weapons);
+                let spawn_zoo_player_dummies = commands.register_system(spawn_zoo_characters);
+                let spawn_zoo_weapons = commands.register_system(spawn_zoo_weapons);
+                commands.run_system(spawn_zoo_player_dummies);
+                commands.run_system(spawn_zoo_weapons);
             }
             _ => {
                 let player_character_spawn_sys = commands.register_system(spawn_player_character);
@@ -51,13 +51,4 @@ fn start_loading(mut commands: Commands, game_kinds: Res<CurrentGameKind>, rules
         },
         GameKinds::MultiPlayer => {}
     }
-}
-
-/// For now, loading does nothing because I don't want to figure it out. Let's just get to the game stuff
-fn tmp_move_to_game(
-    mut app_state: ResMut<NextState<AppState>>,
-    mut game_state: ResMut<NextState<InGameState>>,
-) {
-    app_state.set(AppState::InGame);
-    game_state.set(InGameState::InGame);
 }

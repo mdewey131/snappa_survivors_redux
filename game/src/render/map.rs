@@ -3,13 +3,10 @@
 //!
 use bevy::prelude::*;
 
-use crate::{
-    render::MapAssets,
-    shared::{
-        game_rules::GameRules,
-        loading::{LevelLoadingState, track_loading_asset},
-        states::AppState,
-    },
+use crate::shared::{
+    game_rules::GameRules,
+    loading::{LevelLoadingState, track_loading_asset},
+    states::AppState,
 };
 
 /// The map's rendered elements will work off of chunks so that I can spawn and despawn things somewhat easily.

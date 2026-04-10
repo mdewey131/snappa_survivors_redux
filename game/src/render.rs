@@ -1,10 +1,13 @@
-use crate::shared::{
-    enemies::EnemyKind,
-    game_rules::GameRules,
-    loading::{LevelLoadingState, LoadingAssets},
-    players::CharacterKind,
-    states::AppState,
-    weapons::WeaponKind,
+use crate::{
+    render::menus::loading_screen::LoadingScreenPlugin,
+    shared::{
+        enemies::EnemyKind,
+        game_rules::GameRules,
+        loading::{LevelLoadingState, LoadingAssets},
+        players::CharacterKind,
+        states::AppState,
+        weapons::WeaponKind,
+    },
 };
 use avian2d::prelude::Position;
 #[cfg(feature = "avian_debug")]
@@ -47,6 +50,7 @@ impl Plugin for GameSharedRenderPlugin {
         app.add_plugins((
             SharedUIPlugin,
             LobbyMenuPlugin,
+            LoadingScreenPlugin,
             MapRenderPlugin,
             SharedPlayerRenderPlugin,
             SharedEnemyRenderPlugin,
