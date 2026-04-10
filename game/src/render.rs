@@ -1,8 +1,17 @@
-use crate::shared::states::AppState;
+use crate::shared::{
+    enemies::EnemyKind,
+    game_rules::GameRules,
+    loading::{LevelLoadingState, LoadingAssets},
+    players::CharacterKind,
+    states::AppState,
+    weapons::WeaponKind,
+};
 use avian2d::prelude::Position;
 #[cfg(feature = "avian_debug")]
 use avian2d::prelude::*;
-use bevy::{prelude::*, render::RenderSystems};
+use bevy::{
+    asset::UntypedAssetId, platform::collections::HashMap, prelude::*, render::RenderSystems,
+};
 use bevy_egui::EguiPlugin;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
@@ -25,6 +34,7 @@ use player::SharedPlayerRenderPlugin;
 use ui::SharedUIPlugin;
 use upgrades::UpgradeRenderPlugin;
 
+use crate::shared::loading::track_loading_asset;
 #[cfg(feature = "dev")]
 use crate::shared::{
     enemies::editor::EnemySpawnManagerEditorPlugin, stats::editor::StatsEditorPlugin,
@@ -63,6 +73,22 @@ impl Plugin for GameSharedRenderPlugin {
                 update_free_cam_position.run_if(in_state(AppState::InGame)),
             );
     }
+}
+
+/// This resource tracks the assets that the game needs
+/// while it is currently engaged in a level.
+/// This resource can be used to prevent loading assets during gameplay,
+/// and delegating this to the app's loading state instead
+#[derive(Resource, Debug, Default)]
+pub struct LevelRenderAssets {
+    /// TODO: Make this more than one image
+    ///
+    /// Optional because I want Default
+    pub map_tiles: Option<Handle<Image>>,
+    pub projectiles: HashMap<String, Handle<Image>>,
+    pub weapons: HashMap<WeaponKind, Handle<Image>>,
+    pub enemies: HashMap<EnemyKind, Handle<Image>>,
+    pub characters: HashMap<CharacterKind, Handle<Image>>,
 }
 
 /// This component indicates that the entity should be treated with its z position equal to its y position.

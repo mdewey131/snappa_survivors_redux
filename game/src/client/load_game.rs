@@ -17,7 +17,7 @@ impl Plugin for ClientGameLoadingPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             OnEnter(AppState::LoadingLevel),
-            ((load_game).run_if(is_single_player), tmp_move_to_game),
+            ((start_loading), tmp_move_to_game),
         );
     }
 }
@@ -31,7 +31,7 @@ pub fn client_transition_to_loading_state(
     state.set(AppState::LoadingLevel)
 }
 
-fn load_game(mut commands: Commands, game_kinds: Res<CurrentGameKind>, rules: Res<GameRules>) {
+fn start_loading(mut commands: Commands, game_kinds: Res<CurrentGameKind>, rules: Res<GameRules>) {
     match game_kinds.0.unwrap() {
         GameKinds::SinglePlayer => match rules.map_type {
             #[cfg(feature = "dev")]

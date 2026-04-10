@@ -3,7 +3,14 @@
 //!
 use bevy::prelude::*;
 
-use crate::shared::{game_rules::GameRules, states::AppState};
+use crate::{
+    render::MapAssets,
+    shared::{
+        game_rules::GameRules,
+        loading::{LevelLoadingState, track_loading_asset},
+        states::AppState,
+    },
+};
 
 /// The map's rendered elements will work off of chunks so that I can spawn and despawn things somewhat easily.
 /// I'm anticipating some eventual first party support for this kind of thing, so the goal here is to keep this
@@ -26,11 +33,38 @@ pub struct MapRenderPlugin;
 
 impl Plugin for MapRenderPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(AppState::LoadingLevel), load_map_chunks);
+        app.add_systems(
+            OnEnter(LevelLoadingState::LevelLoading),
+            load_map_tile.pipe(track_loading_asset),
+        )
+        .add_systems(
+            OnEnter(LevelLoadingState::LevelReady),
+            assemble_map_chunks.run_if(in_state(AppState::LoadingLevel)),
+        );
     }
 }
+#[derive(Resource, Debug, Default)]
+pub struct MapAssets {
+    // Just an image right now because I haven't made a tilemap yet
+    pub tilemap: Option<Handle<Image>>,
+}
 
-fn load_map_chunks(mut commands: Commands, _rules: Res<GameRules>, assets: Res<AssetServer>) {
+fn load_map_tile(
+    mut commands: Commands,
+    game_rules: Res<GameRules>,
+    assets: Res<AssetServer>,
+) -> Vec<UntypedHandle> {
+    let handle: Handle<Image> = assets.load("maps/grass_bg.png");
+    let ret = handle.clone();
+    let asset = MapAssets {
+        tilemap: Some(handle),
+    };
+    commands.insert_resource(asset);
+
+    vec![ret.untyped()]
+}
+
+fn assemble_map_chunks(mut commands: Commands, map_asset: Res<MapAssets>) {
     // Making the map somewhat huge to start
     let tiles = Vec2::new(64.0, 64.0);
     let texture_size = Vec2::new(128.0, 128.0);
@@ -46,7 +80,7 @@ fn load_map_chunks(mut commands: Commands, _rules: Res<GameRules>, assets: Res<A
     let (total_size_x, total_size_y) = (tiles.x * texture_size.x, tiles.y * texture_size.y);
     for x in (0..tiles.x as u32) {
         for y in (0..tiles.y as u32) {
-            let texture: Handle<Image> = assets.load("maps/grass_bg.png");
+            let texture: Handle<Image> = map_asset.tilemap.as_ref().unwrap().clone();
             commands.spawn((
                 Sprite::from(texture),
                 Transform::from_translation(Vec3::new(

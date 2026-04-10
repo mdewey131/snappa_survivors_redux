@@ -1,9 +1,16 @@
 use crate::shared::{
-    combat::CharacterFacing, game_kinds::*, game_object_spawning::*, lobby::PlayerInLobby,
-    players::*, states::AppState, upgrades::PlayerUpgradeSlots, weapons::*,
+    combat::CharacterFacing,
+    game_kinds::*,
+    game_object_spawning::*,
+    game_rules::{GameRules, MapKind},
+    lobby::PlayerInLobby,
+    players::*,
+    states::AppState,
+    upgrades::PlayerUpgradeSlots,
+    weapons::*,
 };
 use avian2d::prelude::*;
-use bevy::prelude::*;
+use bevy::{ecs::system::SystemId, prelude::*};
 use lightyear::prelude::*;
 use rand::Rng;
 
@@ -19,7 +26,9 @@ impl Plugin for SharedLoadingPlugin {
             .insert_resource(LoadingAssets::new(EXPECTED_LOADING_CONFIRMATION_FRAMES))
             .add_systems(
                 Update,
-                check_loading_assets.run_if(in_state(AppState::LoadingLevel)),
+                (check_loading_assets,).run_if(
+                    in_state(AppState::LoadingLevel).and(in_state(LevelLoadingState::LevelLoading)),
+                ),
             );
     }
 }
@@ -29,6 +38,20 @@ pub struct LoadingAssets {
     pub handles: Vec<UntypedHandle>,
     pub max_confirmation_frames: u8,
     pub curr_confirmation_frames: u8,
+}
+
+/// A function to be used whenever we want to track an asset.
+///
+/// I expect other systems to return the untyped asset handles they're loading
+/// for the sake of tracking.
+///
+/// Architecting it this way allows for common loading tracking paradigm
+/// across server and client
+pub fn track_loading_asset(
+    mut assets_in: In<Vec<UntypedHandle>>,
+    mut loading: ResMut<LoadingAssets>,
+) {
+    loading.handles.append(&mut assets_in);
 }
 
 #[derive(States, Default, Clone, Copy, Hash, Eq, PartialEq, Debug)]
@@ -53,7 +76,7 @@ pub fn check_loading_assets(
     mut loading: ResMut<LoadingAssets>,
     assets: Res<AssetServer>,
 ) {
-    let _span = trace_span!("Checking Loading Status").entered();
+    let _span = info_span!("Checking Loading Status").entered();
     if !loading.handles.is_empty() {
         // Set confirmation frames to 0 just in case
         loading.curr_confirmation_frames = 0;
