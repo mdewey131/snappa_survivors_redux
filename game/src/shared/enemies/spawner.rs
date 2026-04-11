@@ -1,10 +1,14 @@
 use crate::{
-    shared::{game_rules::MapKind, states::InGameTime},
+    shared::{
+        game_rules::{GameRules, MapKind},
+        states::InGameTime,
+    },
     utils::{SpawnPattern, read_ron},
 };
 
 use super::*;
 use bevy::{math::VectorSpace, prelude::*};
+use ron::ser::PrettyConfig;
 
 #[derive(Resource, Default, Reflect)]
 #[reflect(Resource)]
@@ -62,6 +66,14 @@ pub fn update_enemy_spawn_manager(mut commands: Commands, mut manager: ResMut<En
             }
             if *save {
                 *save = false;
+                let to_write = list.clone();
+                /*
+                let asset_folder: AssetFolder = to_folder.into();
+                let stats_path = format!("assets/{}", asset_folder.to_path("stats.ron".into()));
+                 */
+                let ron_string = ron::ser::to_string_pretty(&to_write, PrettyConfig::new())
+                    .expect("Failed to serialize stats path");
+                let _write = std::fs::write("assets/maps/grass/spawner.ron", ron_string);
             }
         }
     }
@@ -74,11 +86,12 @@ pub struct EnemySpawnInstruction {
     pub pattern: SpawnPattern,
 }
 
-#[derive(Default, Debug, Serialize, Deserialize, Reflect)]
+#[derive(Default, Debug, Serialize, Deserialize, Reflect, Clone)]
 #[reflect(Default)]
 pub struct EnemySpawnerList(pub Vec<EnemySpawnerBuilder>);
 
-#[derive(Debug, Serialize, Deserialize, Reflect)]
+#[derive(Default, Debug, Serialize, Deserialize, Reflect, Clone, Copy)]
+#[reflect(Default)]
 pub struct EnemySpawnerBuilder {
     activation: EnemySpawnerActivation,
     instruction: EnemySpawnInstruction,
@@ -145,25 +158,30 @@ impl Default for EnemySpawnerActivation {
     }
 }
 
-pub fn add_enemy_spawner(mut commands: Commands) {
-    commands.spawn(EnemySpawner {
-        activation: EnemySpawnerActivation::TimeLimit {
-            start_time: 5.0,
-            end_time: 10.0,
-            tick_rate: 1.0,
-        },
-        instruction: EnemySpawnInstruction {
-            kind: EnemyKind::FacelessMan,
-            pattern: SpawnPattern::Circle {
-                amount: 10,
-                center: Vec2::ZERO,
-                radius: 100.0,
-                radius_only: false,
-            },
-        },
-        spawn_timer: None,
-        countdown_timer: Timer::from_seconds(5.0, TimerMode::Once),
-    });
+pub fn add_enemy_spawner(
+    mut commands: Commands,
+    game_rules: Res<GameRules>,
+    spawn_manager: Res<EnemySpawnManager>,
+) {
+    let spawn_list = match spawn_manager.spawn_style {
+        EnemySpawnStyle::Automatic => {
+            let list = read_ron("assets/maps/grass/spawner.ron".into());
+            list
+        }
+        EnemySpawnStyle::EditSpawnerWaves {
+            level,
+            load,
+            save,
+            ref list,
+        } => list.clone(),
+        EnemySpawnStyle::Manual {
+            instruction,
+            should_fire,
+        } => EnemySpawnerList(vec![]),
+    };
+    for spawner in spawn_list.0 {
+        commands.spawn(EnemySpawner::from(spawner));
+    }
 }
 
 pub fn update_enemy_spawner(

@@ -4,6 +4,7 @@ use crate::{
         combat::CombatSystemSet,
         enemies::{spawner::*, *},
         game_kinds::{DefaultClientFilter, SinglePlayer, is_single_player},
+        loading::LevelLoadingState,
         states::{AppState, InGameState},
     },
 };
@@ -15,11 +16,12 @@ pub struct ClientEnemyPlugin;
 impl Plugin for ClientEnemyPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
-            OnEnter(AppState::InGame),
-            (
-                spawn_enemy_spawn_manager.run_if(is_single_player),
-                add_enemy_spawner.run_if(is_single_player),
-            ),
+            OnEnter(AppState::LoadingLevel),
+            (spawn_enemy_spawn_manager.run_if(is_single_player),),
+        )
+        .add_systems(
+            OnEnter(LevelLoadingState::LevelReady),
+            add_enemy_spawner.run_if(is_single_player),
         )
         .add_systems(
             FixedUpdate,
