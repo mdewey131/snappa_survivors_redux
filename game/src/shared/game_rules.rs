@@ -44,6 +44,7 @@ pub struct GameRules {
 }
 
 #[derive(Default, Debug, Clone, Copy, Serialize, Deserialize, PartialEq, PartialOrd, Reflect)]
+#[reflect(Default)]
 pub enum MapKind {
     #[default]
     TheGreens,

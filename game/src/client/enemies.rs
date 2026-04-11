@@ -16,11 +16,15 @@ impl Plugin for ClientEnemyPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             OnEnter(AppState::InGame),
-            spawn_enemy_spawn_manager.run_if(is_single_player),
+            (
+                spawn_enemy_spawn_manager.run_if(is_single_player),
+                add_enemy_spawner.run_if(is_single_player),
+            ),
         )
         .add_systems(
             FixedUpdate,
             (
+                update_enemy_spawner.run_if(is_single_player),
                 update_enemy_spawn_manager.run_if(resource_exists::<EnemySpawnManager>),
                 enemy_state_machine::<
                     Or<(With<Predicted>, With<SinglePlayer>)>,
