@@ -1,33 +1,32 @@
 ([
     (
-        activation: OneTime(
-            at: 0.0,
+        activation: TimeLimit(
+            start_time: 5.0,
+            end_time: 100.0,
+            tick_rate: 5.0,
         ),
         instruction: (
             kind: FacelessMan,
-            pattern: Circle(
-                amount: 1,
-                center: (0.0, 0.0),
-                radius: 0.0,
-                radius_only: true,
+            pattern: AroundAllPlayers(
+                pattern: Circle(
+                    amount: 3,
+                    center: (0.0, 0.0),
+                    radius: 500.0,
+                    radius_only: true,
+                ),
             ),
         ),
     ),
     (
         activation: FixedWaves(
-            start_time: 5.0,
+            start_time: 0.0,
             tick_rate: 5.0,
-            max_ticks: 10,
+            max_ticks: 50,
             c_ticks: 0,
         ),
         instruction: (
             kind: FacelessMan,
-            pattern: Circle(
-                amount: 10,
-                center: (0.0, 0.0),
-                radius: 500.0,
-                radius_only: true,
-            ),
+            pattern: SingleLocation((50.0, 50.0)),
         ),
     ),
 ])

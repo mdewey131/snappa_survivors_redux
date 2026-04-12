@@ -1,7 +1,7 @@
 use crate::{
     shared::{
         game_rules::{GameRules, MapKind},
-        states::InGameTime,
+        states::{AppState, InGameTime},
     },
     utils::{SpawnPattern, read_ron},
 };
@@ -38,7 +38,11 @@ pub fn spawn_enemy_spawn_manager(mut commands: Commands) {
     })
 }
 
-pub fn update_enemy_spawn_manager(mut commands: Commands, mut manager: ResMut<EnemySpawnManager>) {
+pub fn update_enemy_spawn_manager(
+    mut commands: Commands,
+    mut manager: ResMut<EnemySpawnManager>,
+    q_positions: Query<&Position, With<Player>>,
+) {
     match manager.spawn_style {
         EnemySpawnStyle::Automatic => {}
         EnemySpawnStyle::Manual {
@@ -46,7 +50,7 @@ pub fn update_enemy_spawn_manager(mut commands: Commands, mut manager: ResMut<En
             ref mut should_fire,
         } => {
             if *should_fire {
-                let positions = instruction.pattern.to_positions();
+                let positions = instruction.pattern.to_positions(&q_positions);
                 for position in positions {
                     spawn_enemy(&mut commands, instruction.kind, position);
                 }
@@ -83,7 +87,46 @@ pub fn update_enemy_spawn_manager(mut commands: Commands, mut manager: ResMut<En
 #[reflect(Default)]
 pub struct EnemySpawnInstruction {
     pub kind: EnemyKind,
-    pub pattern: SpawnPattern,
+    pub pattern: EnemySpawnPattern,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, Reflect)]
+#[reflect(Default)]
+pub enum EnemySpawnPattern {
+    AroundAllPlayers { pattern: SpawnPattern },
+    SingleLocation(Vec2),
+}
+impl Default for EnemySpawnPattern {
+    fn default() -> Self {
+        Self::AroundAllPlayers {
+            pattern: SpawnPattern::default(),
+        }
+    }
+}
+
+impl EnemySpawnPattern {
+    fn to_positions(&self, q_positions: &Query<&Position, With<Player>>) -> Vec<Vec2> {
+        match *self {
+            EnemySpawnPattern::SingleLocation(v) => {
+                vec![v]
+            }
+            EnemySpawnPattern::AroundAllPlayers { pattern } => {
+                let mut ret = Vec::new();
+                for pos in q_positions {
+                    let mut enemy_offsets = pattern.positions_from_centerpoint(pos.0);
+                    enemy_offsets = enemy_offsets
+                        .iter_mut()
+                        .map(|v| {
+                            *v += pos.0;
+                            *v
+                        })
+                        .collect::<Vec<Vec2>>();
+                    ret.append(&mut enemy_offsets)
+                }
+                ret
+            }
+        }
+    }
 }
 
 #[derive(Default, Debug, Serialize, Deserialize, Reflect, Clone)]
@@ -165,8 +208,16 @@ pub fn add_enemy_spawner(
 ) {
     let spawn_list = match spawn_manager.spawn_style {
         EnemySpawnStyle::Automatic => {
-            let list = read_ron("assets/maps/grass/spawner.ron".into());
-            list
+            let string = match game_rules.map_type {
+                MapKind::TheGreens => Some("assets/maps/grass/spawner.ron".into()),
+                MapKind::DevZoo => None,
+            };
+            if let Some(s) = string {
+                let list = read_ron(s);
+                list
+            } else {
+                EnemySpawnerList(vec![])
+            }
         }
         EnemySpawnStyle::EditSpawnerWaves {
             level,
@@ -180,13 +231,14 @@ pub fn add_enemy_spawner(
         } => EnemySpawnerList(vec![]),
     };
     for spawner in spawn_list.0 {
-        commands.spawn(EnemySpawner::from(spawner));
+        commands.spawn((EnemySpawner::from(spawner), DespawnOnExit(AppState::InGame)));
     }
 }
 
 pub fn update_enemy_spawner(
     mut commands: Commands,
     mut q_spawner: Query<(Entity, &mut EnemySpawner)>,
+    q_player_positions: Query<(&Position), With<Player>>,
     game_timer: Res<Time<Virtual>>,
     in_game_time: Res<InGameTime>,
 ) {
@@ -253,7 +305,10 @@ pub fn update_enemy_spawner(
             }
         }
         if should_spawn_enemy {
-            let positions = spawner.instruction.pattern.to_positions();
+            let positions = spawner
+                .instruction
+                .pattern
+                .to_positions(&q_player_positions);
             for pos in positions {
                 spawn_enemy(&mut commands, spawner.instruction.kind, pos)
             }

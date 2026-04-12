@@ -111,4 +111,24 @@ impl SpawnPattern {
             }
         }
     }
+    /// In the event that you have a custom centerpoint to use, this
+    /// will return the relative position of spawning elements for you, hiding the ugliness.
+    pub fn positions_from_centerpoint(&self, centerpoint: Vec2) -> Vec<Vec2> {
+        // Kind of hacky maybe, but simplifies the code a lot
+        let pattern_override = match self {
+            Self::Circle {
+                amount,
+                center,
+                radius,
+                radius_only,
+            } => Self::Circle {
+                amount: *amount,
+                center: Vec2::ZERO,
+                radius: *radius,
+                radius_only: *radius_only,
+            },
+            _ => *self,
+        };
+        pattern_override.to_positions()
+    }
 }
