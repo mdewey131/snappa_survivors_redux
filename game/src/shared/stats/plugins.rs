@@ -37,7 +37,7 @@ impl Plugin for StatsProtocolPlugin {
         app.register_component::<Shield>().add_prediction();
         app.register_component::<Thorns>().add_prediction();
         app.register_component::<XPGain>().add_prediction();
-        app.register_component::<LevelManager>().add_prediction();
+        app.register_component::<XPManager>().add_prediction();
     }
 }
 

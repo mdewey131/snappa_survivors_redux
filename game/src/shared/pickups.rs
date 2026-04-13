@@ -2,23 +2,34 @@ use crate::shared::{
     colliders::*,
     combat::CombatSystemSet,
     states::InGameState,
-    stats::{components::XPGain, xp::LevelManager},
+    stats::{
+        components::{Health, XPGain},
+        xp::XPManager,
+    },
 };
 use avian2d::prelude::*;
 use bevy::{ecs::entity::MapEntities, prelude::*};
 use lightyear::prelude::*;
 use serde::{Deserialize, Serialize};
 
+pub const XP_PICKUP_BASE_MOVE_SPEED: f32 = 50.0;
+#[derive(Component, Serialize, Deserialize, PartialEq, Clone, Copy, Debug)]
+pub struct HealthPickup {
+    pub amount: f32,
+}
+
 #[derive(Component, Serialize, Deserialize, PartialEq, Clone, Copy, Debug)]
 pub struct XPPickup {
     pub val: f32,
     pub targeting: Option<Entity>,
+    pub t_time: f32,
 }
 impl XPPickup {
     pub fn new(v: f32) -> Self {
         Self {
             val: v,
             targeting: None,
+            t_time: 0.0,
         }
     }
 }
@@ -90,19 +101,26 @@ impl Plugin for SharedPickupsPlugin {
                 .run_if(in_state(InGameState::InGame)),
         )
         .add_observer(add_xp_collider_components)
+        .add_observer(health_pickup)
         .add_observer(award_xp);
     }
 }
 
 fn xp_orb_update(
-    mut q_position: Query<(&Position, &mut LinearVelocity, &XPPickup)>,
+    game_time: Res<Time<Virtual>>,
+    mut q_position: Query<(&Position, &mut LinearVelocity, &mut XPPickup)>,
     q_player: Query<&Position, Without<XPPickup>>,
 ) {
-    for (xp_pos, mut xp_lv, pickup) in &mut q_position {
+    for (xp_pos, mut xp_lv, mut pickup) in &mut q_position {
         if let Some(t_ent) = pickup.targeting {
+            pickup.t_time += game_time.delta_secs();
             if let Ok(t_pos) = q_player.get(t_ent) {
-                xp_lv.0 = (t_pos.0 - xp_pos.0).normalize_or_zero() * 50.0;
+                xp_lv.0 = (t_pos.0 - xp_pos.0).normalize_or_zero()
+                    * XP_PICKUP_BASE_MOVE_SPEED
+                    * pickup.t_time;
             }
+        } else {
+            pickup.t_time = 0.0
         }
     }
 }
@@ -121,6 +139,20 @@ fn add_xp_collider_components(trig: On<Add, XPPickup>, mut commands: Commands) {
             [ColliderTypes::PlayerPickupRadius].into(),
             XPPickupFollowPlayer,
         ),
+        AppliesCollisionEffect::new([ColliderTypes::Player].into(), TriggerPickup),
+    ));
+}
+
+fn add_health_pickup_collider_components(trig: On<Add, HealthPickup>, mut commands: Commands) {
+    commands.entity(trig.entity).insert((
+        CommonColliderBundle::new(
+            RigidBody::Kinematic,
+            Collider::circle(20.0),
+            1.0,
+            [ColliderTypes::StaticPickup].into(),
+            [ColliderTypes::Player].into(),
+        ),
+        Sensor,
         AppliesCollisionEffect::new([ColliderTypes::Player].into(), TriggerPickup),
     ));
 }
@@ -153,7 +185,7 @@ fn award_xp(
     on: On<PickupTrigger>,
     mut commands: Commands,
     q_trigger: Query<&XPPickup>,
-    mut q_lm: Single<&mut LevelManager>,
+    mut q_lm: Single<&mut XPManager>,
     q_xp: Query<&XPGain>,
 ) {
     let mult = q_xp.iter().fold(1.0, |acc, xp| acc * xp.0);
@@ -164,4 +196,19 @@ fn award_xp(
         0.0
     };
     q_lm.c_xp += xp_to_add
+}
+
+fn health_pickup(
+    on: On<PickupTrigger>,
+    mut commands: Commands,
+    q_pickup: Query<&HealthPickup>,
+    mut q_target: Query<(&mut Health)>,
+) {
+    if let Ok(pickup) = q_pickup.get(on.entity) {
+        if let Ok(mut hp) = q_target.get_mut(on.apply_to) {
+            info!("Appyling {:?}", pickup.amount);
+            hp.current += pickup.amount;
+        }
+        commands.entity(on.entity).despawn();
+    }
 }

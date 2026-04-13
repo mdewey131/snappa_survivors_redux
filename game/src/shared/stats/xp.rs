@@ -25,7 +25,7 @@ impl Plugin for SharedXPPlugin {
 }
 
 #[derive(Component, Debug, Clone, Serialize, Deserialize, PartialEq, Reflect)]
-pub struct LevelManager {
+pub struct XPManager {
     pub c_level: u8,
     pub c_xp: f32,
     /// For display purposes
@@ -33,7 +33,7 @@ pub struct LevelManager {
     pub next_max: f32,
 }
 
-impl Default for LevelManager {
+impl Default for XPManager {
     fn default() -> Self {
         Self {
             c_level: 1,
@@ -46,7 +46,7 @@ impl Default for LevelManager {
 
 pub fn update_xp_manager(
     mut level_up_messages: MessageWriter<LevelUpMessage>,
-    mut q_level: Single<&mut LevelManager>,
+    mut q_level: Single<&mut XPManager>,
 ) {
     if q_level.c_xp >= q_level.next_max {
         level_up_messages.write(LevelUpMessage);
@@ -65,6 +65,6 @@ pub fn add_level_manager(mut commands: Commands, gk: Res<CurrentGameKind>) {
             pred: true,
             interp: false,
         },
-        (LevelManager::default(), Name::from("Level Manager")),
+        (XPManager::default(), Name::from("Level Manager")),
     );
 }

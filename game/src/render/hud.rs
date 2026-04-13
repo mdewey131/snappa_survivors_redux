@@ -4,7 +4,7 @@ use crate::shared::{
     game_kinds::{DefaultClientFilter, SinglePlayer},
     players::Player,
     states::*,
-    stats::{components::*, xp::LevelManager, *},
+    stats::{components::*, xp::XPManager, *},
     upgrades::{PlayerUpgradeSlots, StatUpgradeKind},
     weapons::WeaponKind,
 };
@@ -476,7 +476,7 @@ fn update_health_bar(
     }
 }
 
-fn update_xp_bar(mut q_bar: Single<&mut Node, With<XPBarForeground>>, q_xp: Single<&LevelManager>) {
+fn update_xp_bar(mut q_bar: Single<&mut Node, With<XPBarForeground>>, q_xp: Single<&XPManager>) {
     let pct = (q_xp.c_xp - q_xp.prev_max) / (q_xp.next_max - q_xp.prev_max);
     q_bar.width = Val::Percent(pct * 100.0)
 }

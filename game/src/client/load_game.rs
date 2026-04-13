@@ -36,11 +36,15 @@ fn assemble_level(mut commands: Commands, game_kinds: Res<CurrentGameKind>, rule
         GameKinds::SinglePlayer => match rules.map_type {
             #[cfg(feature = "dev")]
             MapKind::DevZoo => {
-                info!("Loading Level");
+                info!("Loading Dev Zoo");
                 let spawn_zoo_player_dummies = commands.register_system(spawn_zoo_characters);
                 let spawn_zoo_weapons = commands.register_system(spawn_zoo_weapons);
                 commands.run_system(spawn_zoo_player_dummies);
                 commands.run_system(spawn_zoo_weapons);
+            }
+            MapKind::TheGreens => {
+                info!("Loading the Greens");
+                let spawn_pickup = commands.register_system()
             }
             _ => {
                 let player_character_spawn_sys = commands.register_system(spawn_player_character);
