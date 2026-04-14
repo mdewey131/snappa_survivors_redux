@@ -4,6 +4,10 @@
         val: 10.0,
     ),
     (
+        kind: Damage,
+        val: 5.0,
+    ),
+    (
         kind: MS,
         val: 100.0,
     ),

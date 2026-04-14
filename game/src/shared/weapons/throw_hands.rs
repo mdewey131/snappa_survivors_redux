@@ -87,7 +87,11 @@ pub fn on_activate<QF: QueryFilter>(
         if throw.targets.is_none() {
             let targets =
                 find_closest_enemy_targets_to_position(p_count.0 as u8, p_pos.0, &q_enemy);
-            throw.targets = Some(targets);
+            let ts = targets
+                .iter()
+                .map(|record| record.0)
+                .collect::<Vec<Entity>>();
+            throw.targets = Some(ts);
         }
         let m_target = throw.targets.as_ref().unwrap().get(throw.current as usize);
 

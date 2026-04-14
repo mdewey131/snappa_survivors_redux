@@ -45,32 +45,43 @@ pub fn shifty_shot_activate<QF: QueryFilter>(
     trigger: On<ActivateWeapon>,
     mut commands: Commands,
     q_weapon: Query<
-        (&ChildOf, &ProjectileSpeed, &Damage, &ProjectileBounces),
+        (
+            &ChildOf,
+            &ProjectileSpeed,
+            &Damage,
+            &ProjectileBounces,
+            &AttackRange,
+        ),
         (QF, With<WeaponShiftyShot>),
     >,
     q_parent: Query<&Position, Without<Enemy>>,
     q_enemies: Query<(Entity, &Position), With<Enemy>>,
 ) {
-    if let Ok((parent, speed, damage, bounces)) = q_weapon.get(trigger.entity) {
+    if let Ok((parent, speed, damage, bounces, range)) = q_weapon.get(trigger.entity) {
         let player_pos = q_parent.get(parent.0).unwrap();
         let closest_enemy = find_closest_enemy_targets_to_position(1, player_pos.0, &q_enemies);
         if let Some(e) = closest_enemy.first() {
-            let rem_bounces = bounces.0 as u8;
-            let enemy_pos = q_enemies.get(*e).unwrap().1;
-            let init_dir = (enemy_pos.0 - player_pos.0).normalize_or_zero();
-            let init_vel = speed.0 * init_dir;
-            commands.queue(SpawnGameObject::new(
-                MultiPlayerComponentOptions::PREDICTED,
-                (
-                    ShiftyShotAttack {
-                        target: *e,
-                        remaining_bounces: rem_bounces,
-                    },
-                    *player_pos,
-                    LinearVelocity(init_vel),
-                    *damage,
-                ),
-            ));
+            if e.1 > range.0 {
+            } else {
+                let rem_bounces = bounces.0 as u8;
+                let enemy_pos = q_enemies.get(e.0).unwrap().1;
+                let init_dir = (enemy_pos.0 - player_pos.0).normalize_or_zero();
+                let init_vel = speed.0 * init_dir;
+                commands.queue(SpawnGameObject::new(
+                    MultiPlayerComponentOptions::PREDICTED,
+                    (
+                        ShiftyShotAttack {
+                            target: e.0,
+                            remaining_bounces: rem_bounces,
+                        },
+                        *player_pos,
+                        LinearVelocity(init_vel),
+                        *damage,
+                        *speed,
+                        *range,
+                    ),
+                ));
+            }
         }
     }
 }
@@ -94,19 +105,21 @@ pub fn update_shifty_shot_attack<QF: QueryFilter>(
             &Position,
             &mut ShiftyShotAttack,
             &Damage,
+            &AttackRange,
+            &ProjectileSpeed,
         ),
         (QF, Without<Enemy>),
     >,
     q_enemies: Query<(Entity, &Position), With<Enemy>>,
     mut q_enemy_damage: Query<&mut DamageBuffer, With<Enemy>>,
 ) {
-    for (attack_ent, mut velo, pos, mut attack_data, dam) in &mut q_attack {
+    for (attack_ent, mut velo, pos, mut attack_data, dam, range, p_speed) in &mut q_attack {
         let mut should_retarget = false;
         let enemy_data = q_enemies.get(attack_data.target);
         // Enemy could die while this is in flight
         if let Ok((e_ent, enemy_pos)) = enemy_data {
             let direction_vec = (enemy_pos.0 - pos.0).normalize_or_zero();
-            let new_vec = direction_vec * velo.0.length();
+            let new_vec = direction_vec * p_speed.0;
             velo.0 = new_vec;
 
             if pos.0.distance(enemy_pos.0) <= ATTACK_DISTANCE_THRESHOLD {
@@ -129,13 +142,12 @@ pub fn update_shifty_shot_attack<QF: QueryFilter>(
         }
 
         if should_retarget {
-            // Bit hacky, but we find two of these because we may find the current enemy as the closest to our position,
-            // and that's the one case I want to avoid (bouncing back and forth between enemies is fine with me, but
-            // I may want to revisit that)
-            let closest_2 = find_closest_enemy_targets_to_position(2, pos.0, &q_enemies);
+            // Find a few different options potentially in the area for variety
+            let closest_2 = find_closest_enemy_targets_to_position(5, pos.0, &q_enemies);
             let filtered_list = closest_2
                 .into_iter()
-                .filter(|&ent| ent != attack_data.target)
+                .filter(|record| (record.0 != attack_data.target) && (record.1 <= range.0))
+                .map(|record| record.0)
                 .collect::<Vec<Entity>>();
             // There could be no one!
             if let Some(new_enemy_ent) = filtered_list.first() {
@@ -145,6 +157,7 @@ pub fn update_shifty_shot_attack<QF: QueryFilter>(
                 // will sometimes do nothing
                 commands.entity(attack_ent).remove::<DespawnTimer>();
             } else {
+                velo.0 = Vec2::ZERO;
                 commands.entity(attack_ent).insert(DespawnTimer::new(0.5));
             }
         }

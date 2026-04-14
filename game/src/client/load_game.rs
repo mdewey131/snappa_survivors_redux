@@ -5,7 +5,7 @@ use crate::shared::{
     game_kinds::*,
     game_rules::{GameRules, MapKind},
     loading::{LevelLoadingState, spawn_player_character},
-    pickups::HealthPickup,
+    pickups::{HealthPickup, HealthPickupSpawner, tmp_spawn_health_spawner},
     states::{AppState, InGameState, set_app_state_in_game},
     stats::xp::add_xp_manager,
 };
@@ -46,7 +46,7 @@ fn assemble_level(mut commands: Commands, game_kinds: Res<CurrentGameKind>, rule
             }
             MapKind::TheGreens => {
                 info!("Loading the Greens");
-                let spawn_pickup = commands.register_system(tmp_spawn_health_pickup);
+                let spawn_pickup = commands.register_system(tmp_spawn_health_spawner);
                 commands.run_system(spawn_pickup);
 
                 let player_character_spawn_sys = commands.register_system(spawn_player_character);
@@ -58,11 +58,4 @@ fn assemble_level(mut commands: Commands, game_kinds: Res<CurrentGameKind>, rule
         },
         GameKinds::MultiPlayer => {}
     }
-}
-
-fn tmp_spawn_health_pickup(mut commands: Commands) {
-    commands.spawn((
-        HealthPickup { amount: 5.0 },
-        Position(Vec2::new(500.0, 400.0)),
-    ));
 }

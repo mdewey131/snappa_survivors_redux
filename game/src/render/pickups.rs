@@ -51,7 +51,7 @@ fn xp_pickup_spawned(
         commands.entity(trigger.entity).insert((
             Sprite::from(pickups.xp.clone()),
             Transform::from_translation(pos.extend(pos.y)),
-            RenderYtoZ::default(),
+            RenderYtoZ::new(100.0),
         ));
     }
 }

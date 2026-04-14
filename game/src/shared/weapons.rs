@@ -314,7 +314,7 @@ pub fn find_closest_enemy_targets_to_position(
     num_to_find: u8,
     player_pos: Vec2,
     q_enemy_pos: &Query<(Entity, &Position), With<Enemy>>,
-) -> Vec<Entity> {
+) -> Vec<(Entity, f32)> {
     let mut sorted = q_enemy_pos
         .iter()
         .map(|(ent, pos)| {
@@ -329,7 +329,7 @@ pub fn find_closest_enemy_targets_to_position(
     for _i in (0..num_to_find) {
         let m_enemy = sorted.pop();
         if let Some(record) = m_enemy {
-            targets.push(record.0)
+            targets.push((record.0, record.2))
         }
     }
     targets

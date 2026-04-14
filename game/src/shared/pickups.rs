@@ -12,11 +12,20 @@ use bevy::{ecs::entity::MapEntities, prelude::*};
 use lightyear::prelude::*;
 use serde::{Deserialize, Serialize};
 
+pub const HEALTH_PICKUP_SPAWNER_COOLDOWN: f32 = 30.0;
+
 pub const XP_PICKUP_BASE_MOVE_SPEED: f32 = 5000.0;
 pub const XP_PICKUP_CURVE_TIME_TO_ZERO: f32 = 0.25;
 #[derive(Component, Serialize, Deserialize, PartialEq, Clone, Copy, Debug)]
 pub struct HealthPickup {
     pub amount: f32,
+}
+
+#[derive(Component)]
+pub struct HealthPickupSpawner {
+    pub pickup: Entity,
+    pub hp_amount: f32,
+    pub timer: Timer,
 }
 
 #[derive(Component, Serialize, Deserialize, PartialEq, Clone, Copy, Debug)]
@@ -87,7 +96,7 @@ impl Plugin for SharedPickupsPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             FixedUpdate,
-            (xp_orb_update)
+            (xp_orb_update, hp_spawner_update)
                 .in_set(CombatSystemSet::Combat)
                 .run_if(in_state(InGameState::InGame)),
         )
@@ -217,4 +226,44 @@ fn health_pickup(
         }
         commands.entity(on.entity).despawn();
     }
+}
+
+fn hp_spawner_update(
+    game_time: Res<Time<Virtual>>,
+    mut commands: Commands,
+    mut q_spawner: Query<(&Position, &mut HealthPickupSpawner)>,
+    q_pickups: Query<(), With<HealthPickup>>,
+) {
+    for (pos, mut spawner) in &mut q_spawner {
+        if let Ok(()) = q_pickups.get(spawner.pickup) {
+        } else {
+            spawner.timer.tick(game_time.delta());
+            if spawner.timer.just_finished() {
+                let pickup = commands
+                    .spawn((
+                        HealthPickup {
+                            amount: spawner.hp_amount,
+                        },
+                        *pos,
+                    ))
+                    .id();
+                spawner.pickup = pickup;
+                spawner.timer.reset();
+            }
+        }
+    }
+}
+
+pub fn tmp_spawn_health_spawner(mut commands: Commands) {
+    let pos = Position(Vec2::new(500.0, 400.0));
+    let amount = 5.0;
+    let pickup = commands.spawn((HealthPickup { amount }, pos)).id();
+    let _spawner = commands.spawn((
+        HealthPickupSpawner {
+            pickup,
+            hp_amount: amount,
+            timer: Timer::from_seconds(HEALTH_PICKUP_SPAWNER_COOLDOWN, TimerMode::Once),
+        },
+        pos,
+    ));
 }
