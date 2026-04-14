@@ -12,7 +12,8 @@ use bevy::{ecs::entity::MapEntities, prelude::*};
 use lightyear::prelude::*;
 use serde::{Deserialize, Serialize};
 
-pub const XP_PICKUP_BASE_MOVE_SPEED: f32 = 50.0;
+pub const XP_PICKUP_BASE_MOVE_SPEED: f32 = 5000.0;
+pub const XP_PICKUP_CURVE_TIME_TO_ZERO: f32 = 0.25;
 #[derive(Component, Serialize, Deserialize, PartialEq, Clone, Copy, Debug)]
 pub struct HealthPickup {
     pub amount: f32,
@@ -101,6 +102,7 @@ impl Plugin for SharedPickupsPlugin {
                 .run_if(in_state(InGameState::InGame)),
         )
         .add_observer(add_xp_collider_components)
+        .add_observer(add_health_pickup_collider_components)
         .add_observer(health_pickup)
         .add_observer(award_xp);
     }
@@ -115,9 +117,13 @@ fn xp_orb_update(
         if let Some(t_ent) = pickup.targeting {
             pickup.t_time += game_time.delta_secs();
             if let Ok(t_pos) = q_player.get(t_ent) {
-                xp_lv.0 = (t_pos.0 - xp_pos.0).normalize_or_zero()
-                    * XP_PICKUP_BASE_MOVE_SPEED
-                    * pickup.t_time;
+                let dir = (t_pos.0 - xp_pos.0).normalize_or_zero();
+                // shoutout parabolas
+                let velo_min =
+                    -1.0 * XP_PICKUP_BASE_MOVE_SPEED * (XP_PICKUP_CURVE_TIME_TO_ZERO).powf(2.0);
+                let speed = (XP_PICKUP_BASE_MOVE_SPEED) * pickup.t_time.powf(2.0) + velo_min;
+                xp_lv.0 = speed * dir;
+                info!("Setting LV to {:?} ", xp_lv.0);
             }
         } else {
             pickup.t_time = 0.0

@@ -24,6 +24,7 @@ pub mod enemies;
 pub mod hud;
 pub mod map;
 pub mod menus;
+pub mod pickups;
 pub mod player;
 pub mod ui;
 pub mod upgrades;
@@ -33,6 +34,7 @@ use camera::*;
 use enemies::SharedEnemyRenderPlugin;
 use map::MapRenderPlugin;
 use menus::lobby::LobbyMenuPlugin;
+use pickups::*;
 use player::SharedPlayerRenderPlugin;
 use ui::SharedUIPlugin;
 use upgrades::UpgradeRenderPlugin;
@@ -54,6 +56,7 @@ impl Plugin for GameSharedRenderPlugin {
             MapRenderPlugin,
             SharedPlayerRenderPlugin,
             SharedEnemyRenderPlugin,
+            SharedPickupsRenderPlugin,
             UpgradeRenderPlugin,
         ));
         #[cfg(feature = "inspector")]

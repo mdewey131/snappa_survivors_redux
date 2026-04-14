@@ -6,7 +6,7 @@ use crate::shared::{
     loading::{LevelLoadingState, spawn_characters_in_multiplayer},
     players::{CharacterKind, Player, PlayerBaseBundle, PlayerWeapons},
     states::*,
-    stats::xp::add_level_manager,
+    stats::xp::add_xp_manager,
     upgrades::PlayerUpgradeSlots,
     weapons::{WeaponKind, add_weapon_to_character},
 };
@@ -22,7 +22,7 @@ impl Plugin for DedicatedServerLoadingPlugin {
         app.add_systems(
             OnEnter(LevelLoadingState::LevelReady),
             (
-                add_level_manager,
+                add_xp_manager,
                 spawn_characters_in_multiplayer,
                 set_app_state_in_game,
             )

@@ -56,7 +56,7 @@ pub fn update_xp_manager(
     }
 }
 
-pub fn add_level_manager(mut commands: Commands, gk: Res<CurrentGameKind>) {
+pub fn add_xp_manager(mut commands: Commands, gk: Res<CurrentGameKind>) {
     let _lm = spawn_game_object(
         &mut commands,
         gk.0.unwrap(),

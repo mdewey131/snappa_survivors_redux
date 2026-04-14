@@ -18,6 +18,24 @@
         ),
     ),
     (
+        activation: TimeLimit(
+            start_time: 30.0,
+            end_time: 200.0,
+            tick_rate: 10.0,
+        ),
+        instruction: (
+            kind: FacelessMan,
+            pattern: AroundAllPlayers(
+                pattern: Circle(
+                    amount: 10,
+                    center: (0.0, 0.0),
+                    radius: 1500.0,
+                    radius_only: true,
+                ),
+            ),
+        ),
+    ),
+    (
         activation: FixedWaves(
             start_time: 0.0,
             tick_rate: 5.0,
