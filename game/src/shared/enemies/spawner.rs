@@ -210,6 +210,7 @@ pub fn add_enemy_spawner(
         EnemySpawnStyle::Automatic => {
             let string = match game_rules.map_type {
                 MapKind::TheGreens => Some("assets/maps/grass/spawner.ron".into()),
+                #[cfg(feature = "dev")]
                 MapKind::DevZoo => None,
             };
             if let Some(s) = string {

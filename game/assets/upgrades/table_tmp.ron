@@ -221,6 +221,12 @@
         ],
     ),
     (
+        kind: AddWeapon(BumpinTunes),
+        rewards: [
+            AddWeapon(BumpinTunes),
+        ],
+    ),
+    (
         kind: AddWeapon(DiceGuard),
         rewards: [
             AddWeapon(DiceGuard),
@@ -239,9 +245,35 @@
         ],
     ),
     (
+        kind: AddWeapon(BouncingDice),
+        rewards: [
+            AddWeapon(BouncingDice),
+        ],
+    ),
+    (
+        kind: AddWeapon(ShiftyShot),
+        rewards: [
+            StatUpgrade(
+                range: (
+                    min: 0.0,
+                    max: 1.0,
+                ),
+                kind: Armor,
+                value: None,
+            ),
+        ],
+    ),
+    (
         kind: AddWeapon(FlurryOfBlows),
         rewards: [
-            AddWeapon(FlurryOfBlows),
+            StatUpgrade(
+                range: (
+                    min: 0.0,
+                    max: 1.0,
+                ),
+                kind: Armor,
+                value: None,
+            ),
         ],
     ),
     (
@@ -274,6 +306,35 @@
         ],
     ),
     (
+        kind: UpgradeWeapon(ShiftyShot),
+        rewards: [
+            StatUpgrade(
+                range: (
+                    min: -0.2,
+                    max: -0.05,
+                ),
+                kind: CDR,
+                value: None,
+            ),
+            StatUpgrade(
+                range: (
+                    min: 1.0,
+                    max: 2.0,
+                ),
+                kind: ProjectileBounces,
+                value: None,
+            ),
+            StatUpgrade(
+                range: (
+                    min: 2.0,
+                    max: 5.0,
+                ),
+                kind: Damage,
+                value: None,
+            ),
+        ],
+    ),
+    (
         kind: UpgradeWeapon(BouncingDice),
         rewards: [
             StatUpgrade(
@@ -281,7 +342,7 @@
                     min: 0.0,
                     max: 1.0,
                 ),
-                kind: Armor,
+                kind: Damage,
                 value: None,
             ),
             StatUpgrade(

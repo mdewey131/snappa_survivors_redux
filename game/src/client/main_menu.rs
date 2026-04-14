@@ -133,12 +133,17 @@ fn spawn_main_menu(mut commands: Commands, assets: Res<AssetServer>, systems: Re
 
     // Dev zoo
     if cfg!(feature = "dev") {
+        #[cfg(feature = "dev")]
         let launch_zoo = commands.register_system(launch_zoo_level);
+        #[cfg(feature = "dev")]
         let zoo_button = GameButton::new(GameButtonOnRelease::TriggerSystem(launch_zoo));
+        #[cfg(feature = "dev")]
         let zoo_btn_style = GameButtonStyle::new(GameButtonImage::default())
             .with_color(Color::srgb(1.0, 0.0, 0.0))
             .with_text("Zoo".into());
+        #[cfg(feature = "dev")]
         let zoo_btn_ent = zoo_button.spawn(&mut commands, &assets, zoo_btn_style);
+        #[cfg(feature = "dev")]
         commands.entity(zoo_btn_ent).insert(ChildOf(button_well));
     }
 
