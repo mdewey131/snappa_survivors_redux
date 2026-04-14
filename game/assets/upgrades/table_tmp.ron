@@ -356,6 +356,35 @@
         ],
     ),
     (
+        kind: UpgradeWeapon(BumpinTunes),
+        rewards: [
+            StatUpgrade(
+                range: (
+                    min: 0.2,
+                    max: 0.5,
+                ),
+                kind: Damage,
+                value: None,
+            ),
+            StatUpgrade(
+                range: (
+                    min: -0.05,
+                    max: -0.01,
+                ),
+                kind: CDR,
+                value: None,
+            ),
+            StatUpgrade(
+                range: (
+                    min: 10.0,
+                    max: 20.0,
+                ),
+                kind: EffSize,
+                value: None,
+            ),
+        ],
+    ),
+    (
         kind: UpgradeWeapon(DiceGuard),
         rewards: [
             StatUpgrade(

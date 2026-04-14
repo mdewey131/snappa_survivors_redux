@@ -57,7 +57,7 @@
     ),
     (
         kind: PickupR,
-        val: 200.0,
+        val: 50.0,
     ),
     (
         kind: ProjCount,

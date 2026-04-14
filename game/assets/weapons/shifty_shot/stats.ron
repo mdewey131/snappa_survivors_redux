@@ -1,7 +1,7 @@
 ([
     (
         kind: AttackRange,
-        val: 700.0,
+        val: 500.0,
     ),
     (
         kind: CDR,
