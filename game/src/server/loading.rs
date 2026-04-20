@@ -3,7 +3,8 @@ use crate::shared::{
     game_kinds::{CurrentGameKind, MultiPlayerComponentOptions},
     game_object_spawning::spawn_game_object,
     game_rules::GameRules,
-    loading::{LevelLoadingState, spawn_characters_in_multiplayer},
+    loading::LevelLoadingState,
+    maps::*,
     players::{CharacterKind, Player, PlayerBaseBundle, PlayerWeapons},
     states::*,
     stats::xp::add_xp_manager,
@@ -19,16 +20,17 @@ pub struct DedicatedServerLoadingPlugin;
 
 impl Plugin for DedicatedServerLoadingPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(
-            OnEnter(LevelLoadingState::LevelReady),
-            (
-                add_xp_manager,
-                spawn_characters_in_multiplayer,
-                set_app_state_in_game,
+        app.add_systems(OnEnter(AppState::LoadingLevel), add_map_loading_systems)
+            .add_systems(
+                OnEnter(LevelLoadingState::LevelLoading),
+                run_map_loading_systems,
             )
-                .chain()
-                .run_if(in_state(AppState::LoadingLevel)),
-        );
+            .add_systems(
+                OnEnter(LevelLoadingState::LevelReady),
+                (add_xp_manager, set_app_state_in_game)
+                    .chain()
+                    .run_if(in_state(AppState::LoadingLevel)),
+            );
     }
 }
 

@@ -1,4 +1,4 @@
-use crate::shared::{game_rules::*, states::AppState};
+use crate::shared::{game_rules::*, maps::MapKind, states::AppState};
 use bevy::prelude::*;
 pub struct DedicatedServerGameRulesPlugin;
 impl Plugin for DedicatedServerGameRulesPlugin {

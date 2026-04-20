@@ -3,6 +3,7 @@ use crate::shared::{
     game_kinds::{CurrentGameKind, GameKinds, MultiPlayerComponentOptions},
     game_object_spawning::{SpawnGameObject, spawn_game_object},
     game_rules::GameRules,
+    maps::*,
     players::{CharacterKind, Player, PlayerBaseBundle, PlayerWeapons},
     states::AppState,
     stats::RawStatsList,
@@ -93,7 +94,7 @@ pub fn launch_zoo_level(
     info!("Transitioning to zoo level");
     game_kind.0 = Some(GameKinds::SinglePlayer);
     let mut game_rules = GameRules::default();
-    game_rules.map_type = crate::shared::game_rules::MapKind::DevZoo;
+    game_rules.map_type = crate::shared::maps::MapKind::DevZoo;
     commands.insert_resource(game_rules);
     state.set(AppState::LoadingLevel);
 }
@@ -213,6 +214,12 @@ pub fn spawn_zoo_weapons(mut commands: Commands) {
         )),
     ));
 }
+
+/// TODO
+pub fn spawn_zoo_interactables() {}
+
+/// TODO
+pub fn spawn_zoo_enemies() {}
 
 fn draw_zoo_gizmos(mut gizmos: Gizmos, q_pens: Query<(&Transform, &ZooPen)>) {
     for (pos, pen) in &q_pens {

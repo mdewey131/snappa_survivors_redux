@@ -8,8 +8,9 @@ use crate::{
     shared::{
         GameMainChannel,
         game_kinds::{CurrentGameKind, GameKinds, SinglePlayer, is_single_player},
-        game_rules::{Difficulty, GameRuleField, MapKind},
+        game_rules::{Difficulty, GameRuleField},
         lobby::{ClientChangeCharacterMessage, PlayerInLobby},
+        maps::MapKind,
         players::CharacterKind,
         states::AppState,
     },

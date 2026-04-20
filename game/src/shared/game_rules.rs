@@ -10,7 +10,7 @@ use bevy::prelude::*;
 use lightyear::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::shared::{GameMainChannel, states::AppState};
+use crate::shared::{GameMainChannel, maps::MapKind, states::AppState};
 
 pub struct SharedGameRulesPlugin;
 
@@ -43,14 +43,6 @@ pub struct GameRules {
     pub difficulty: Difficulty,
 }
 
-#[derive(Default, Debug, Clone, Copy, Serialize, Deserialize, PartialEq, PartialOrd, Reflect)]
-#[reflect(Default)]
-pub enum MapKind {
-    #[default]
-    TheGreens,
-    #[cfg(feature = "dev")]
-    DevZoo,
-}
 impl GameRuleField for MapKind {
     fn set_field(&self, rules: &mut GameRules) {
         rules.map_type = *self

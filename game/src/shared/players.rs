@@ -20,6 +20,9 @@ use lightyear::prelude::*;
 use serde::{Deserialize, Serialize};
 use strum::EnumIter;
 
+mod spawning;
+pub use spawning::*;
+
 /// The component that describes a player.
 /// This holds a record of the peer id so that,
 /// if a client disconnects, we can still maintain
@@ -27,7 +30,7 @@ use strum::EnumIter;
 /// to come back
 #[derive(Component, Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Reflect)]
 pub struct Player {
-    pub client: PeerId,
+    pub client: Option<PeerId>,
     pub character: CharacterKind,
 }
 

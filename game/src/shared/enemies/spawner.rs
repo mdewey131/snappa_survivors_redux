@@ -1,6 +1,7 @@
 use crate::{
     shared::{
-        game_rules::{GameRules, MapKind},
+        game_rules::GameRules,
+        maps::MapKind,
         states::{AppState, InGameTime},
     },
     utils::{SpawnPattern, read_ron},
