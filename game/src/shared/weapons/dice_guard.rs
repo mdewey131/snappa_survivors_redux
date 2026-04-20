@@ -56,7 +56,7 @@ pub fn dice_guard_activate<QF: QueryFilter>(
             // Shorhand for now
             let r = size.0 * 4.0;
             //spawn_positions.positions_2d().into_iter().enumerate() {
-            let angle = std::f32::consts::TAU * (i as f32 / p_count.0 as f32);
+            let angle = std::f32::consts::TAU * (i as f32 / p_count.0);
             let proj = Projectile {
                 movement: ProjectileMovement::Orbital {
                     around: parent.parent(),

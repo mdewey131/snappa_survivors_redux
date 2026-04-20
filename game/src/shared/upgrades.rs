@@ -385,7 +385,7 @@ pub fn apply_upgrade(
                     let mut stat = stats_list
                         .list
                         .get_mut(&sk)
-                        .expect(&format!("This entity is expected to have {:?}", sk));
+                        .unwrap_or_else(|| panic!("This entity is expected to have {:?}", sk));
                     stat.base_value += value.unwrap();
                 }
                 _ => todo!(),

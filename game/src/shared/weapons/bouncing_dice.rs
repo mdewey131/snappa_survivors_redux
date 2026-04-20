@@ -82,7 +82,7 @@ pub fn on_activate<QF: QueryFilter>(
         commands.queue(SpawnGameObject::new(
             MultiPlayerComponentOptions::PREDICTED,
             (
-                position.clone(),
+                *position,
                 BouncingDiceAttack {
                     init_pos: position.0,
                     c_target: pos_to_target,

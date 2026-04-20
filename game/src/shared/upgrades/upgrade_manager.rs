@@ -98,8 +98,8 @@ impl UpgradeManager {
                 UpgradeKind::AddWeapon(_w) => table_entry.unwrap().clone(),
                 _ => {
                     let mut rewards_with_rolls = table_entry.unwrap().clone();
-                    for mut reward in rewards_with_rolls.iter_mut() {
-                        let r = self.create_stat_value_from_rarity(&rarity, &reward);
+                    for reward in rewards_with_rolls.iter_mut() {
+                        let r = self.create_stat_value_from_rarity(&rarity, reward);
                         *reward = r
                     }
 
@@ -136,7 +136,7 @@ impl UpgradeManager {
                 };
                 let range_min = range.min + (i as f32 * diff) / 4.0;
                 let range_max = range.min + ((i + 1) as f32 * diff) / 4.0;
-                let v = (&mut self.rng).random_range(range_min..range_max);
+                let v = (self.rng).random_range(range_min..range_max);
                 UpgradeReward::StatUpgrade {
                     range: *range,
                     kind: *kind,
