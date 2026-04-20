@@ -126,13 +126,18 @@ fn xp_orb_update(
         if let Some(t_ent) = pickup.targeting {
             pickup.t_time += game_time.delta_secs();
             if let Ok(t_pos) = q_player.get(t_ent) {
+                let dist = (t_pos.0).distance(xp_pos.0);
                 let dir = (t_pos.0 - xp_pos.0).normalize_or_zero();
                 // shoutout parabolas
                 let velo_min =
                     -1.0 * XP_PICKUP_BASE_MOVE_SPEED * (XP_PICKUP_CURVE_TIME_TO_ZERO).powf(2.0);
                 let speed = (XP_PICKUP_BASE_MOVE_SPEED) * pickup.t_time.powf(2.0) + velo_min;
+                /*if speed > dist {
+
+                    xp_lv.0 = dist * dir
+                } else {*/
                 xp_lv.0 = speed * dir;
-                info!("Setting LV to {:?} ", xp_lv.0);
+                //}
             }
         } else {
             pickup.t_time = 0.0

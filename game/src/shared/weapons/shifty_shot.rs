@@ -2,7 +2,7 @@ use crate::{
     render::RenderYtoZ,
     shared::{
         colliders::CollisionEffect,
-        damage::{DamageBuffer, DamageInstance},
+        damage::{DamageBuffer, DamageInstance, Dead},
         despawn_timer::DespawnTimer,
         game_object_spawning::SpawnGameObject,
         weapons::ActivateWeapon,
@@ -14,6 +14,7 @@ use bevy::{
     prelude::*,
 };
 use lightyear::prelude::*;
+use rand::prelude::SliceRandom;
 
 use super::*;
 const ATTACK_DISTANCE_THRESHOLD: f32 = 10.0;
@@ -55,11 +56,12 @@ pub fn shifty_shot_activate<QF: QueryFilter>(
         (QF, With<WeaponShiftyShot>),
     >,
     q_parent: Query<&Position, Without<Enemy>>,
-    q_enemies: Query<(Entity, &Position), With<Enemy>>,
+    q_enemies: Query<(Entity, &Position), (With<Enemy>, Without<Dead>)>,
 ) {
     if let Ok((parent, speed, damage, bounces, range)) = q_weapon.get(trigger.entity) {
         let player_pos = q_parent.get(parent.0).unwrap();
-        let closest_enemy = find_closest_enemy_targets_to_position(1, player_pos.0, &q_enemies);
+        let enemy_vec = q_enemies.iter().collect::<Vec<(Entity, &Position)>>();
+        let closest_enemy = find_closest_enemy_targets_to_position(1, player_pos.0, &enemy_vec);
         if let Some(e) = closest_enemy.first() {
             if e.1 > range.0 {
             } else {
@@ -110,7 +112,7 @@ pub fn update_shifty_shot_attack<QF: QueryFilter>(
         ),
         (QF, Without<Enemy>),
     >,
-    q_enemies: Query<(Entity, &Position), With<Enemy>>,
+    q_enemies: Query<(Entity, &Position), (With<Enemy>, Without<Dead>)>,
     mut q_enemy_damage: Query<&mut DamageBuffer, With<Enemy>>,
 ) {
     for (attack_ent, mut velo, pos, mut attack_data, dam, range, p_speed) in &mut q_attack {
@@ -142,13 +144,16 @@ pub fn update_shifty_shot_attack<QF: QueryFilter>(
         }
 
         if should_retarget {
+            let enemy_vec = q_enemies.iter().collect::<Vec<(Entity, &Position)>>();
             // Find a few different options potentially in the area for variety
-            let closest_2 = find_closest_enemy_targets_to_position(5, pos.0, &q_enemies);
-            let filtered_list = closest_2
+            let closest_2 = find_closest_enemy_targets_to_position(5, pos.0, &enemy_vec);
+            let mut filtered_list = closest_2
                 .into_iter()
                 .filter(|record| (record.0 != attack_data.target) && (record.1 <= range.0))
                 .map(|record| record.0)
                 .collect::<Vec<Entity>>();
+
+            filtered_list.shuffle(&mut rand::rng());
             // There could be no one!
             if let Some(new_enemy_ent) = filtered_list.first() {
                 attack_data.target = *new_enemy_ent;

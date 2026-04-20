@@ -1,6 +1,6 @@
 use crate::shared::{
     combat::{CombatSystemSet, Cooldown},
-    damage::{DamageBuffer, DamageInstance},
+    damage::{DamageBuffer, DamageInstance, Dead},
     enemies::Enemy,
     game_kinds::{CurrentGameKind, MultiPlayerComponentOptions},
     game_object_spawning::{SpawnGameObject, spawn_game_object},
@@ -78,18 +78,34 @@ pub enum ThrowHandsAttackState {
 pub fn on_activate<QF: QueryFilter>(
     trigger: On<ActivateWeapon>,
     mut commands: Commands,
-    mut q_weapon: Query<(&ChildOf, &mut ThrowHands, &ProjectileCount, &Damage), QF>,
+    mut q_weapon: Query<
+        (
+            &ChildOf,
+            &mut ThrowHands,
+            &ProjectileCount,
+            &Damage,
+            &AttackRange,
+        ),
+        QF,
+    >,
     q_player: Query<&Position, Without<Enemy>>,
-    q_enemy: Query<(Entity, &Position), With<Enemy>>,
+    q_enemy: Query<(Entity, &Position), (With<Enemy>, Without<Dead>)>,
 ) {
-    if let Ok((child, mut throw, p_count, damage)) = q_weapon.get_mut(trigger.entity) {
+    if let Ok((child, mut throw, p_count, damage, range)) = q_weapon.get_mut(trigger.entity) {
         let p_pos = q_player.get(child.0).expect("This player should exist");
+        let enemy_vec = q_enemy.iter().collect::<Vec<(Entity, &Position)>>();
         if throw.targets.is_none() {
             let targets =
-                find_closest_enemy_targets_to_position(p_count.0 as u8, p_pos.0, &q_enemy);
+                find_closest_enemy_targets_to_position(p_count.0 as u8, p_pos.0, &enemy_vec);
             let ts = targets
                 .iter()
-                .map(|record| record.0)
+                .filter_map(|record| {
+                    if record.1 <= range.0 {
+                        Some(record.0)
+                    } else {
+                        None
+                    }
+                })
                 .collect::<Vec<Entity>>();
             throw.targets = Some(ts);
         }
