@@ -121,7 +121,7 @@ pub fn spawn_zoo_characters(mut commands: Commands) {
             + CHARACTER_DISPLAY_GROUP_CENTERPOINT.1;
 
         let player = Player {
-            client: PeerId::Local(0),
+            client: None,
             character: char,
         };
         let player_stats = RawStatsList::import_stats(player.character);
@@ -183,7 +183,7 @@ pub fn spawn_zoo_weapons(mut commands: Commands) {
 
         // Always spawn dewey, he has stats that we can use as a baseline
         let player = Player {
-            client: PeerId::Local(0),
+            client: None,
             character: CharacterKind::Dewey,
         };
         let player_stats = RawStatsList::import_stats(player.character);
