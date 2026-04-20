@@ -26,13 +26,14 @@ pub struct DedicatedServerEnemyPlugin;
 impl Plugin for DedicatedServerEnemyPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
-            OnEnter(AppState::InGame),
+            OnEnter(AppState::LoadingLevel),
             spawn_enemy_spawn_manager.run_if(not(is_single_player)),
         )
         .add_systems(
             FixedUpdate,
             (
                 update_enemy_spawn_manager.run_if(resource_exists::<EnemySpawnManager>),
+                update_enemy_spawner,
                 enemy_state_machine::<With<Replicate>, With<Replicate>>,
             )
                 .run_if(in_state(InGameState::InGame))
@@ -41,20 +42,4 @@ impl Plugin for DedicatedServerEnemyPlugin {
         .add_observer(add_non_replicated_enemy_components::<DefaultServerFilter>)
         .add_observer(on_enemy_death);
     }
-}
-
-/// TODO: Move this to the responsibility of a dedicated spawner that gets selectively spawned on client or server, depending on the context
-fn spawn_enemy(mut commands: Commands) {
-    let enemy = Enemy {
-        kind: EnemyKind::FacelessMan,
-        state: EnemyState::Spawning,
-    };
-    let mut rng = rand::rng();
-    let pos = (rng.random_range(-50.0..50.0), rng.random_range(-50.0..50.0));
-    commands.spawn((
-        CommonColliderBundle::from(enemy),
-        enemy,
-        Position(Vec2::new(pos.0, pos.1)),
-        EnemySpawnTimer::default(),
-    ));
 }

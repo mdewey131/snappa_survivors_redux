@@ -28,7 +28,11 @@ impl Plugin for ClientGameLoadingPlugin {
         )
         .add_systems(
             OnEnter(LevelLoadingState::LevelReady),
-            (set_app_state_in_game).run_if(in_state(AppState::LoadingLevel)),
+            (
+                add_xp_manager.run_if(is_single_player),
+                set_app_state_in_game,
+            )
+                .run_if(in_state(AppState::LoadingLevel)),
         );
     }
 }

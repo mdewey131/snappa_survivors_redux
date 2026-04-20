@@ -7,7 +7,10 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "dev")]
 use crate::utils::zoo::*;
 use crate::{
-    shared::{game_rules::GameRules, states::AppState, stats::xp::add_xp_manager},
+    shared::{
+        enemies::spawner::add_enemy_spawner, game_rules::GameRules, states::AppState,
+        stats::xp::add_xp_manager,
+    },
     utils::SpawnPattern,
 };
 
@@ -25,47 +28,42 @@ pub enum MapKind {
 
 impl MapKind {
     fn character_spawner(&self, commands: &mut Commands) -> Box<SystemId> {
-        let label = match self {
-            MapKind::TheGreens => spawn_characters_the_greens,
+        match self {
+            MapKind::TheGreens => Box::new(commands.register_system(spawn_characters_the_greens)),
             #[cfg(feature = "dev")]
-            MapKind::DevZoo => spawn_zoo_characters,
-        };
-        let system_id = commands.register_system(label);
-        Box::new(system_id)
+            MapKind::DevZoo => Box::new(commands.register_system(spawn_zoo_characters)),
+        }
     }
     fn interactables_spawner(&self, commands: &mut Commands) -> Box<SystemId> {
-        let label = match self {
-            MapKind::TheGreens => spawn_interactables_the_greens,
+        match self {
+            MapKind::TheGreens => {
+                Box::new(commands.register_system(spawn_interactables_the_greens))
+            }
             #[cfg(feature = "dev")]
-            MapKind::DevZoo => spawn_zoo_interactables,
-        };
-        Box::new(commands.register_system(label))
+            MapKind::DevZoo => Box::new(commands.register_system(spawn_zoo_interactables)),
+        }
     }
     fn enemy_spawners(&self, commands: &mut Commands) -> Box<SystemId> {
-        let label = match self {
-            MapKind::TheGreens => enemy_spawners_the_greens,
+        match self {
+            MapKind::TheGreens => Box::new(commands.register_system(add_enemy_spawner)),
             #[cfg(feature = "dev")]
-            MapKind::DevZoo => spawn_zoo_enemies,
-        };
-        Box::new(commands.register_system(label))
+            MapKind::DevZoo => Box::new(commands.register_system(spawn_zoo_enemies)),
+        }
     }
 
     fn map_elements(&self, commands: &mut Commands) -> Box<SystemId> {
-        let label = match self {
-            MapKind::TheGreens => map_elements_the_greens,
+        match self {
+            MapKind::TheGreens => Box::new(commands.register_system(map_elements_the_greens)),
             #[cfg(feature = "dev")]
-            MapKind::DevZoo => spawn_zoo_interactables,
-        };
-        Box::new(commands.register_system(label))
+            MapKind::DevZoo => Box::new(commands.register_system(spawn_zoo_interactables)),
+        }
     }
     fn custom_systems(&self, commands: &mut Commands) -> Vec<Box<SystemId>> {
         let mut ret = Vec::new();
         match self {
             #[cfg(feature = "dev")]
-            MapKind::DevZoo => ret.push(commands.register_system(spawn_zoo_weapons)),
-            _ => {
-                ret.push(Box::new(commands.register_system(add_xp_manager)));
-            }
+            MapKind::DevZoo => ret.push(Box::new(commands.register_system((spawn_zoo_weapons)))),
+            _ => {}
         }
         ret
     }

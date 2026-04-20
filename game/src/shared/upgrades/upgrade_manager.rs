@@ -98,7 +98,7 @@ impl UpgradeManager {
                 UpgradeKind::AddWeapon(_w) => table_entry.unwrap().clone(),
                 _ => {
                     let mut rewards_with_rolls = table_entry.unwrap().clone();
-                    for reward in rewards_with_rolls.iter_mut() {
+                    for mut reward in rewards_with_rolls.iter_mut() {
                         let r = self.create_stat_value_from_rarity(&rarity, reward);
                         *reward = r
                     }

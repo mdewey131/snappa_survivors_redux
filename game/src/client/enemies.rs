@@ -20,10 +20,6 @@ impl Plugin for ClientEnemyPlugin {
             (spawn_enemy_spawn_manager.run_if(is_single_player),),
         )
         .add_systems(
-            OnEnter(LevelLoadingState::LevelReady),
-            add_enemy_spawner.run_if(is_single_player),
-        )
-        .add_systems(
             FixedUpdate,
             (
                 (
