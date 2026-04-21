@@ -4,7 +4,7 @@ use std::time::Duration;
 
 use crate::shared::combat::{CharacterFacing, FacingDirection};
 
-#[derive(Component, Reflect)]
+#[derive(Component, Reflect, Clone)]
 pub struct AnimationConfig {
     pub first_sprite_index: usize,
     pub last_sprite_index: usize,

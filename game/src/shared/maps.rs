@@ -27,6 +27,14 @@ pub enum MapKind {
 }
 
 impl MapKind {
+    fn map_background(&self, commands: &mut Commands) -> Box<SystemId> {
+        match self {
+            MapKind::TheGreens => Box::new(commands.register_system(map_chunks_the_greens)),
+            #[cfg(feature = "dev")]
+            MapKind::DevZoo => Box::new(commands.register_system(map_chunks_the_greens)),
+        }
+    }
+
     fn character_spawner(&self, commands: &mut Commands) -> Box<SystemId> {
         match self {
             MapKind::TheGreens => Box::new(commands.register_system(spawn_characters_the_greens)),
@@ -69,7 +77,7 @@ impl MapKind {
     }
 }
 
-/// A resource that tracks which systems are responsible for loading the map.
+/// A resource that tracks which systems are responsible for placing things around the maps.
 /// These are completely generic sytems because we expect that maps will want
 /// their own way of defining these common functions, on top of potentially
 /// having more things to do based on the initial sytems
@@ -77,7 +85,8 @@ impl MapKind {
 /// For the Client, in multiplayer scenarios, this is not run, but it is in
 /// single player scenarios.
 #[derive(Resource, Debug)]
-pub struct MapLoadingSystems {
+pub struct MapBuilderSystems {
+    pub map_background: Box<SystemId>,
     pub characters: Box<SystemId>,
     pub interactables: Box<SystemId>,
     pub enemy_spawners: Box<SystemId>,
@@ -86,13 +95,15 @@ pub struct MapLoadingSystems {
 }
 
 pub fn add_map_loading_systems(mut commands: Commands, game_rules: Res<GameRules>) {
+    let map_background = game_rules.map_type.map_background(&mut commands);
     let characters = game_rules.map_type.character_spawner(&mut commands);
     let interactables = game_rules.map_type.interactables_spawner(&mut commands);
     let enemy_spawners = game_rules.map_type.enemy_spawners(&mut commands);
     let map_elements = game_rules.map_type.map_elements(&mut commands);
     let custom_systems = game_rules.map_type.custom_systems(&mut commands);
 
-    commands.insert_resource(MapLoadingSystems {
+    commands.insert_resource(MapBuilderSystems {
+        map_background,
         characters,
         interactables,
         enemy_spawners,
@@ -101,7 +112,8 @@ pub fn add_map_loading_systems(mut commands: Commands, game_rules: Res<GameRules
     });
 }
 
-pub fn run_map_loading_systems(mut commands: Commands, loading_systems: Res<MapLoadingSystems>) {
+pub fn run_map_loading_systems(mut commands: Commands, loading_systems: Res<MapBuilderSystems>) {
+    commands.run_system(*loading_systems.map_background);
     commands.run_system(*loading_systems.map_elements);
     commands.run_system(*loading_systems.enemy_spawners);
     commands.run_system(*loading_systems.interactables);

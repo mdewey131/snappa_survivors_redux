@@ -16,6 +16,7 @@ pub const HEALTH_PICKUP_SPAWNER_COOLDOWN: f32 = 30.0;
 
 pub const XP_PICKUP_BASE_MOVE_SPEED: f32 = 5000.0;
 pub const XP_PICKUP_CURVE_TIME_TO_ZERO: f32 = 0.25;
+
 #[derive(Component, Serialize, Deserialize, PartialEq, Clone, Copy, Debug)]
 pub struct HealthPickup {
     pub amount: f32,
@@ -132,12 +133,12 @@ fn xp_orb_update(
                 let velo_min =
                     -1.0 * XP_PICKUP_BASE_MOVE_SPEED * (XP_PICKUP_CURVE_TIME_TO_ZERO).powf(2.0);
                 let speed = (XP_PICKUP_BASE_MOVE_SPEED) * pickup.t_time.powf(2.0) + velo_min;
-                /*if speed > dist {
 
+                if dist < 10.0 {
                     xp_lv.0 = dist * dir
-                } else {*/
-                xp_lv.0 = speed * dir;
-                //}
+                } else {
+                    xp_lv.0 = speed * dir;
+                }
             }
         } else {
             pickup.t_time = 0.0
