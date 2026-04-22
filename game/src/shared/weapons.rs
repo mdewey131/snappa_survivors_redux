@@ -310,7 +310,7 @@ fn tick_weapon_active_timer(
     }
 }
 
-pub fn find_closest_enemy_targets_to_position(
+pub fn find_closest_in_list(
     num_to_find: u8,
     player_pos: Vec2,
     q_enemy_pos: &Vec<(Entity, &Position)>,

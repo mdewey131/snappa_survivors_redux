@@ -7,7 +7,7 @@ use crate::shared::{
     players::Player,
     states::InGameState,
     stats::components::*,
-    weapons::{DeactivateWeapon, find_closest_enemy_targets_to_position},
+    weapons::{DeactivateWeapon, find_closest_in_list},
 };
 use avian2d::prelude::*;
 use bevy::{
@@ -95,8 +95,7 @@ pub fn on_activate<QF: QueryFilter>(
         let p_pos = q_player.get(child.0).expect("This player should exist");
         let enemy_vec = q_enemy.iter().collect::<Vec<(Entity, &Position)>>();
         if throw.targets.is_none() {
-            let targets =
-                find_closest_enemy_targets_to_position(p_count.0 as u8, p_pos.0, &enemy_vec);
+            let targets = find_closest_in_list(p_count.0 as u8, p_pos.0, &enemy_vec);
             let ts = targets
                 .iter()
                 .filter_map(|record| {

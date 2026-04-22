@@ -4,18 +4,28 @@ use crate::{
         animation::AnimationConfig,
         map::{ChunkOf, MapBackground, MapChunk},
     },
-    shared::{game_kinds::CurrentGameKind, lobby::PlayerInLobby, players::*, states::AppState},
+    shared::{
+        game_kinds::CurrentGameKind,
+        interactables::{
+            BeerShrine, BeerShrineChargeRadius, beer_shrine_collider,
+            beer_shrine_collider_detection_range,
+        },
+        lobby::PlayerInLobby,
+        players::*,
+        states::AppState,
+    },
     utils::SpawnPattern,
 };
+use avian2d::prelude::{Position, Sensor};
 use bevy::prelude::*;
 use bluenoise::BlueNoise;
 use lightyear::prelude::*;
 use rand::rngs::{SmallRng, ThreadRng};
 
-pub const THE_GREENS_NUM_TILES: (u32, u32) = (100, 100);
+pub const THE_GREENS_NUM_TILES: (u32, u32) = (48, 48);
 pub const THE_GREENS_TILE_SIZE: (f32, f32) = (128.0, 128.0);
-pub const THE_GREENS_MIN_WIDTH_BETWEEN_INTERACTABLES: f32 = 50.0;
-
+pub const THE_GREENS_MIN_WIDTH_BETWEEN_INTERACTABLES: f32 = 500.0;
+pub const THE_GREENS_NUM_INTERACTIVE_ELEMENTS: usize = 30;
 pub fn spawn_characters_the_greens(
     mut commands: Commands,
     game_kinds: Res<CurrentGameKind>,
@@ -46,31 +56,47 @@ pub fn spawn_interactables_the_greens(
         total_size_y,
         THE_GREENS_MIN_WIDTH_BETWEEN_INTERACTABLES,
     );
-    let noise = noise.with_samples(500).with_seed(10);
+    let noise = noise
+        .with_samples(THE_GREENS_NUM_INTERACTIVE_ELEMENTS as u32)
+        .with_seed(10);
     let handle: Handle<Image> = asset.load("shrines/beer_shrine-Sheet.png");
 
     let layout = TextureAtlasLayout::from_grid(UVec2::splat(96), 1, 8, None, None);
     let tex_atlas = layouts.add(layout);
     let animation = AnimationConfig::new(0, 7, 8);
 
-    for point in noise.take(500) {
-        commands.spawn((
-            Sprite {
-                image: handle.clone(),
-                texture_atlas: Some(TextureAtlas {
-                    layout: tex_atlas.clone(),
-                    index: 0,
-                }),
-                ..default()
-            },
-            animation.clone(),
-            Transform::from_translation(Vec3::new(
-                point.x - (total_size_x / 2.0),
-                point.y - (total_size_x / 2.0),
-                point.y - (total_size_x / 2.0),
-            )),
-            RenderYtoZ::default(),
-        ));
+    info!("Spawning Points!");
+    for point in noise.take(THE_GREENS_NUM_INTERACTIVE_ELEMENTS) {
+        let position = Vec2::new(
+            point.x - (total_size_x / 2.0),
+            point.y - (total_size_y / 2.0),
+        );
+        commands
+            .spawn((
+                BeerShrine {
+                    max_charge: 10.0,
+                    current_charge: 10.0,
+                    charge_rate_secs: 0.75,
+                },
+                Position(position),
+                beer_shrine_collider(),
+                Sprite {
+                    image: handle.clone(),
+                    texture_atlas: Some(TextureAtlas {
+                        layout: tex_atlas.clone(),
+                        index: 0,
+                    }),
+                    ..default()
+                },
+                animation.clone(),
+                Transform::from_translation(position.extend(point.y - (total_size_y / 2.0))),
+                RenderYtoZ::default(),
+            ))
+            .with_child((
+                BeerShrineChargeRadius,
+                beer_shrine_collider_detection_range(),
+                Sensor,
+            ));
     }
 }
 

@@ -105,6 +105,8 @@ pub enum ColliderTypes {
     //Can be picked up by pickup radius
     RemotePickup,
     PlayerRevive,
+    /// You shall not pass
+    SolidObject,
 }
 
 /// Now, let's see how viable this feels

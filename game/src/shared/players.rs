@@ -45,6 +45,7 @@ impl From<Player> for CommonColliderBundle {
                 ColliderTypes::Enemy,
                 ColliderTypes::StaticPickup,
                 ColliderTypes::RemotePickup,
+                ColliderTypes::SolidObject,
             ]
             .into(),
         )

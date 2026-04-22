@@ -19,6 +19,7 @@ pub mod game_kinds;
 pub mod game_object_spawning;
 pub mod game_rules;
 pub mod inputs;
+pub mod interactables;
 pub mod loading;
 pub mod lobby;
 pub mod maps;
@@ -51,6 +52,7 @@ use weapons::{SharedWeaponPlugin, WeaponProtocolPlugin};
 use crate::utils::zoo::ZooLevelPlugin;
 use crate::{
     shared::{
+        interactables::SharedInteractablesPlugin,
         pickups::{PickupsProtocolPlugin, SharedPickupsPlugin},
         players::{Player, PlayerProtocolPlugin},
     },
@@ -87,6 +89,7 @@ impl Plugin for GameSharedPlugin {
             SharedPickupsPlugin,
             SharedStatesPlugin,
             SharedGameRulesPlugin,
+            SharedInteractablesPlugin,
             SharedStatsPlugin,
             SharedLoadingPlugin,
             SharedWeaponPlugin,

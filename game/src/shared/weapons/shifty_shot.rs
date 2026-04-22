@@ -61,7 +61,7 @@ pub fn shifty_shot_activate<QF: QueryFilter>(
     if let Ok((parent, speed, damage, bounces, range)) = q_weapon.get(trigger.entity) {
         let player_pos = q_parent.get(parent.0).unwrap();
         let enemy_vec = q_enemies.iter().collect::<Vec<(Entity, &Position)>>();
-        let closest_enemy = find_closest_enemy_targets_to_position(1, player_pos.0, &enemy_vec);
+        let closest_enemy = find_closest_in_list(1, player_pos.0, &enemy_vec);
         if let Some(e) = closest_enemy.first() {
             if e.1 > range.0 {
             } else {
@@ -146,7 +146,7 @@ pub fn update_shifty_shot_attack<QF: QueryFilter>(
         if should_retarget {
             let enemy_vec = q_enemies.iter().collect::<Vec<(Entity, &Position)>>();
             // Find a few different options potentially in the area for variety
-            let closest_2 = find_closest_enemy_targets_to_position(5, pos.0, &enemy_vec);
+            let closest_2 = find_closest_in_list(5, pos.0, &enemy_vec);
             let mut filtered_list = closest_2
                 .into_iter()
                 .filter(|record| (record.0 != attack_data.target) && (record.1 <= range.0))
