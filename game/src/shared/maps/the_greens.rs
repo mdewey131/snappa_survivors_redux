@@ -61,9 +61,8 @@ pub fn spawn_interactables_the_greens(
         .with_seed(10);
     let handle: Handle<Image> = asset.load("shrines/beer_shrine-Sheet.png");
 
-    let layout = TextureAtlasLayout::from_grid(UVec2::splat(96), 1, 8, None, None);
+    let layout = TextureAtlasLayout::from_grid(UVec2::splat(96), 8, 1, None, None);
     let tex_atlas = layouts.add(layout);
-    let animation = AnimationConfig::new(0, 7, 8);
 
     info!("Spawning Points!");
     for point in noise.take(THE_GREENS_NUM_INTERACTIVE_ELEMENTS) {
@@ -88,7 +87,6 @@ pub fn spawn_interactables_the_greens(
                     }),
                     ..default()
                 },
-                animation.clone(),
                 Transform::from_translation(position.extend(point.y - (total_size_y / 2.0))),
                 RenderYtoZ::default(),
             ))

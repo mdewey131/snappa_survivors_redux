@@ -10,82 +10,141 @@ use rand::{
 use strum::IntoEnumIterator;
 
 /// Contains its own rng thread so that we can somewhat control the distribution for testing
+///
+/// Manages the queue for upgrades to be applied to the lobby, in the event that multiple level ups / shrine rewards
+/// happen on the same frame
 #[derive(Resource)]
 pub struct UpgradeManager {
     /// Recommended by the rng book for non-crypto purposes
     rng: SmallRng,
     seed: [u8; 32],
     pub table: UpgradeTable,
+    pub queue: Option<Vec<HashMap<Entity, UpgradeOptions>>>,
 }
 
 impl UpgradeManager {
-    pub fn generate_upgrade_options(&mut self, c_upgrades: &PlayerUpgradeSlots) -> UpgradeOptions {
-        // Gather the set of currently taken upgrades in each case
-        let c_weapons_iter = c_upgrades.weapons.keys();
-        let weapons_len_check = c_weapons_iter.len() < c_upgrades.weapon_limit;
-        let mut available_upgrades = c_weapons_iter
-            .map(|w| UpgradeKind::UpgradeWeapon(*w))
-            .collect::<Vec<UpgradeKind>>();
-        if weapons_len_check {
-            // We can add any other weapon but the ones we already have
-            let mut rem_weapons = WeaponKind::iter()
-                .filter_map(|w| {
-                    if c_upgrades.weapons.get(&w).is_some() {
-                        None
-                    } else {
-                        Some(UpgradeKind::AddWeapon(w))
-                    }
-                })
+    pub fn add_level_up_options_to_queue(
+        &mut self,
+        players: Vec<(Entity, &PlayerUpgradeSlots)>,
+    ) -> Result<(), String> {
+        let mut upgrade_set = HashMap::new();
+        for (ent, c_upgrades) in players.iter() {
+            // Gather the set of currently taken upgrades in each case
+            let c_weapons_iter = c_upgrades.weapons.keys();
+            let weapons_len_check = c_weapons_iter.len() < c_upgrades.weapon_limit;
+            let mut available_upgrades = c_weapons_iter
+                .map(|w| UpgradeKind::UpgradeWeapon(*w))
                 .collect::<Vec<UpgradeKind>>();
-
-            available_upgrades.append(&mut rem_weapons);
-        }
-        // Do the same for stats
-        let c_stats_iter = c_upgrades.stats.keys();
-        let mut stats_upgrades = if c_stats_iter.len() == c_upgrades.stats_limit {
-            c_stats_iter
-                .map(|stat_upgrade| UpgradeKind::UpgradePlayerStat(*stat_upgrade))
-                .collect::<Vec<UpgradeKind>>()
-        } else {
-            StatUpgradeKind::iter()
-                .map(|stat_upgrade| UpgradeKind::UpgradePlayerStat(stat_upgrade))
-                .collect::<Vec<UpgradeKind>>()
-        };
-        available_upgrades.append(&mut stats_upgrades);
-
-        // Pick randomly from these upgrades
-        let upgrades: Vec<_> = available_upgrades
-            .into_iter()
-            .choose_multiple(&mut self.rng, 3)
-            .into_iter()
-            .collect();
-
-        // Let's roll
-        let options = upgrades
-            .into_iter()
-            .map(|uk| {
-                let rarity: UpgradeRarity = rand::random();
-
-                let level = match uk {
-                    UpgradeKind::AddWeapon(_w) => 1,
-                    UpgradeKind::UpgradeWeapon(w) => c_upgrades.weapons.get(&w).unwrap() + 1,
-                    UpgradeKind::UpgradePlayerStat(upgrade_stat) => {
-                        if let Some(v) = c_upgrades.stats.get(&upgrade_stat) {
-                            v + 1
+            if weapons_len_check {
+                // We can add any other weapon but the ones we already have
+                let mut rem_weapons = WeaponKind::iter()
+                    .filter_map(|w| {
+                        if c_upgrades.weapons.get(&w).is_some() {
+                            None
                         } else {
-                            1
+                            Some(UpgradeKind::AddWeapon(w))
                         }
-                    }
-                };
-                self.make_upgrade(uk, rarity, level)
-            })
-            .collect::<Vec<Upgrade>>();
+                    })
+                    .collect::<Vec<UpgradeKind>>();
 
-        let boxed_options: Box<[Upgrade; 3]> = options.into_boxed_slice().try_into().unwrap();
-        UpgradeOptions {
-            options: *boxed_options,
-            selected: None,
+                available_upgrades.append(&mut rem_weapons);
+            }
+            // Do the same for stats
+            let c_stats_iter = c_upgrades.stats.keys();
+            let mut stats_upgrades = if c_stats_iter.len() == c_upgrades.stats_limit {
+                c_stats_iter
+                    .map(|stat_upgrade| UpgradeKind::UpgradePlayerStat(*stat_upgrade))
+                    .collect::<Vec<UpgradeKind>>()
+            } else {
+                StatUpgradeKind::iter()
+                    .map(|stat_upgrade| UpgradeKind::UpgradePlayerStat(stat_upgrade))
+                    .collect::<Vec<UpgradeKind>>()
+            };
+            available_upgrades.append(&mut stats_upgrades);
+
+            // Pick randomly from these upgrades
+            let upgrades: Vec<_> = available_upgrades
+                .into_iter()
+                .choose_multiple(&mut self.rng, 3)
+                .into_iter()
+                .collect();
+
+            // Let's roll
+            let options = upgrades
+                .into_iter()
+                .map(|uk| {
+                    let rarity: UpgradeRarity = rand::random();
+
+                    let level = match uk {
+                        UpgradeKind::AddWeapon(_w) => 1,
+                        UpgradeKind::UpgradeWeapon(w) => c_upgrades.weapons.get(&w).unwrap() + 1,
+                        UpgradeKind::UpgradePlayerStat(upgrade_stat) => {
+                            if let Some(v) = c_upgrades.stats.get(&upgrade_stat) {
+                                v + 1
+                            } else {
+                                1
+                            }
+                        }
+                        _ => {
+                            unimplemented!()
+                        }
+                    };
+                    self.make_upgrade(uk, rarity, level)
+                })
+                .collect::<Vec<Upgrade>>();
+
+            let boxed_options: Box<[Upgrade; 3]> = options.into_boxed_slice().try_into().unwrap();
+            let result = UpgradeOptions {
+                options: *boxed_options,
+                selected: None,
+            };
+            upgrade_set.insert(*ent, result);
         }
+        if let Some(ref mut q) = self.queue {
+            q.insert(0, upgrade_set);
+        } else {
+            self.queue = Some(vec![upgrade_set]);
+        }
+        Ok(())
+    }
+
+    pub fn add_shrine_rewards_to_queue(&mut self, players: Vec<Entity>) -> Result<(), String> {
+        let mut upgrades = vec![
+            UpgradeKind::ShrineEffect(ShrineEffect::Stat(StatKind::Health)),
+            UpgradeKind::ShrineEffect(ShrineEffect::Stat(StatKind::MS)),
+            UpgradeKind::ShrineEffect(ShrineEffect::Stat(StatKind::CDR)),
+            UpgradeKind::ShrineEffect(ShrineEffect::Stat(StatKind::EffDuration)),
+        ];
+        let mut entries = HashMap::new();
+        for player in players.iter() {
+            let mut options = upgrades
+                .choose_multiple(&mut self.rng, 3)
+                .map(|kind| {
+                    // All shrine bonuses have the same rarity and
+                    self.make_upgrade(*kind, UpgradeRarity::Common, 1)
+                })
+                .collect::<Vec<Upgrade>>();
+
+            let (o1, o2, o3) = (
+                options.pop().unwrap(),
+                options.pop().unwrap(),
+                options.pop().unwrap(),
+            );
+            entries.insert(
+                *player,
+                UpgradeOptions {
+                    options: [o1, o2, o3],
+                    selected: None,
+                },
+            );
+        }
+
+        if let Some(ref mut q) = self.queue {
+            q.insert(0, entries);
+        } else {
+            self.queue = Some(vec![entries]);
+        }
+        Ok(())
     }
 
     pub fn make_upgrade(&mut self, kind: UpgradeKind, rarity: UpgradeRarity, level: u8) -> Upgrade {
@@ -155,6 +214,7 @@ pub fn add_upgrade_manager(mut commands: Commands) {
         rng: SmallRng::from_seed(seed),
         seed,
         table: UpgradeTable::new(),
+        queue: None,
     });
 }
 
@@ -175,7 +235,9 @@ pub enum UpgradeReward {
         value: Option<f32>,
     },
     AddWeapon(WeaponKind),
+    ShrineEffect(ShrineEffectData),
 }
+
 impl Default for UpgradeReward {
     fn default() -> Self {
         Self::StatUpgrade {

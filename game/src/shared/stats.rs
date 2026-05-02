@@ -142,11 +142,26 @@ pub struct Stat {
 
 impl Stat {
     pub fn get_current(&mut self) -> Option<f32> {
-        let modifier_total = self
+        let modifiers_result = self
             .modifiers
             .iter_mut()
-            .map(|modifier| modifier.val(self.base_value))
-            .sum::<f32>();
+            .enumerate()
+            .map(|(i, modifier)| {
+                if let Some(v) = modifier.val(self.base_value) {
+                    (None, v)
+                } else {
+                    (Some(i), 0.0)
+                }
+            })
+            .collect::<Vec<(Option<usize>, f32)>>();
+        let modifier_total = modifiers_result.iter().map(|e| e.1).sum::<f32>();
+
+        for (m_index, _) in modifiers_result.iter().rev() {
+            if let Some(i) = m_index {
+                self.modifiers.remove(*i);
+            }
+        }
+
         if let Ok(mut guard) = self.current.lock() {
             *guard = self.base_value + modifier_total;
             Some((*guard))
@@ -179,20 +194,17 @@ impl StatModifier {
             val: 0.0,
         }
     }
-    fn val(&mut self, base_stat: f32) -> f32 {
-        let stat_value = match self.from_stat.upgrade() {
-            Some(arc) => match arc.lock() {
-                Ok(mutex_guard) => *mutex_guard,
-                Err(_) => 0.0,
-            },
-            None => 0.0,
-        };
-        match self.method {
-            StatModifierMethod::FlatAdd => stat_value,
+    fn val(&mut self, base_stat: f32) -> Option<f32> {
+        let stat_value = self.from_stat.upgrade().map(|arc| match arc.lock() {
+            Ok(mutex_guard) => *mutex_guard,
+            Err(_) => 0.0,
+        });
+        stat_value.map(|sv| match self.method {
+            StatModifierMethod::FlatAdd => sv,
             StatModifierMethod::MultipliyWithBase { coefficient } => {
-                ((base_stat * stat_value * coefficient) - base_stat)
+                ((base_stat * sv * coefficient) - base_stat)
             }
-        }
+        })
     }
 }
 
@@ -200,6 +212,18 @@ impl StatModifier {
 pub enum StatModifierMethod {
     FlatAdd,
     MultipliyWithBase { coefficient: f32 },
+}
+
+/// A component that gets spawned into the world to hold a modifier to a particular entity.
+///
+/// This will add the stat modifier to the target entity on spawn, and then its up to the
+/// caller to figure out how this is supposed to expire
+#[derive(Component, Reflect, Debug)]
+pub struct TemporaryStatModifier {
+    pub target: Entity,
+    pub stat: StatKind,
+    pub method: StatModifierMethod,
+    pub amount: f32,
 }
 
 #[derive(Component, Debug, Reflect)]
@@ -267,4 +291,13 @@ impl RawStatsList {
         }
         comms.entity(ent).insert(stats_list);
     }
+}
+
+
+pub fn on_temporary_stat_modifier_spawn(
+    mut commands: Commands
+    q_modifier: Query<(Entity, &TemporaryStatModifier), Added<TemporaryStatModifier>>,
+    q_player: Query<&StatKind, With<Player>>,
+) {
+    
 }

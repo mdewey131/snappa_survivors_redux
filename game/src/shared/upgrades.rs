@@ -5,7 +5,7 @@ use crate::shared::{
     game_kinds::{CurrentGameKind, SinglePlayer, is_single_player},
     players::{CharacterKind, Player, PlayerWeapons},
     states::{AppState, InGameState},
-    stats::{RawStatsList, StatKind, StatList, xp::LevelUpMessage},
+    stats::{RawStatsList, StatKind, StatList, StatModifier, xp::LevelUpMessage},
     weapons::{Weapon, WeaponKind, add_weapon_to_character},
 };
 use bevy::{
@@ -50,11 +50,17 @@ impl Plugin for ClientUpgradePlugin {
                 )
                     .run_if(not(is_single_player)),
                 (
-                    spawn_upgrade_choices_on_level_up
-                        .pipe(client_move_to_selecting_upgrades_state_on_upgrade_generation),
+                    add_level_up_upgrades_to_queue.run_if(resource_exists::<UpgradeManager>),
                     client_1p_move_to_in_game_state_on_upgrade_selection,
                 )
                     .run_if(is_single_player),
+                (add_upgrade_options_to_player
+                    .pipe(client_move_to_selecting_upgrades_state_on_upgrade_generation))
+                .run_if(
+                    is_single_player.and(
+                        resource_exists::<UpgradeManager>.and(upgrade_manager_queue_has_entries),
+                    ),
+                ),
             )
                 .run_if(in_state(AppState::InGame)),
         );
@@ -74,17 +80,20 @@ impl Plugin for DedicatedServerUpgradePlugin {
         );
         app.add_systems(
             Update,
-            (
-                spawn_upgrade_choices_on_level_up
-                    .pipe(server_send_upgrade_message_to_client)
-                    .run_if(in_state(InGameState::InGame)),
+            ((
+                add_level_up_upgrades_to_queue
+                    .run_if(resource_exists::<UpgradeManager>.and(in_state(InGameState::InGame))),
                 (
                     server_on_receive_upgrade_selection_message,
                     server_send_start_game_message_on_all_selected.run_if(all_players_selected),
                 )
                     .run_if(in_state(InGameState::SelectingUpgrades)),
+                (add_upgrade_options_to_player.pipe(server_send_upgrade_message_to_client),)
+                    .run_if(
+                        resource_exists::<UpgradeManager>.and(upgrade_manager_queue_has_entries),
+                    ),
             )
-                .run_if(in_state(AppState::InGame)),
+                .run_if(in_state(AppState::InGame)),),
         );
     }
 }
@@ -162,11 +171,29 @@ pub enum UpgradeKind {
     AddWeapon(WeaponKind),
     UpgradeWeapon(WeaponKind),
     UpgradePlayerStat(StatUpgradeKind),
+    ShrineEffect(ShrineEffect),
 }
 impl Default for UpgradeKind {
     fn default() -> Self {
         Self::UpgradePlayerStat(StatUpgradeKind::default())
     }
+}
+
+/// The stable enum to refer to the effect from a shrine, with data contained in `ShrineEffectData`
+#[derive(Reflect, Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Hash, Eq)]
+#[reflect(Default)]
+pub enum ShrineEffect {
+    Stat(StatKind),
+}
+impl Default for ShrineEffect {
+    fn default() -> Self {
+        Self::Stat(StatKind::Health)
+    }
+}
+
+#[derive(Reflect, Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
+pub enum ShrineEffectData {
+    Stat { effect: f32, duration: f32 },
 }
 
 #[derive(
@@ -245,27 +272,47 @@ impl PlayerUpgradeSlots {
 ///
 /// This returns a result, which we mostly do to be able to pipe this into other functions that
 /// do different things depending on where we are (send message from server in MP, move to selecting state on client)
-pub fn spawn_upgrade_choices_on_level_up(
+pub fn add_level_up_upgrades_to_queue(
     mut reader: MessageReader<LevelUpMessage>,
-    mut commands: Commands,
     mut manager: ResMut<UpgradeManager>,
     q_player: Query<(Entity, &PlayerUpgradeSlots), With<Player>>,
-) -> Result<(), BevyError> {
-    if let Some(m) = reader.read().next() {
-        for (p_ent, c_upgrades) in &q_player {
-            let comp_options = manager.generate_upgrade_options(c_upgrades);
-            commands.entity(p_ent).insert(comp_options);
-        }
-        Ok(())
-    } else {
-        Err(BevyError::from("no_op"))
+) {
+    for m in reader.read() {
+        let input_data = q_player.iter().collect();
+        let _ = manager.add_level_up_options_to_queue(input_data);
     }
+}
+
+pub fn upgrade_manager_queue_has_entries(manager: Res<UpgradeManager>) -> bool {
+    manager.queue.is_some()
+}
+
+pub fn add_upgrade_options_to_player(
+    mut commands: Commands,
+    mut manager: ResMut<UpgradeManager>,
+    q_player: Query<Entity, With<Player>>,
+) -> Result<(), String> {
+    if manager.queue.is_none() {
+        return Err("queue empty".into());
+    }
+    let mut queue = manager.queue.as_mut().unwrap();
+    let mut player_options = queue
+        .pop()
+        .expect("The queue must have an entry if it exists");
+    for player in q_player.iter() {
+        let comp_options = player_options.remove(&player).unwrap();
+        commands.entity(player).insert(comp_options);
+    }
+    if queue.is_empty() {
+        manager.queue = None;
+    }
+    Ok(())
 }
 
 /// Run on the server. We expect the values of the selection upgrades to be piped
 /// in because we need to attach networking components
 pub fn server_send_upgrade_message_to_client(
-    incoming: In<Result<(), BevyError>>,
+    incoming: In<Result<(), String>>,
     mut next: ResMut<NextState<InGameState>>,
     mut q_messages: Single<&mut MessageSender<ServerMoveToUpgradesMessage>>,
 ) {
@@ -279,7 +326,7 @@ pub fn server_send_upgrade_message_to_client(
 }
 
 pub fn client_move_to_selecting_upgrades_state_on_upgrade_generation(
-    incoming: In<Result<(), BevyError>>,
+    incoming: In<Result<(), String>>,
     mut next: ResMut<NextState<InGameState>>,
 ) {
     if incoming.0.is_err() {
@@ -388,6 +435,25 @@ pub fn apply_upgrade(
                         .unwrap_or_else(|| panic!("This entity is expected to have {:?}", sk));
                     stat.base_value += value.unwrap();
                 }
+                UpgradeReward::ShrineEffect(e) => match e {
+                    ShrineEffectData::Stat { effect, duration } => {
+                        let stat_kind = match selected.kind {
+                            UpgradeKind::ShrineEffect(eff) => match eff {
+                                ShrineEffect::Stat(s) => Some(s),
+                                _ => None,
+                            },
+                            _ => None,
+                        };
+                        let mut stat =
+                            stats_list
+                                .list
+                                .get_mut(&stat_kind.unwrap())
+                                .unwrap_or_else(|| {
+                                    panic!("This entity is expected to have {:?}", stat_kind)
+                                });
+                        stat.base_value += effect;
+                    }
+                },
                 _ => todo!(),
             }
         }
@@ -396,6 +462,7 @@ pub fn apply_upgrade(
             UpgradeKind::AddWeapon(w) => slots.weapons.insert(w, selected.level),
             UpgradeKind::UpgradeWeapon(w) => slots.weapons.insert(w, selected.level),
             UpgradeKind::UpgradePlayerStat(s) => slots.stats.insert(s, selected.level),
+            UpgradeKind::ShrineEffect(_k) => None,
         };
     }
 }

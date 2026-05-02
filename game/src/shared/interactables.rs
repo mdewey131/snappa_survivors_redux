@@ -5,6 +5,7 @@ use crate::shared::{
     colliders::{ColliderTypes, CommonColliderBundle},
     players::Player,
     states::InGameState,
+    upgrades::UpgradeManager,
 };
 
 pub struct SharedInteractablesPlugin;
@@ -13,7 +14,8 @@ impl Plugin for SharedInteractablesPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             FixedUpdate,
-            charge_beer_shrine.run_if(in_state(InGameState::InGame)),
+            charge_beer_shrine
+                .run_if(resource_exists::<UpgradeManager>.and(in_state(InGameState::InGame))),
         );
     }
 }
@@ -46,7 +48,7 @@ pub struct BeerShrineChargeRadius;
 pub fn beer_shrine_collider_detection_range() -> CommonColliderBundle {
     CommonColliderBundle::new(
         RigidBody::Static,
-        Collider::circle(100.0),
+        Collider::circle(500.0),
         0.0,
         [ColliderTypes::StaticPickup].into(),
         [ColliderTypes::Player].into(),
@@ -54,6 +56,8 @@ pub fn beer_shrine_collider_detection_range() -> CommonColliderBundle {
 }
 
 pub fn charge_beer_shrine(
+    mut commands: Commands,
+    mut manager: ResMut<UpgradeManager>,
     cols: Collisions,
     game_time: Res<Time<Virtual>>,
     q_charge_radius: Query<(Entity, &ChildOf), With<BeerShrineChargeRadius>>,
@@ -75,7 +79,10 @@ pub fn charge_beer_shrine(
                 (shrine.charge_rate_secs * n_players as f32) * game_time.delta_secs();
             shrine.current_charge -= charge_to_sub;
             if shrine.current_charge < 0.0 {
-                info!("Shrine Charged!");
+                info!("Shrine Charged - Despawning Outer Collider!");
+                commands.entity(radius).despawn();
+                let players = q_players.iter().collect();
+                manager.add_shrine_ewards_to_queue(players);
             }
         } else {
             shrine.current_charge = shrine.max_charge
