@@ -15,7 +15,7 @@ pub mod xp;
 
 use components::*;
 
-use crate::utils::AssetFolder;
+use crate::{shared::states::InGameState, utils::AssetFolder};
 
 /// The result of the inevitable "rewrite into an enum"
 #[derive(
@@ -208,7 +208,7 @@ impl StatModifier {
     }
 }
 
-#[derive(Component, Reflect, Debug)]
+#[derive(Component, Reflect, Debug, Clone, Copy)]
 pub enum StatModifierMethod {
     FlatAdd,
     MultipliyWithBase { coefficient: f32 },
@@ -219,6 +219,7 @@ pub enum StatModifierMethod {
 /// This will add the stat modifier to the target entity on spawn, and then its up to the
 /// caller to figure out how this is supposed to expire
 #[derive(Component, Reflect, Debug)]
+#[require(Name = "Temp Stat Mod")]
 pub struct TemporaryStatModifier {
     pub target: Entity,
     pub stat: StatKind,
@@ -293,11 +294,29 @@ impl RawStatsList {
     }
 }
 
-
-pub fn on_temporary_stat_modifier_spawn(
-    mut commands: Commands
-    q_modifier: Query<(Entity, &TemporaryStatModifier), Added<TemporaryStatModifier>>,
-    q_player: Query<&StatKind, With<Player>>,
+pub fn apply_stat_modifier(
+    mut commands: Commands,
+    q_modifier: Query<(Entity, &TemporaryStatModifier), Without<StatList>>,
+    mut q_target: Query<&mut StatList>,
 ) {
-    
+    for (modif_ent, modif) in q_modifier {
+        let mut modifier_ent_stats = StatList::new();
+        let stat = Stat {
+            base_value: modif.amount,
+            modifiers: vec![],
+            current: Arc::new(Mutex::new(modif.amount)),
+        };
+
+        let pointer = stat.clone_current_weak();
+        modifier_ent_stats.list.insert(modif.stat, stat);
+        commands.entity(modif_ent).insert(modifier_ent_stats);
+
+        let mut target_stats = q_target
+            .get_mut(modif.target)
+            .expect("StatList of target not found!");
+        let target_stat = target_stats.list.get_mut(&modif.stat).unwrap();
+        target_stat
+            .modifiers
+            .push(StatModifier::new(pointer, modif.method))
+    }
 }

@@ -413,4 +413,31 @@
             ),
         ],
     ),
+    (
+        kind: ShrineEffect(Stat(Health)),
+        rewards: [
+            ShrineEffect(Stat(
+                effect: 1.5,
+                duration: 30.0,
+            )),
+        ],
+    ),
+    (
+        kind: ShrineEffect(Stat(CDR)),
+        rewards: [
+            ShrineEffect(Stat(
+                effect: 0.6,
+                duration: 30.0,
+            )),
+        ],
+    ),
+    (
+        kind: ShrineEffect(Stat(MS)),
+        rewards: [
+            ShrineEffect(Stat(
+                effect: 1.3,
+                duration: 60.0,
+            )),
+        ],
+    ),
 ])

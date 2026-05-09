@@ -82,7 +82,7 @@ pub fn charge_beer_shrine(
                 info!("Shrine Charged - Despawning Outer Collider!");
                 commands.entity(radius).despawn();
                 let players = q_players.iter().collect();
-                manager.add_shrine_ewards_to_queue(players);
+                manager.add_shrine_rewards_to_queue(players);
             }
         } else {
             shrine.current_charge = shrine.max_charge

@@ -2,10 +2,13 @@ use std::fmt::Display;
 
 use crate::shared::{
     GameMainChannel,
+    despawn_timer::DespawnTimer,
     game_kinds::{CurrentGameKind, SinglePlayer, is_single_player},
     players::{CharacterKind, Player, PlayerWeapons},
     states::{AppState, InGameState},
-    stats::{RawStatsList, StatKind, StatList, StatModifier, xp::LevelUpMessage},
+    stats::{
+        RawStatsList, StatKind, StatList, StatModifier, TemporaryStatModifier, xp::LevelUpMessage,
+    },
     weapons::{Weapon, WeaponKind, add_weapon_to_character},
 };
 use bevy::{
@@ -192,8 +195,17 @@ impl Default for ShrineEffect {
 }
 
 #[derive(Reflect, Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
+#[reflect(Default)]
 pub enum ShrineEffectData {
     Stat { effect: f32, duration: f32 },
+}
+impl Default for ShrineEffectData {
+    fn default() -> Self {
+        Self::Stat {
+            effect: 0.5,
+            duration: 30.0,
+        }
+    }
 }
 
 #[derive(
@@ -444,14 +456,18 @@ pub fn apply_upgrade(
                             },
                             _ => None,
                         };
-                        let mut stat =
-                            stats_list
-                                .list
-                                .get_mut(&stat_kind.unwrap())
-                                .unwrap_or_else(|| {
-                                    panic!("This entity is expected to have {:?}", stat_kind)
-                                });
-                        stat.base_value += effect;
+
+                        commands.spawn((
+                            TemporaryStatModifier {
+                                target: ent,
+                                method: super::stats::StatModifierMethod::MultipliyWithBase {
+                                    coefficient: 1.0,
+                                },
+                                stat: stat_kind.unwrap(),
+                                amount: effect,
+                            },
+                            DespawnTimer::new(duration),
+                        ));
                     }
                 },
                 _ => todo!(),

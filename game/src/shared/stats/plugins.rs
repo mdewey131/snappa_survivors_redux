@@ -1,4 +1,4 @@
-use super::{components::*, relationships::StatRelationshipsPlugin, xp::*};
+use super::{apply_stat_modifier, components::*, relationships::StatRelationshipsPlugin, xp::*};
 use crate::shared::{combat::CombatSystemSet, states::InGameState};
 use bevy::prelude::*;
 use lightyear::prelude::*;
@@ -9,6 +9,10 @@ impl Plugin for SharedStatsPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(StatComponentPlugin);
         app.add_plugins(StatRelationshipsPlugin);
+        app.add_systems(
+            Update,
+            apply_stat_modifier.run_if(in_state(InGameState::InGame)),
+        );
     }
 }
 
