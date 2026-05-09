@@ -3,3 +3,4 @@ game/Cargo.lock
 
 *.aseprite
 *.png
+*.wav*
