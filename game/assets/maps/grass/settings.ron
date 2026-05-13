@@ -1,0 +1,11 @@
+(
+    map_size_tiles: (48, 48),
+    tile_size: (128.0, 128.0),
+    num_health_spawners: 10,
+    num_beer_shrines: 50,
+    space_between_interactables: 1000.0,
+    character_spawning_center: (0.0, 0.0),
+    character_spawning_radius: 500.0,
+    audio_path: "",
+    enemy_spawner_path: "",
+)

@@ -27,6 +27,7 @@ pub mod map;
 pub mod menus;
 pub mod pickups;
 pub mod player;
+pub mod shrines;
 pub mod ui;
 pub mod upgrades;
 pub mod weapons;
@@ -37,6 +38,7 @@ use map::MapRenderPlugin;
 use menus::lobby::LobbyMenuPlugin;
 use pickups::*;
 use player::SharedPlayerRenderPlugin;
+use shrines::SharedShrinesRenderPlugin;
 use ui::SharedUIPlugin;
 use upgrades::UpgradeRenderPlugin;
 
@@ -59,6 +61,7 @@ impl Plugin for GameSharedRenderPlugin {
             SharedPlayerRenderPlugin,
             SharedEnemyRenderPlugin,
             SharedPickupsRenderPlugin,
+            SharedShrinesRenderPlugin,
             UpgradeRenderPlugin,
         ));
         #[cfg(feature = "inspector")]

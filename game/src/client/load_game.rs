@@ -20,7 +20,10 @@ impl Plugin for ClientGameLoadingPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             OnEnter(AppState::LoadingLevel),
-            add_map_loading_systems.run_if(is_single_player),
+            (
+                initialiize_map_builder,
+                add_map_loading_systems.run_if(is_single_player),
+            ),
         )
         .add_systems(
             OnEnter(LevelLoadingState::LevelLoading),
