@@ -1,5 +1,5 @@
 use crate::{
-    render::{interactables::BeerShrineRenderPlugin, menus::loading_screen::LoadingScreenPlugin},
+    render::menus::loading_screen::LoadingScreenPlugin,
     shared::{
         enemies::EnemyKind,
         game_rules::GameRules,
@@ -53,7 +53,6 @@ pub struct GameSharedRenderPlugin;
 impl Plugin for GameSharedRenderPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((
-            BeerShrineRenderPlugin,
             SharedUIPlugin,
             LobbyMenuPlugin,
             LoadingScreenPlugin,

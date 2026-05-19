@@ -5,7 +5,7 @@ use bevy::{
 };
 use bluenoise::BlueNoise;
 use lightyear::core::id::RemoteId;
-use rand::{SeedableRng, rngs::SmallRng};
+use rand::{SeedableRng, prelude::SliceRandom, rngs::SmallRng};
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "dev")]
@@ -21,6 +21,7 @@ use crate::{
             beer_shrine_collider_detection_range,
         },
         lobby::PlayerInLobby,
+        pickups::{HEALTH_PICKUP_SPAWNER_COOLDOWN, HealthPickup, HealthPickupSpawner},
         players::spawn_characters,
         states::AppState,
         stats::xp::add_xp_manager,
@@ -32,6 +33,7 @@ mod the_greens;
 use the_greens::*;
 
 const MAP_BUILDER_SEED: u64 = 0;
+const MAP_BUILDER_SMALL_RNG_SEED: [u8; 32] = [0; 32];
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct MapBuilderSettings {
@@ -49,6 +51,7 @@ pub struct MapBuilderSettings {
 #[derive(Resource)]
 pub struct MapBuilder {
     pub noise: BlueNoise<SmallRng>,
+    pub rng: SmallRng,
     pub settings: MapBuilderSettings,
 }
 
@@ -81,10 +84,10 @@ impl From<MapBuilderSettings> for MapBuilder {
 
         noise
             .with_seed(MAP_BUILDER_SEED)
-            .with_samples(total_elements_to_spawn);
-
+            .with_samples(total_elements_to_spawn * 10);
         Self {
             noise,
+            rng: SmallRng::from_seed(MAP_BUILDER_SMALL_RNG_SEED),
             settings: value,
         }
     }
@@ -250,29 +253,59 @@ pub fn spawn_characters_in_map(
 pub fn spawn_interactables_in_map(mut commands: Commands, mut builder: ResMut<MapBuilder>) {
     let total_size_x = builder.settings.map_size_tiles.0 as f32 * builder.settings.tile_size.x;
     let total_size_y = builder.settings.map_size_tiles.1 as f32 * builder.settings.tile_size.y;
-    info!("Spawning Points!");
-    let num_to_take = builder.settings.num_beer_shrines as usize;
+    let num_shrines = builder.settings.num_beer_shrines as usize;
+    let num_health_pickups = builder.settings.num_health_spawners as usize;
+    let to_spawn = num_shrines + num_health_pickups;
     let noise = &mut builder.noise;
-    let points_to_spawn = noise.take(num_to_take);
-    for point in points_to_spawn {
+    let interactables = noise
+        .into_iter()
+        .by_ref()
+        .take(to_spawn)
+        .collect::<Vec<Vec2>>();
+
+    let mut range = (0..interactables.len()).collect::<Vec<usize>>();
+    range.shuffle(&mut rand::rng());
+
+    let shrine_range = 0..num_shrines;
+    let health_pickup_range = num_shrines..(num_shrines + num_health_pickups);
+
+    for (seq_num, index) in range.iter().enumerate() {
+        let point = interactables.get(*index).expect("Should be here");
         let position = Vec2::new(
             point.x - (total_size_x / 2.0),
             point.y - (total_size_y / 2.0),
         );
-        commands
-            .spawn((
-                BeerShrine {
-                    max_charge: 10.0,
-                    current_charge: 10.0,
-                    charge_rate_secs: 0.75,
+        if shrine_range.contains(&seq_num) {
+            trace!("Spawning shrine");
+            commands
+                .spawn((
+                    BeerShrine {
+                        max_charge: 10.0,
+                        current_charge: 10.0,
+                        charge_rate_secs: 0.75,
+                    },
+                    Position(position),
+                    beer_shrine_collider(),
+                ))
+                .with_child((
+                    BeerShrineChargeRadius,
+                    beer_shrine_collider_detection_range(),
+                    Sensor,
+                ));
+        } else if health_pickup_range.contains(&seq_num) {
+            info!("Spawning health pickup");
+            let amount = 5.0;
+            let pickup = commands
+                .spawn((HealthPickup { amount }, Position(position)))
+                .id();
+            let _spawner = commands.spawn((
+                HealthPickupSpawner {
+                    pickup,
+                    hp_amount: amount,
+                    timer: Timer::from_seconds(HEALTH_PICKUP_SPAWNER_COOLDOWN, TimerMode::Once),
                 },
                 Position(position),
-                beer_shrine_collider(),
-            ))
-            .with_child((
-                BeerShrineChargeRadius,
-                beer_shrine_collider_detection_range(),
-                Sensor,
             ));
+        }
     }
 }

@@ -23,6 +23,7 @@ pub struct HealthPickup {
 }
 
 #[derive(Component)]
+#[require(Name = Name::from("Health Pickup Spawner"))]
 pub struct HealthPickupSpawner {
     pub pickup: Entity,
     pub hp_amount: f32,

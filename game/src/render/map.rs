@@ -15,7 +15,9 @@ use crate::shared::{
 #[derive(Component, Debug, Clone, Copy)]
 pub struct MapChunk;
 
+/// Requires Visibility to tamp down on a noisy warning
 #[derive(Component)]
+#[require(Visibility = Visibility::Visible)]
 pub struct MapBackground;
 
 #[derive(Component)]
