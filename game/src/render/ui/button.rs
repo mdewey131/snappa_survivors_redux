@@ -120,7 +120,7 @@ impl GameButtonStyle {
 
     /// The main function used to turn the style into a button
     pub fn add_style_components(
-        self,
+        mut self,
         to: Entity,
         commands: &mut Commands,
         assets: &Res<AssetServer>,
@@ -134,18 +134,16 @@ impl GameButtonStyle {
         if let Some(c) = self.color {
             im_node = im_node.with_color(c);
         }
+        if let Some((size, col)) = self.border {
+            self.node.border_radius = BorderRadius::all(size);
+            commands.entity(to).insert((BorderColor::all(col)));
+        }
 
         commands.entity(to).insert((im_node, self.node));
 
         // The optional things
         if let Some(text) = self.text {
             commands.entity(to).with_child(text);
-        }
-
-        if let Some((size, col)) = self.border {
-            commands
-                .entity(to)
-                .insert((BorderRadius::all(size), BorderColor::all(col)));
         }
     }
 

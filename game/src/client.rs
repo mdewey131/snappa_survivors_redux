@@ -18,7 +18,10 @@ use crate::{
     },
 };
 use bevy::prelude::*;
-use lightyear::prelude::{Client, PeerId, Predicted, ReplicationSender, Server, Timeline};
+use lightyear::prelude::{
+    Client, InputTimelineConfig, PeerId, Predicted, ReplicationSender, Server, Timeline,
+    client::InputDelayConfig,
+};
 use rand::Rng;
 
 pub mod camera;
@@ -146,11 +149,8 @@ pub fn transition_to_multi_player(
 }
 
 fn add_input_delay_on_client_add(trigger: On<Add, Client>, mut commands: Commands) {
-    use lightyear::prelude::{
-        Input,
-        client::{InputDelayConfig, InputTimeline},
-    };
-    let input = Input::default().with_input_delay(InputDelayConfig::fixed_input_delay(10));
+    let input =
+        InputTimelineConfig::default().with_input_delay(InputDelayConfig::fixed_input_delay(10));
 
     commands.entity(trigger.entity).insert((
         ReplicationSender::new(
@@ -158,10 +158,7 @@ fn add_input_delay_on_client_add(trigger: On<Add, Client>, mut commands: Command
             lightyear::prelude::SendUpdatesMode::SinceLastAck,
             false,
         ),
-        InputTimeline(Timeline {
-            context: input,
-            ..default()
-        }),
+        input,
     ));
 }
 

@@ -71,7 +71,7 @@ impl CollisionEffect for XPPickupFollowPlayer {
             if let Ok(ref mut em) = ent_mut {
                 unsafe {
                     let xp_orb = em.get_components_mut_unchecked::<&mut XPPickup>();
-                    if let Some(mut xp) = xp_orb {
+                    if let Ok(mut xp) = xp_orb {
                         xp.targeting = Some(p_ent)
                     }
                 }
