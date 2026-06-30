@@ -3,6 +3,8 @@ use lightyear::prelude::{Client, MessageSender};
 use serde::{Deserialize, Serialize};
 use strum::IntoEnumIterator;
 
+pub const BORDER_WIDTH: f32 = 20.0;
+
 use crate::{
     render::ui::button::*,
     shared::{
@@ -24,8 +26,11 @@ impl Plugin for LobbyMenuPlugin {
         app.add_systems(OnEnter(AppState::Lobby), make_lobby)
             .add_systems(
                 Update,
-                mp_propagate_client_change_character_message_to_server
-                    .run_if(in_state(AppState::Lobby).and(not(is_single_player))),
+                (
+                    mp_propagate_client_change_character_message_to_server
+                        .run_if(in_state(AppState::Lobby).and(not(is_single_player))),
+                    animate_character_button,
+                ),
             )
             .add_observer(trigger_game_change_message_callback::<Difficulty>)
             .add_observer(trigger_game_change_message_callback::<MapKind>);
@@ -84,7 +89,7 @@ pub struct LobbyCharacterSelection {
     pub buttons: HashMap<CharacterKind, Entity>,
 }
 
-#[derive(Component, Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Component, Debug, Clone, Serialize, Deserialize, Default, Reflect)]
 #[require(Node = char_sel_button(), Button = Button, Pickable = char_button_picking())]
 pub struct CharacterSelectionButton {
     pub kind: CharacterKind,
@@ -254,7 +259,9 @@ fn trigger_game_change_message_callback<F: GameRuleField>(
         commands.run_system_with(cb.0, button.0);
     }
 }
-
+/// We spawn the container for the button on either interface
+/// for the sake of getting layour correct,
+/// so actual button can be selectively spawned
 pub fn spawn_lobby_back_button(
     trigger: On<Add, ContainerLobbyBackButton>,
     mut commands: Commands,
@@ -307,5 +314,35 @@ fn mp_propagate_client_change_character_message_to_server(
 ) {
     for e in reader.read() {
         q_client.send::<GameMainChannel>(*e);
+    }
+}
+
+/// This to be reworked extensively, later
+fn animate_character_button(
+    mut gizmos: Gizmos,
+    mut q_button: Query<(&UiGlobalTransform, &mut CharacterSelectionButton)>,
+    q_player: Query<&PlayerInLobby, Or<(With<SinglePlayer>, With<Client>)>>,
+) {
+    for (pos, mut button) in &mut q_button {
+        let mut to_rm = Vec::new();
+        for (i, ent) in button.selected_by.iter().enumerate() {
+            let color = if let Ok(player) = q_player.get(*ent) {
+                player.color
+            } else {
+                info!("Found an invalid selection");
+                to_rm.push(i);
+                continue;
+            };
+
+            gizmos.rect_2d(
+                pos.translation,
+                Vec2::splat((BORDER_WIDTH * (i + 1) as f32)),
+                color,
+            );
+        }
+        to_rm.reverse();
+        for i in to_rm {
+            button.selected_by.remove(i);
+        }
     }
 }
