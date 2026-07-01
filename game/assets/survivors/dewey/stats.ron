@@ -25,7 +25,7 @@
     ),
     (
         kind: Health,
-        val: 50.0,
+        val: 40.0,
     ),
     (
         kind: HealthRegen,
@@ -66,6 +66,10 @@
     (
         kind: ProjSpeed,
         val: 1.0,
+    ),
+    (
+        kind: Revive,
+        val: 2.0,
     ),
     (
         kind: Shield,

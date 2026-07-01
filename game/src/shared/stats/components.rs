@@ -19,9 +19,10 @@ use serde::{Deserialize, Serialize, de::DeserializeOwned};
 ///
 /// It is the responsibility of this component to check up on the value of statlist
 /// every frame. Doing it this way means that we're not required to carry a mutable reference
-/// to the whole stats list anytime we want to access a particular stat. These are read-only
-/// values
+/// to the whole stats list anytime we want to read a particular stat.
+/// TODO: Rework the internals of this, its weird
 pub trait StatComponent: Component + Sized + Clone + Copy {
+    /// TODO: Implement this as Into<StatKind> on the trait boundary, make a proc(?) macro for it
     fn stat_kind(&self) -> StatKind;
 
     /// Returns option if there is an update (i.e., if this number is different from the current value)
@@ -66,6 +67,7 @@ impl StatComponent for Health {
     fn stat_kind(&self) -> StatKind {
         StatKind::Health
     }
+    /// StatList only has information on max health, so we have to adjust current to fit the new max
     fn update_self_from_current_stat_value(&self, val: f32) -> Option<Self> {
         if self.max == val {
             None
@@ -270,9 +272,23 @@ impl StatComponent for PickupRadius {
 #[derive(Component, Debug, Clone, Copy, Deserialize, Serialize, Default, Reflect, PartialEq)]
 #[reflect(Default)]
 pub struct ProjectileBounces(pub f32);
+
 impl StatComponent for ProjectileBounces {
     fn stat_kind(&self) -> StatKind {
         StatKind::ProjBounces
+    }
+    fn update_self_from_current_stat_value(&self, val: f32) -> Option<Self> {
+        if self.0 != val { Some(Self(val)) } else { None }
+    }
+}
+
+#[derive(Component, Debug, Clone, Copy, Deserialize, Serialize, Default, Reflect, PartialEq)]
+#[reflect(Default)]
+pub struct Revive(pub f32);
+
+impl StatComponent for Revive {
+    fn stat_kind(&self) -> StatKind {
+        StatKind::Revive
     }
     fn update_self_from_current_stat_value(&self, val: f32) -> Option<Self> {
         if self.0 != val { Some(Self(val)) } else { None }

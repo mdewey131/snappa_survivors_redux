@@ -6,9 +6,10 @@ use lightyear::prelude::{Controlled, Predicted, Replicate};
 use crate::{
     render::player::rendering_on_player_add,
     shared::{
+        SINGLE_PLAYER_SERVER_PORT,
         colliders::CommonColliderBundle,
         combat::CombatSystemSet,
-        game_kinds::{DefaultClientFilter, SinglePlayer},
+        game_kinds::{DefaultClientFilter, SinglePlayer, is_single_player},
         inputs::Movement,
         players::*,
         states::InGameState,
@@ -22,11 +23,14 @@ impl Plugin for ClientPlayerPlugin {
         app.add_systems(
             FixedUpdate,
             (
-                player_movement::<DefaultClientFilter>,
-                update_player_facing_direction::<DefaultClientFilter>,
-            )
-                .in_set(CombatSystemSet::Combat)
-                .run_if(in_state(InGameState::InGame)),
+                (
+                    player_movement::<DefaultClientFilter>,
+                    update_player_facing_direction::<DefaultClientFilter>,
+                )
+                    .in_set(CombatSystemSet::Combat)
+                    .run_if(in_state(InGameState::InGame)),
+                on_player_death.run_if(is_single_player),
+            ),
         )
         .add_observer(add_non_networked_player_components::<DefaultClientFilter>);
     }

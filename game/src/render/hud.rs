@@ -242,7 +242,7 @@ pub struct HealthBar {
 fn health_bar_holder_node() -> Node {
     Node {
         width: Val::Percent(100.0),
-        height: Val::Percent(30.0),
+        height: Val::Percent(10.0),
         justify_content: JustifyContent::Center,
         align_items: AlignItems::Center,
         grid_column: GridPlacement::start_end(8, 13),
@@ -354,6 +354,7 @@ impl StatDisplayIcon {
             StatKind::ProjBounces => Some("projectile_bounces"),
             StatKind::ProjCount => Some("projectile_count"),
             StatKind::ProjSpeed => Some("projectile_speed"),
+            StatKind::Revive => None,
             StatKind::Shield => Some("shield"),
             StatKind::Thorns => Some("thorns"),
             StatKind::XPGain => Some("xp_gain"),
@@ -460,7 +461,8 @@ fn spawn_hud_container(mut commands: Commands, assets: Res<AssetServer>) {
 }
 
 fn update_health_bar(
-    mut q_bar: Single<&mut Node, With<HealthBarForeground>>,
+    mut q_fore: Single<&mut Node, (With<HealthBarForeground>, Without<HealthBarBackground>)>,
+    mut q_back: Single<&mut Node, With<HealthBarBackground>>,
     q_player: Query<
         &Health,
         (
@@ -471,8 +473,17 @@ fn update_health_bar(
     >,
 ) {
     for hp in &q_player {
-        let pct = hp.current / hp.max();
-        q_bar.width = Val::Percent(pct * 100.0)
+        let m_hp = hp.max();
+        let width_modifier = if m_hp <= 25.0 {
+            0.0
+        } else {
+            (0.25 * m_hp).clamp(0.0, 50.0)
+        };
+        let back_width = 50.0 + width_modifier;
+        q_back.width = Val::Percent(back_width);
+        // pct still multiplies by 100 because foreground is a child of background
+        let pct = hp.current / m_hp;
+        q_fore.width = Val::Percent(pct * 100.0);
     }
 }
 

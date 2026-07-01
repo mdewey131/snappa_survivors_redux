@@ -1,14 +1,14 @@
 use crate::shared::{
     colliders::*,
     combat::CombatSystemSet,
-    states::InGameState,
+    states::{AppState, InGameState},
     stats::{
         components::{Health, XPGain},
         xp::XPManager,
     },
 };
 use avian2d::prelude::*;
-use bevy::{ecs::entity::MapEntities, prelude::*};
+use bevy::{audio::PlaybackMode::Despawn, ecs::entity::MapEntities, prelude::*};
 use lightyear::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -18,12 +18,16 @@ pub const XP_PICKUP_BASE_MOVE_SPEED: f32 = 5000.0;
 pub const XP_PICKUP_CURVE_TIME_TO_ZERO: f32 = 0.25;
 
 #[derive(Component, Serialize, Deserialize, PartialEq, Clone, Copy, Debug)]
+#[require(DespawnOnEnter<AppState> = DespawnOnEnter(AppState::GameOver))]
 pub struct HealthPickup {
     pub amount: f32,
 }
 
 #[derive(Component)]
-#[require(Name = Name::from("Health Pickup Spawner"))]
+#[require(
+    Name = Name::from("Health Pickup Spawner"),
+    DespawnOnEnter<AppState> = DespawnOnEnter(AppState::GameOver)
+)]
 pub struct HealthPickupSpawner {
     pub pickup: Entity,
     pub hp_amount: f32,

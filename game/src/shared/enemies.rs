@@ -121,13 +121,13 @@ pub fn enemy_state_machine<EnemyQF: QueryFilter, PlayerQF: QueryFilter>(
             &Position,
             &mut LinearVelocity,
             Option<&mut EnemySpawnTimer>,
-            Has<Collider>,
+            Has<RigidBodyDisabled>,
         ),
         (EnemyQF),
     >,
     q_targets: Query<(Entity, &Position), (With<Player>, Without<Enemy>, PlayerQF)>,
 ) {
-    for (ent, mut enemy, e_pos, mut e_lv, mut m_timer, has_col) in &mut q_enemy {
+    for (ent, mut enemy, e_pos, mut e_lv, mut m_timer, body_disabled) in &mut q_enemy {
         match enemy.state {
             EnemyState::Spawning => {
                 let timer = if m_timer.is_none() {
@@ -165,11 +165,10 @@ pub fn enemy_state_machine<EnemyQF: QueryFilter, PlayerQF: QueryFilter>(
             }
             EnemyState::Dying => {
                 // Proxy for "we haven't run this before"
-                if has_col {
+                if !body_disabled {
                     commands
                         .entity(ent)
-                        .remove::<Collider>()
-                        .insert(DeathTimer::new(0.5));
+                        .insert((RigidBodyDisabled, DeathTimer::new(0.5)));
                     e_lv.0 = Vec2::ZERO;
                 }
             }
@@ -205,7 +204,6 @@ pub fn on_enemy_death(
         let xp_amt = match enemy.kind {
             EnemyKind::FacelessMan => 1.0,
         };
-
         enemy.state = EnemyState::Dying;
 
         commands.queue(SpawnGameObject::new(

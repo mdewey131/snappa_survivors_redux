@@ -4,7 +4,7 @@ use bevy::{ecs::relationship::Relationship, prelude::*};
 use crate::shared::{
     colliders::{ColliderTypes, CommonColliderBundle},
     players::Player,
-    states::InGameState,
+    states::{AppState, InGameState},
     upgrades::UpgradeManager,
 };
 
@@ -27,7 +27,7 @@ impl Plugin for SharedInteractablesPlugin {
 pub struct Interactable;
 
 #[derive(Component)]
-#[require(Interactable)]
+#[require(Interactable, DespawnOnEnter<AppState> = DespawnOnEnter(AppState::GameOver))]
 pub struct BeerShrine {
     pub max_charge: f32,
     pub current_charge: f32,

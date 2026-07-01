@@ -2,7 +2,11 @@ use bevy::{ecs::entity::MapEntities, prelude::*};
 use lightyear::prelude::{AppComponentExt, PredictionRegistrationExt};
 use serde::{Deserialize, Serialize};
 
-use crate::shared::{combat::CombatSystemSet, stats::components::Health};
+use crate::shared::{
+    combat::{CombatEntityActive, CombatSystemSet, EntityIncapacitated},
+    players::Reviving,
+    stats::components::Health,
+};
 
 #[derive(
     Component, Debug, Clone, Reflect, Deref, DerefMut, Default, PartialEq, Serialize, Deserialize,
@@ -73,7 +77,7 @@ pub struct EntityKilledMessage {
 fn apply_frame_damage(
     mut events: MessageWriter<EntityKilledMessage>,
     //mut damage_events: MessageWriter<AppliedDamageLogMessage>,
-    mut q_health: Query<(Entity, &DamageBuffer, &mut Health), Without<Dead>>,
+    mut q_health: Query<(Entity, &DamageBuffer, &mut Health), CombatEntityActive>,
 ) {
     for (ent, buff, mut health) in &mut q_health {
         let mut health_to_set = health.current;
@@ -112,17 +116,9 @@ fn clear_damage_buffer(mut q_buffer: Query<&mut DamageBuffer>) {
     }
 }
 
-/// This uses q_check because if you try to insert this on a predicted component and the confirmed entity is dead on the same frame,
-/// then you will end up adding the same component twice in a frame
-fn apply_dead_component(
-    mut commands: Commands,
-    mut events: MessageReader<EntityKilledMessage>,
-    //q_check: Query<(), Or<(With<Interpolated>, With<Predicted>)>>,
-) {
+fn apply_dead_component(mut commands: Commands, mut events: MessageReader<EntityKilledMessage>) {
     for e in events.read() {
-        /*if q_check.get(e.dead_entity).is_err()  { */
         commands.entity(e.dead_entity).insert(Dead);
-        //}
     }
 }
 

@@ -40,6 +40,7 @@ pub enum StatKind {
     ProjBounces,
     ProjCount,
     ProjSpeed,
+    Revive,
     Shield,
     Thorns,
     XPGain,
@@ -105,6 +106,9 @@ impl StatKind {
             StatKind::ProjSpeed => {
                 ec.insert(ProjectileSpeed(input));
             }
+            StatKind::Revive => {
+                ec.insert(Revive(input));
+            }
             StatKind::Shield => {
                 ec.insert(Shield(input));
             }
@@ -124,10 +128,8 @@ impl StatKind {
 /// when we're constantly in need of a mutable reference to self in order to get
 /// the current value.
 ///
-/// A potential solution to this problem is making a set of StatComponents
-/// that are responsible for reading from the mutex at the end of every frame,
-/// and can therefore be kept around as read-only copies of the stats that an
-/// entity possesses
+/// In order to keep the overhead low, we're only updating stats once per frame,
+/// using the components created via `StatKind::to_component()`
 #[derive(Component, Reflect, Debug)]
 #[reflect(Component)]
 pub struct Stat {
@@ -239,7 +241,7 @@ impl StatList {
             list: HashMap::new(),
         }
     }
-    fn get_current(&mut self, stat_kind: &StatKind) -> Option<f32> {
+    pub fn get_current(&mut self, stat_kind: &StatKind) -> Option<f32> {
         let stat = self.list.get_mut(stat_kind);
         if let Some(s) = stat {
             if let Some(v) = s.get_current() {
@@ -250,6 +252,9 @@ impl StatList {
         } else {
             return None;
         }
+    }
+    pub fn remove(&mut self, stat_kind: &StatKind) -> Option<Stat> {
+        self.list.remove(stat_kind)
     }
 }
 

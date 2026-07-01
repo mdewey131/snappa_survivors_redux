@@ -319,26 +319,20 @@ fn mp_propagate_client_change_character_message_to_server(
 
 /// This to be reworked extensively, later
 fn animate_character_button(
-    mut gizmos: Gizmos,
-    mut q_button: Query<(&UiGlobalTransform, &mut CharacterSelectionButton)>,
+    mut q_button: Query<(Entity, &mut BackgroundColor, &mut CharacterSelectionButton)>,
     q_player: Query<&PlayerInLobby, Or<(With<SinglePlayer>, With<Client>)>>,
 ) {
-    for (pos, mut button) in &mut q_button {
+    for (b_ent, mut b_color, mut button) in &mut q_button {
         let mut to_rm = Vec::new();
-        for (i, ent) in button.selected_by.iter().enumerate() {
-            let color = if let Ok(player) = q_player.get(*ent) {
+        for (i, p_ent) in button.selected_by.iter().enumerate() {
+            let color = if let Ok(player) = q_player.get(*p_ent) {
                 player.color
             } else {
-                info!("Found an invalid selection");
+                info!("Found invalid player {} selecting button {}", p_ent, b_ent);
                 to_rm.push(i);
                 continue;
             };
-
-            gizmos.rect_2d(
-                pos.translation,
-                Vec2::splat((BORDER_WIDTH * (i + 1) as f32)),
-                color,
-            );
+            b_color.0 = color;
         }
         to_rm.reverse();
         for i in to_rm {

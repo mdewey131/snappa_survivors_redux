@@ -1,7 +1,11 @@
 use avian2d::prelude::{Physics, PhysicsTime};
 use bevy::{prelude::*, time::Stopwatch, ui::FixedMeasure};
 
-use crate::shared::combat::CombatSystemSet;
+use crate::shared::{
+    combat::{CombatEntityActive, CombatSystemSet},
+    damage::Dead,
+    players::Player,
+};
 
 /// Handles all of the logic that is relevant to the game loop.
 #[derive(States, Component, Clone, PartialEq, Eq, Hash, Debug, Default, Copy)]
@@ -27,7 +31,46 @@ pub enum AppState {
     Lobby,
     LoadingLevel,
     InGame,
+    GameOver,
     PostGame,
+}
+
+/// This checks to see if all players are dead and, if so, begins a small timer to pause the game and move to game over.
+/// Its done this way just to make really sure that players are actually dead
+#[derive(Resource, Default)]
+pub struct GameOverTimer {
+    pub timer: Option<Timer>,
+}
+impl GameOverTimer {
+    pub fn start_timer(&mut self) {
+        self.timer = Some(Timer::from_seconds(0.3, TimerMode::Once))
+    }
+}
+
+pub fn add_game_over_timer(mut commands: Commands) {
+    commands.insert_resource(GameOverTimer::default());
+}
+
+pub fn check_game_over(
+    // Not virtual time because we don't want you pausing to delay the inevitable here. Just get it over with
+    time: Res<Time>,
+    mut app_state: ResMut<NextState<AppState>>,
+    mut game_state: ResMut<NextState<InGameState>>,
+    mut res: ResMut<GameOverTimer>,
+    q_players: Query<(), (With<Player>, Without<Dead>)>,
+) {
+    if (q_players.is_empty() && res.timer.is_none()) {
+        res.start_timer();
+    } else if q_players.is_empty() {
+        let mut timer = res.timer.as_mut().unwrap();
+        timer.tick(time.delta());
+        if timer.is_finished() {
+            app_state.set(AppState::GameOver);
+            game_state.set(InGameState::OutOfGame);
+        }
+    } else if !q_players.is_empty() && res.timer.is_some() {
+        res.timer = None;
+    }
 }
 
 #[derive(Resource, Default, Deref, DerefMut)]

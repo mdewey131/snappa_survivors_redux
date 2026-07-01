@@ -1,5 +1,5 @@
 use crate::shared::{
-    combat::{CombatSystemSet, Cooldown},
+    combat::{CombatEntityActive, CombatSystemSet, Cooldown},
     damage::{DamageBuffer, DamageInstance, Dead},
     enemies::Enemy,
     game_kinds::{CurrentGameKind, MultiPlayerComponentOptions},
@@ -89,7 +89,7 @@ pub fn on_activate<QF: QueryFilter>(
         QF,
     >,
     q_player: Query<&Position, Without<Enemy>>,
-    q_enemy: Query<(Entity, &Position), (With<Enemy>, Without<Dead>)>,
+    q_enemy: Query<(Entity, &Position), (With<Enemy>, CombatEntityActive)>,
 ) {
     if let Ok((child, mut throw, p_count, damage, range)) = q_weapon.get_mut(trigger.entity) {
         let p_pos = q_player.get(child.0).expect("This player should exist");

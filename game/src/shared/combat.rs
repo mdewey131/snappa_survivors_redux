@@ -7,7 +7,14 @@ use bevy_enhanced_input::{
 use lightyear::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::shared::{inputs::Movement, players::Player};
+pub type EntityIncapacitated = Or<(With<Dead>, With<Reviving>)>;
+pub type CombatEntityActive = (Without<Dead>, Without<Reviving>);
+
+use crate::shared::{
+    damage::Dead,
+    inputs::Movement,
+    players::{Player, Reviving},
+};
 #[derive(SystemSet, Hash, Eq, PartialEq, Debug, Clone, Copy, Default)]
 pub enum CombatSystemSet {
     /// Used for anything that should make itself known to combat beforehand (e.g. spawning bullets, leveling))

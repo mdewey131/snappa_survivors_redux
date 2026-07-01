@@ -86,12 +86,6 @@ impl CommonColliderBundle {
 /// Each collider that an entity takes will be a child
 /// each of those children will have specified collider sizes
 /// and individual filters
-///
-/// Becuase this has to be a "flat" enum, and because
-/// the single player mode exists, this has to make a
-/// distinction between predicted and replicated
-/// types in each level. I hate it, but I don't know
-/// what else to do about it
 #[derive(PhysicsLayer, Default, Clone, Copy, Debug)]
 pub enum ColliderTypes {
     #[default]
@@ -109,7 +103,6 @@ pub enum ColliderTypes {
     SolidObject,
 }
 
-/// Now, let's see how viable this feels
 #[derive(Component, Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Reflect)]
 pub struct ApplyDamage;
 

@@ -2,7 +2,10 @@ use bevy::prelude::*;
 use lightyear::{connection::client::ClientState, prelude::Client};
 
 use super::GameClient;
-use crate::shared::states::AppState;
+use crate::shared::{
+    game_kinds::is_single_player,
+    states::{AppState, InGameState, add_game_over_timer, check_game_over},
+};
 pub struct ClientStatesPlugin;
 impl Plugin for ClientStatesPlugin {
     fn build(&self, app: &mut App) {
@@ -14,6 +17,16 @@ impl Plugin for ClientStatesPlugin {
             Update,
             transition_to_lobby
                 .run_if(in_state(AppState::EstablishServerConnection).and(client_connected)),
+        );
+        app.add_systems(
+            OnEnter(InGameState::InGame),
+            add_game_over_timer.run_if(is_single_player),
+        );
+        app.add_systems(
+            Update,
+            check_game_over
+                .run_if(is_single_player)
+                .run_if(not(in_state(InGameState::OutOfGame))),
         );
     }
 }

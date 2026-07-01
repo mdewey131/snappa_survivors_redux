@@ -2,6 +2,7 @@ use crate::{
     render::RenderYtoZ,
     shared::{
         colliders::CollisionEffect,
+        combat::CombatEntityActive,
         damage::{DamageBuffer, DamageInstance, Dead},
         despawn_timer::DespawnTimer,
         game_object_spawning::SpawnGameObject,
@@ -56,7 +57,7 @@ pub fn shifty_shot_activate<QF: QueryFilter>(
         (QF, With<WeaponShiftyShot>),
     >,
     q_parent: Query<&Position, Without<Enemy>>,
-    q_enemies: Query<(Entity, &Position), (With<Enemy>, Without<Dead>)>,
+    q_enemies: Query<(Entity, &Position), (With<Enemy>, CombatEntityActive)>,
 ) {
     if let Ok((parent, speed, damage, bounces, range)) = q_weapon.get(trigger.entity) {
         let player_pos = q_parent.get(parent.0).unwrap();
@@ -112,7 +113,7 @@ pub fn update_shifty_shot_attack<QF: QueryFilter>(
         ),
         (QF, Without<Enemy>),
     >,
-    q_enemies: Query<(Entity, &Position), (With<Enemy>, Without<Dead>)>,
+    q_enemies: Query<(Entity, &Position), (With<Enemy>, CombatEntityActive)>,
     mut q_enemy_damage: Query<&mut DamageBuffer, With<Enemy>>,
 ) {
     for (attack_ent, mut velo, pos, mut attack_data, dam, range, p_speed) in &mut q_attack {

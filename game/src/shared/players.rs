@@ -3,18 +3,25 @@ use std::path::{Path, PathBuf};
 use crate::{
     shared::{
         colliders::{ColliderTypes, CommonColliderBundle, RecentlyCollided},
-        combat::CharacterFacing,
+        combat::{CharacterFacing, CombatEntityActive},
         damage::Dead,
         game_kinds::{CurrentGameKind, MultiPlayerComponentOptions, SinglePlayer},
         inputs::Movement,
-        stats::components::{MovementSpeed, PickupRadius},
+        stats::{
+            StatKind, StatList,
+            components::{Health, MovementSpeed, PickupRadius},
+        },
         upgrades::PlayerUpgradeSlots,
         weapons::WeaponKind,
     },
     utils::AssetFolder,
 };
 use avian2d::prelude::*;
-use bevy::{ecs::query::QueryFilter, platform::collections::HashMap, prelude::*};
+use bevy::{
+    ecs::{entity_disabling::Disabled, query::QueryFilter},
+    platform::collections::HashMap,
+    prelude::*,
+};
 use bevy_enhanced_input::prelude::*;
 use lightyear::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -160,6 +167,9 @@ pub struct PlayerBaseBundle {
     pub facing: CharacterFacing,
 }
 
+#[derive(Component, Debug)]
+pub struct Reviving(pub Timer);
+
 /// Marker component for the pickup radius that a player has
 #[derive(Component, Debug, Clone, Copy)]
 pub struct PlayerPickupRadius;
@@ -177,7 +187,7 @@ fn shared_player_movement(mut velo: Mut<LinearVelocity>, ms: f32, input: Vec2) {
 
 pub fn player_movement<QF: QueryFilter>(
     q_mv_action: Query<(&ActionValue, &ActionOf<Player>), With<Action<Movement>>>,
-    mut q_lv: Query<(&MovementSpeed, &mut LinearVelocity), (QF, With<Player>, Without<Dead>)>,
+    mut q_lv: Query<(&MovementSpeed, &mut LinearVelocity), (QF, With<Player>, CombatEntityActive)>,
 ) {
     for (val, a_of) in &q_mv_action {
         if let Ok((ms, mut lv)) = q_lv.get_mut(a_of.entity()) {
@@ -224,15 +234,57 @@ pub fn add_non_networked_player_components<QF: QueryFilter>(
     }
 }
 
-// On death, we want to spawn a region that can be used for players to revive their friend
-/*
-pub fn on_death(
-    trigger: On<Add, Dead>,
-    gk: Res<CurrentGameKind>,
-    q_player: Query<(), With<Player>>,
+/// Need to do a variety of things on player death
+///
+/// pull stats to remove revives,
+pub fn on_player_death(
+    mut commands: Commands,
+    mut q_player: Query<
+        (Entity, &mut LinearVelocity, &Children, &mut StatList),
+        (With<Player>, Added<Dead>),
+    >,
 ) {
+    for (ent, mut velo, children, mut list) in &mut q_player {
+        velo.0 = Vec2::ZERO;
+        commands.entity(ent).insert(RigidBodyDisabled);
+        for child in children {
+            commands.entity(*child).insert(Disabled);
+        }
+        if let Some(mut revives) = list.get_current(&StatKind::Revive) {
+            revives -= 1.0;
+            if revives <= 0.0 {
+                list.remove(&StatKind::Revive);
+            }
+            commands
+                .entity(ent)
+                .remove::<Dead>()
+                .insert(Reviving(Timer::from_seconds(1.0, TimerMode::Once)));
+        } else {
+            commands.entity(ent).with_child(Text2d::new("DEAD"));
+        }
+    }
 }
- */
+
+pub fn on_player_revive(
+    time: Res<Time<Virtual>>,
+    mut commands: Commands,
+    mut q_player: Query<(Entity, &mut Reviving, &Children, &mut Health), With<Player>>,
+) {
+    for (player, mut rev, children, mut health) in &mut q_player {
+        rev.0.tick(time.delta());
+        if rev.0.is_finished() {
+            commands
+                .entity(player)
+                .remove::<Reviving>()
+                .remove::<RigidBodyDisabled>();
+
+            health.current = health.max() * 0.5;
+            for child in children {
+                commands.entity(*child).remove::<Disabled>();
+            }
+        }
+    }
+}
 
 pub fn update_player_facing_direction<QF: QueryFilter>(
     mut q_player: Query<(&mut CharacterFacing, &Actions<Player>), QF>,
