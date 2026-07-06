@@ -121,7 +121,7 @@ pub fn enemy_state_machine<EnemyQF: QueryFilter, PlayerQF: QueryFilter>(
             &Position,
             &mut LinearVelocity,
             Option<&mut EnemySpawnTimer>,
-            Has<RigidBodyDisabled>,
+            Has<ColliderDisabled>,
         ),
         (EnemyQF),
     >,
@@ -168,7 +168,7 @@ pub fn enemy_state_machine<EnemyQF: QueryFilter, PlayerQF: QueryFilter>(
                 if !body_disabled {
                     commands
                         .entity(ent)
-                        .insert((RigidBodyDisabled, DeathTimer::new(0.5)));
+                        .insert((ColliderDisabled, DeathTimer::new(0.5)));
                     e_lv.0 = Vec2::ZERO;
                 }
             }

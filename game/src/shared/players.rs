@@ -8,7 +8,7 @@ use crate::{
         game_kinds::{CurrentGameKind, MultiPlayerComponentOptions, SinglePlayer},
         inputs::Movement,
         stats::{
-            StatKind, StatList,
+            Stat, StatKind, StatList,
             components::{Health, MovementSpeed, PickupRadius},
         },
         upgrades::PlayerUpgradeSlots,
@@ -246,21 +246,27 @@ pub fn on_player_death(
 ) {
     for (ent, mut velo, children, mut list) in &mut q_player {
         velo.0 = Vec2::ZERO;
-        commands.entity(ent).insert(RigidBodyDisabled);
+        commands.entity(ent).insert(ColliderDisabled);
         for child in children {
             commands.entity(*child).insert(Disabled);
         }
-        if let Some(mut revives) = list.get_current(&StatKind::Revive) {
-            revives -= 1.0;
-            if revives <= 0.0 {
-                list.remove(&StatKind::Revive);
+        let mut stat = list.remove(&StatKind::Revive);
+        if let Some(mut s) = stat {
+            let rev_val = if let Some(v) = s.get_current() {
+                v
+            } else {
+                0.0 - f32::EPSILON
+            };
+            if rev_val > 0.0 {
+                s.base_value -= 1.0;
+                list.list.insert(StatKind::Revive, s);
+                commands
+                    .entity(ent)
+                    .remove::<Dead>()
+                    .insert(Reviving(Timer::from_seconds(1.0, TimerMode::Once)));
             }
-            commands
-                .entity(ent)
-                .remove::<Dead>()
-                .insert(Reviving(Timer::from_seconds(1.0, TimerMode::Once)));
         } else {
-            commands.entity(ent).with_child(Text2d::new("DEAD"));
+            commands.entity(ent).insert(Text2d::from("DEAD"));
         }
     }
 }
@@ -276,7 +282,7 @@ pub fn on_player_revive(
             commands
                 .entity(player)
                 .remove::<Reviving>()
-                .remove::<RigidBodyDisabled>();
+                .remove::<ColliderDisabled>();
 
             health.current = health.max() * 0.5;
             for child in children {

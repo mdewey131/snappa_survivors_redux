@@ -242,13 +242,9 @@ impl StatList {
         }
     }
     pub fn get_current(&mut self, stat_kind: &StatKind) -> Option<f32> {
-        let stat = self.list.get_mut(stat_kind);
-        if let Some(s) = stat {
-            if let Some(v) = s.get_current() {
-                return Some(v);
-            } else {
-                return None;
-            }
+        let mut stat = self.list.get_mut(stat_kind);
+        if let Some(ref mut s) = stat {
+            return s.get_current();
         } else {
             return None;
         }
