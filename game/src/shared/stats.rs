@@ -1,7 +1,6 @@
 use std::sync::{Arc, Mutex, Weak};
 
 use bevy::{platform::collections::HashMap, prelude::*};
-use lightyear::prelude::*;
 use serde::{Deserialize, Serialize};
 
 pub mod components;
@@ -163,7 +162,7 @@ impl Stat {
 
         if let Ok(mut guard) = self.current.lock() {
             *guard = self.base_value + modifier_total;
-            Some(*guard )
+            Some(*guard)
         } else {
             None
         }
@@ -201,7 +200,7 @@ impl StatModifier {
         stat_value.map(|sv| match self.method {
             StatModifierMethod::FlatAdd => sv,
             StatModifierMethod::MultipliyWithBase { coefficient } => {
-                (base_stat * sv * coefficient) - base_stat 
+                (base_stat * sv * coefficient) - base_stat
             }
         })
     }

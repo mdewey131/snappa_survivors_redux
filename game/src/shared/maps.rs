@@ -1,8 +1,5 @@
 use avian2d::prelude::*;
-use bevy::{
-    ecs::system::SystemId,
-    prelude::*,
-};
+use bevy::{ecs::system::SystemId, prelude::*};
 use bluenoise::BlueNoise;
 use lightyear::core::id::RemoteId;
 use rand::{SeedableRng, prelude::SliceRandom, rngs::SmallRng};
@@ -140,10 +137,10 @@ impl MapKind {
         }
     }
     fn custom_systems(&self, _commands: &mut Commands) -> Vec<Box<SystemId>> {
-        let ret = Vec::new();
+        let mut ret = Vec::new();
         match self {
             #[cfg(feature = "dev")]
-            MapKind::DevZoo => ret.push(Box::new(commands.register_system((spawn_zoo_weapons)))),
+            MapKind::DevZoo => ret.push(Box::new(_commands.register_system(spawn_zoo_weapons))),
             _ => {}
         }
         ret
@@ -214,8 +211,8 @@ fn spawn_map_chunks(mut commands: Commands, builder: Res<MapBuilder>) {
 
     let total_size_x = builder.settings.map_size_tiles.0 as f32 * builder.settings.tile_size.x;
     let total_size_y = builder.settings.map_size_tiles.1 as f32 * builder.settings.tile_size.y;
-    for x in 0..builder.settings.map_size_tiles.0 as usize  {
-        for y in 0..builder.settings.map_size_tiles.1 as usize  {
+    for x in 0..builder.settings.map_size_tiles.0 as usize {
+        for y in 0..builder.settings.map_size_tiles.1 as usize {
             commands.spawn((
                 Transform::from_translation(Vec3::new(
                     x as f32 * texture_size.x - (total_size_x / 2.0),

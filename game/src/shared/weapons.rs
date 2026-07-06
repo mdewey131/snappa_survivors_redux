@@ -25,10 +25,10 @@ pub mod dice_guard;
 pub mod shifty_shot;
 pub mod throw_hands;
 
-pub use bouncing_dice::*;
+pub use bouncing_dice::{BouncingDiceAttack, WeaponBouncingDice, bouncing_dice_attack};
 pub use dice_guard::*;
 pub use shifty_shot::*;
-pub use throw_hands::*;
+pub use throw_hands::{ThrowHands, ThrowHandsAttack, ThrowHandsProtocolPlugin};
 
 pub struct SharedWeaponPlugin;
 
@@ -128,7 +128,6 @@ impl From<WeaponKind> for AssetFolder {
             WeaponKind::BouncingDice => Self("weapons/bouncing_dice".into()),
             WeaponKind::BumpinTunes => Self("weapons/bumpin_tunes".into()),
             WeaponKind::ShiftyShot => Self("weapons/shifty_shot".into()),
-            _ => Self("unknown!".into()),
         }
     }
 }
@@ -326,7 +325,7 @@ pub fn find_closest_in_list(
     sorted.sort_by(|q1, q2| q1.2.partial_cmp(&q2.2).unwrap());
     sorted.reverse();
     let mut targets = Vec::new();
-    for _i in 0..num_to_find  {
+    for _i in 0..num_to_find {
         let m_enemy = sorted.pop();
         if let Some(record) = m_enemy {
             targets.push((record.0, record.2))

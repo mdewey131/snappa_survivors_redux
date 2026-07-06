@@ -1,18 +1,16 @@
 use crate::{
     render::menus::loading_screen::LoadingScreenPlugin,
-    shared::{
-        enemies::EnemyKind,
-        players::CharacterKind,
-        states::AppState,
-        weapons::WeaponKind,
-    },
+    shared::{enemies::EnemyKind, players::CharacterKind, states::AppState, weapons::WeaponKind},
 };
 use avian2d::prelude::Position;
 #[cfg(feature = "avian_debug")]
 use avian2d::prelude::*;
-use bevy::{
-    platform::collections::HashMap, prelude::*, render::RenderSystems,
-};
+#[cfg(feature = "inspector")]
+use bevy_egui::EguiPlugin;
+#[cfg(feature = "inspector")]
+use bevy_inspector_egui::quick::{ResourceInspectorPlugin, WorldInspectorPlugin};
+
+use bevy::{platform::collections::HashMap, prelude::*, render::RenderSystems};
 
 pub mod animation;
 pub mod camera;

@@ -1,7 +1,6 @@
 use crate::shared::{
     combat::CharacterFacing,
-    game_kinds::{CurrentGameKind, GameKinds, MultiPlayerComponentOptions},
-    game_object_spawning::{SpawnGameObject, spawn_game_object},
+    game_kinds::{CurrentGameKind, GameKinds},
     game_rules::GameRules,
     maps::*,
     players::{CharacterKind, Player, PlayerBaseBundle, PlayerWeapons},
@@ -12,7 +11,6 @@ use crate::shared::{
 };
 use avian2d::prelude::*;
 use bevy::prelude::*;
-use lightyear::prelude::PeerId;
 use strum::IntoEnumIterator;
 
 const DISPLAY_PEN_COLS: usize = 2;
@@ -49,7 +47,7 @@ impl ZooPen {
 pub struct CharacterDisplayGroup;
 fn character_pen() -> ZooPen {
     let len = CharacterKind::iter().len();
-    let num_rows = (len / DISPLAY_PEN_COLS);
+    let num_rows = len / DISPLAY_PEN_COLS;
     let total_w = WEAPON_DISPLAY_PEN_HEIGHT * num_rows as f32;
     let total_h = WEAPON_DISPLAY_PEN_WIDTH * DISPLAY_PEN_COLS as f32;
     ZooPen::new(
@@ -65,7 +63,7 @@ fn character_pen() -> ZooPen {
 pub struct WeaponDisplayGroup;
 fn weapon_pen() -> ZooPen {
     let len = WeaponKind::iter().len();
-    let num_rows = (len / DISPLAY_PEN_COLS);
+    let num_rows = len / DISPLAY_PEN_COLS;
     let total_w = WEAPON_DISPLAY_PEN_HEIGHT * num_rows as f32;
     let total_h = WEAPON_DISPLAY_PEN_WIDTH * DISPLAY_PEN_COLS as f32;
     ZooPen::new(
@@ -104,9 +102,9 @@ pub fn spawn_zoo_characters(mut commands: Commands) {
     let iter = CharacterKind::iter();
     let len = iter.len();
     // 1 for padding, may not be necessary
-    let num_rows = (len / DISPLAY_PEN_COLS);
+    let num_rows = len / DISPLAY_PEN_COLS;
     for (i, char) in iter.enumerate() {
-        let col_pos = (i % DISPLAY_PEN_COLS);
+        let col_pos = i % DISPLAY_PEN_COLS;
         let row_pos = (i * num_rows) / len;
         info!("Found col_pos: {}, row_pos: {}", col_pos, row_pos);
         let total_width = CHARACTER_DISPLAY_PEN_WIDTH * num_rows as f32;
@@ -165,10 +163,10 @@ pub fn spawn_zoo_weapons(mut commands: Commands) {
 
     let weapons_iter = WeaponKind::iter();
     let len = weapons_iter.len();
-    let num_rows = (len / DISPLAY_PEN_COLS);
+    let num_rows = len / DISPLAY_PEN_COLS;
 
     for (i, weapon) in weapons_iter.enumerate() {
-        let col_pos = (i % DISPLAY_PEN_COLS);
+        let col_pos = i % DISPLAY_PEN_COLS;
         let row_pos = (i * num_rows) / len;
         let total_width = WEAPON_DISPLAY_PEN_WIDTH * num_rows as f32;
         let total_height = WEAPON_DISPLAY_PEN_HEIGHT * DISPLAY_PEN_COLS as f32;

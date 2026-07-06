@@ -9,9 +9,6 @@ use crate::shared::{
     stats::xp::add_xp_manager,
 };
 
-#[cfg(feature = "dev")]
-use crate::utils::zoo::*;
-
 pub struct ClientGameLoadingPlugin;
 
 impl Plugin for ClientGameLoadingPlugin {
