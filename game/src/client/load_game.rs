@@ -1,4 +1,3 @@
-use avian2d::prelude::Position;
 use bevy::prelude::*;
 
 use crate::shared::{
@@ -6,8 +5,7 @@ use crate::shared::{
     game_rules::GameRules,
     loading::LevelLoadingState,
     maps::*,
-    pickups::{HealthPickup, HealthPickupSpawner, tmp_spawn_health_spawner},
-    states::{AppState, InGameState, set_app_state_in_game},
+    states::{AppState, set_app_state_in_game},
     stats::xp::add_xp_manager,
 };
 

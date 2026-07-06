@@ -50,7 +50,7 @@ pub struct MapAssets {
 
 fn load_map_tile(
     mut commands: Commands,
-    game_rules: Res<GameRules>,
+    _game_rules: Res<GameRules>,
     assets: Res<AssetServer>,
 ) -> Vec<UntypedHandle> {
     let handle: Handle<Image> = assets.load("maps/grass_bg.png");

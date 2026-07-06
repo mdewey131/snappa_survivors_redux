@@ -12,7 +12,6 @@ use bevy::{
         system::{SystemId, SystemInput},
     },
     prelude::*,
-    state::state::FreelyMutableState,
 };
 
 use rand::Rng;
@@ -21,8 +20,8 @@ use serde::{Deserialize, Serialize, de::DeserializeOwned};
 /// a concrete instance of type T
 pub fn read_ron<T: DeserializeOwned>(path: String) -> T {
     if let Ok(s) = std::fs::read_to_string(&path) {
-        let val = ron::from_str::<T>(&s).expect("Failed to Deserialize Type");
-        val
+        
+        ron::from_str::<T>(&s).expect("Failed to Deserialize Type")
     } else {
         panic!("Failed to read file {:?}", &path);
     }
@@ -42,7 +41,7 @@ impl AssetFolder {
     }
 }
 impl From<()> for AssetFolder {
-    fn from(value: ()) -> Self {
+    fn from(_value: ()) -> Self {
         AssetFolder("".into())
     }
 }
@@ -113,12 +112,12 @@ impl SpawnPattern {
     }
     /// In the event that you have a custom centerpoint to use, this
     /// will return the relative position of spawning elements for you, hiding the ugliness.
-    pub fn positions_from_centerpoint(&self, centerpoint: Vec2) -> Vec<Vec2> {
+    pub fn positions_from_centerpoint(&self, _centerpoint: Vec2) -> Vec<Vec2> {
         // Kind of hacky maybe, but simplifies the code a lot
         let pattern_override = match self {
             Self::Circle {
                 amount,
-                center,
+                center: _,
                 radius,
                 radius_only,
             } => Self::Circle {

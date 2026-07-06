@@ -1,14 +1,11 @@
 use bevy::prelude::*;
 
-use crate::{
-    render::weapons::*,
-    shared::{
+use crate::shared::{
         combat::CombatSystemSet,
-        game_kinds::{DefaultServerFilter, is_single_player},
+        game_kinds::DefaultServerFilter,
         states::InGameState,
         weapons::shifty_shot::*,
-    },
-};
+    };
 
 pub struct DedicatedServerShiftyShotPlugin;
 impl Plugin for DedicatedServerShiftyShotPlugin {

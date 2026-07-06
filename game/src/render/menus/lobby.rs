@@ -170,7 +170,7 @@ pub struct LobbyBackButton;
 #[derive(Component)]
 pub struct ChangeGameSettingButton<F: GameRuleField>(F);
 
-fn make_lobby(mut commands: Commands, assets: Res<AssetServer>, game_kind: Res<CurrentGameKind>) {
+fn make_lobby(mut commands: Commands, assets: Res<AssetServer>, _game_kind: Res<CurrentGameKind>) {
     let lobby = commands
         .spawn((LobbyScreen, DespawnOnExit(AppState::Lobby)))
         .id();
@@ -182,7 +182,7 @@ fn make_lobby(mut commands: Commands, assets: Res<AssetServer>, game_kind: Res<C
     // Lobby Main Body
     let lobby_main = commands.spawn((LobbyMainContainer, ChildOf(lobby))).id();
 
-    let player_info = commands
+    let _player_info = commands
         .spawn((LobbyPlayerInfoContainer, ChildOf(lobby_main)))
         .id();
 

@@ -1,12 +1,5 @@
-use crate::shared::{
-    combat::CharacterFacing, game_kinds::*, game_object_spawning::*, game_rules::GameRules,
-    lobby::PlayerInLobby, maps::MapKind, players::*, states::AppState,
-    upgrades::PlayerUpgradeSlots, weapons::*,
-};
-use avian2d::prelude::*;
-use bevy::{ecs::system::SystemId, prelude::*};
-use lightyear::prelude::*;
-use rand::Rng;
+use crate::shared::states::AppState;
+use bevy::prelude::*;
 
 const EXPECTED_LOADING_CONFIRMATION_FRAMES: u8 = 30;
 

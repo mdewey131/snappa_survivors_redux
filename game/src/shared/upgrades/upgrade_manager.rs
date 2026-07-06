@@ -1,10 +1,8 @@
-use std::path::Path;
 
 use super::*;
-use bevy::prelude::*;
 use rand::{
     SeedableRng,
-    rngs::{SmallRng, ThreadRng},
+    rngs::SmallRng,
     seq::{IndexedRandom, IteratorRandom},
 };
 use strum::IntoEnumIterator;
@@ -57,7 +55,7 @@ impl UpgradeManager {
                     .collect::<Vec<UpgradeKind>>()
             } else {
                 StatUpgradeKind::iter()
-                    .map(|stat_upgrade| UpgradeKind::UpgradePlayerStat(stat_upgrade))
+                    .map(UpgradeKind::UpgradePlayerStat)
                     .collect::<Vec<UpgradeKind>>()
             };
             available_upgrades.append(&mut stats_upgrades);
@@ -109,12 +107,10 @@ impl UpgradeManager {
     }
 
     pub fn add_shrine_rewards_to_queue(&mut self, players: Vec<Entity>) -> Result<(), String> {
-        let mut upgrades = vec![
-            UpgradeKind::ShrineEffect(ShrineEffect::Stat(StatKind::Health)),
+        let upgrades = [UpgradeKind::ShrineEffect(ShrineEffect::Stat(StatKind::Health)),
             UpgradeKind::ShrineEffect(ShrineEffect::Stat(StatKind::MS)),
             UpgradeKind::ShrineEffect(ShrineEffect::Stat(StatKind::CDR)),
-            UpgradeKind::ShrineEffect(ShrineEffect::Stat(StatKind::EffDuration)),
-        ];
+            UpgradeKind::ShrineEffect(ShrineEffect::Stat(StatKind::EffDuration))];
         let mut entries = HashMap::new();
         for player in players.iter() {
             let mut options = upgrades
@@ -157,16 +153,16 @@ impl UpgradeManager {
                 UpgradeKind::AddWeapon(_w) => table_entry.unwrap().clone(),
                 _ => {
                     let mut rewards_with_rolls = table_entry.unwrap().clone();
-                    for mut reward in rewards_with_rolls.iter_mut() {
+                    for reward in rewards_with_rolls.iter_mut() {
                         let r = self.create_stat_value_from_rarity(&rarity, reward);
                         *reward = r
                     }
 
-                    let chosen_rewards = rewards_with_rolls
-                        .into_iter()
-                        .choose_multiple(&mut self.rng, 1);
+                    
 
-                    chosen_rewards
+                    rewards_with_rolls
+                        .into_iter()
+                        .choose_multiple(&mut self.rng, 1)
                 }
             }
         };
@@ -175,7 +171,7 @@ impl UpgradeManager {
             kind,
             rarity,
             level,
-            rewards: rewards,
+            rewards,
         }
     }
 
@@ -185,7 +181,7 @@ impl UpgradeManager {
         reward: &UpgradeReward,
     ) -> UpgradeReward {
         match reward {
-            UpgradeReward::StatUpgrade { range, kind, value } => {
+            UpgradeReward::StatUpgrade { range, kind, value: _ } => {
                 let diff = range.max - range.min;
                 let i = match *rarity {
                     UpgradeRarity::Common => 0,
@@ -251,6 +247,12 @@ impl Default for UpgradeReward {
 pub struct UpgradeTable {
     table: HashMap<UpgradeKind, Vec<UpgradeReward>>,
 }
+impl Default for UpgradeTable {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl UpgradeTable {
     pub fn new() -> Self {
         let mut upgrades = HashMap::new();

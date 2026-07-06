@@ -1,8 +1,6 @@
-use std::marker::PhantomData;
 
 use avian2d::prelude::{LinearVelocity, Position};
 use bevy::{prelude::*, render::RenderSystems};
-use bevy_enhanced_input::prelude::*;
 
 use crate::{
     render::{RenderYtoZ, animation::*},
@@ -10,7 +8,7 @@ use crate::{
         combat::CharacterFacing,
         interactables::Interactable,
         players::Player,
-        states::{AppState, InGameState},
+        states::InGameState,
         weapons::find_closest_in_list,
     },
 };
@@ -137,7 +135,7 @@ pub fn update_player_directional_hints(
             Without<PlayerDirectionalHint>,
         ),
     >,
-    q_hints: Query<&PlayerDirectionalHint, (Without<Player>)>,
+    q_hints: Query<&PlayerDirectionalHint, Without<Player> >,
     q_interactables: Query<&Position, (With<Interactable>, Without<Player>)>,
 ) {
     for hint in &q_hints {
@@ -151,7 +149,7 @@ pub fn update_player_directional_hints(
         let draw_arrow_to = player_pos.0 + dir * 20.0;
         trace!("Drawing arrow to {:?}", draw_arrow_to);
         gizmos.arrow_2d(
-            (player_pos.0 + dir * 5.0),
+            player_pos.0 + dir * 5.0 ,
             draw_arrow_to,
             Color::srgb(1.0, 0.0, 0.0),
         );

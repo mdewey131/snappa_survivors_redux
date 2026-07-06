@@ -1,11 +1,9 @@
 use crate::shared::{
-    combat::{CombatEntityActive, CombatSystemSet, Cooldown},
-    damage::{DamageBuffer, DamageInstance, Dead},
+    combat::{CombatEntityActive, Cooldown},
+    damage::{DamageBuffer, DamageInstance},
     enemies::Enemy,
-    game_kinds::{CurrentGameKind, MultiPlayerComponentOptions},
-    game_object_spawning::{SpawnGameObject, spawn_game_object},
-    players::Player,
-    states::InGameState,
+    game_kinds::MultiPlayerComponentOptions,
+    game_object_spawning::SpawnGameObject,
     stats::components::*,
     weapons::{DeactivateWeapon, find_closest_in_list},
 };
@@ -112,7 +110,7 @@ pub fn on_activate<QF: QueryFilter>(
 
         // CHECK THIS LINE FOR WEIRD BEHAVIOR IN THIS WEAPON
         let target = if let Some(t) = m_target {
-            t.clone()
+            *t
         } else {
             return;
         };
@@ -141,7 +139,7 @@ pub fn update_attack<QF: QueryFilter>(
     mut commands: Commands,
     time: Res<Time<Fixed>>,
     mut q_attack: Query<(Entity, &mut ThrowHandsAttack, &Damage), QF>,
-    mut q_target: Query<(&mut DamageBuffer)>,
+    mut q_target: Query<&mut DamageBuffer >,
 ) {
     for (attack_ent, mut throw, damage) in &mut q_attack {
         match throw.state {

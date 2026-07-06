@@ -1,4 +1,4 @@
-use avian2d::{math::PI, prelude::LinearVelocity};
+use avian2d::prelude::LinearVelocity;
 use bevy::prelude::*;
 use std::time::Duration;
 
@@ -53,7 +53,7 @@ impl AnimationFacing {
         if let Some(ref mut tex) = sprite.texture_atlas {
             let c_idx = tex.index;
             let diff = c_idx - config.first_sprite_index;
-            let min = (self.tex_width as usize * self.tex_rows[facing.to_index()]);
+            let min = self.tex_width as usize * self.tex_rows[facing.to_index()] ;
             let max = min + (self.tex_width as usize) - 1;
             let new = min + diff;
             tex.index = new;

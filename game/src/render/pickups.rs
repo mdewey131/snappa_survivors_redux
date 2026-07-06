@@ -1,5 +1,5 @@
 use avian2d::prelude::Position;
-use bevy::{asset::UntypedAssetId, prelude::*};
+use bevy::prelude::*;
 
 use crate::{
     render::RenderYtoZ,

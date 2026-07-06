@@ -1,7 +1,6 @@
 use avian2d::prelude::*;
 use bevy::{ecs::query::QueryFilter, prelude::*};
 use lightyear::prelude::*;
-use rand::Rng;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -12,7 +11,6 @@ use crate::{
         game_object_spawning::*,
         pickups::XPPickup,
         players::Player,
-        stats::RawStatsList,
     },
     utils::AssetFolder,
 };
@@ -27,7 +25,7 @@ pub struct Enemy {
 }
 
 impl From<Enemy> for CommonColliderBundle {
-    fn from(value: Enemy) -> Self {
+    fn from(_value: Enemy) -> Self {
         Self::new(
             RigidBody::Dynamic,
             Collider::capsule(20.0, 30.0),
@@ -44,7 +42,7 @@ impl From<Enemy> for CommonColliderBundle {
 }
 
 impl From<Enemy> for MultiPlayerComponentOptions {
-    fn from(value: Enemy) -> Self {
+    fn from(_value: Enemy) -> Self {
         Self {
             pred: true,
             interp: false,
@@ -123,7 +121,7 @@ pub fn enemy_state_machine<EnemyQF: QueryFilter, PlayerQF: QueryFilter>(
             Option<&mut EnemySpawnTimer>,
             Has<ColliderDisabled>,
         ),
-        (EnemyQF),
+        EnemyQF ,
     >,
     q_targets: Query<(Entity, &Position), (With<Player>, Without<Enemy>, PlayerQF)>,
 ) {
@@ -182,7 +180,7 @@ pub fn enemy_state_machine<EnemyQF: QueryFilter, PlayerQF: QueryFilter>(
 pub fn add_non_replicated_enemy_components<QF: QueryFilter>(
     trigger: On<Add, Enemy>,
     mut commands: Commands,
-    q_to_attach: Query<&Enemy, (QF)>,
+    q_to_attach: Query<&Enemy, QF >,
 ) {
     if let Ok(en) = q_to_attach.get(trigger.entity) {
         commands.entity(trigger.entity).insert((
@@ -197,7 +195,7 @@ pub fn add_non_replicated_enemy_components<QF: QueryFilter>(
 pub fn on_enemy_death(
     trigger: On<Add, Dead>,
     mut commands: Commands,
-    gk: Res<CurrentGameKind>,
+    _gk: Res<CurrentGameKind>,
     mut q_enemy: Query<(&Position, &mut Enemy)>,
 ) {
     if let Ok((pos, mut enemy)) = q_enemy.get_mut(trigger.entity) {
@@ -208,7 +206,7 @@ pub fn on_enemy_death(
 
         commands.queue(SpawnGameObject::new(
             MultiPlayerComponentOptions::PREDICTED,
-            (pos.clone(), XPPickup::new(xp_amt)),
+            (*pos, XPPickup::new(xp_amt)),
         ));
     }
 }

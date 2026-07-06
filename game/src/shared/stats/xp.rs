@@ -1,4 +1,4 @@
-use bevy::{ecs::query::QueryFilter, prelude::*};
+use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::shared::{

@@ -1,6 +1,5 @@
 use super::*;
 use crate::shared::weapons::Weapon;
-use bevy::prelude::*;
 
 /// In the future, this can do some really interesting stuff in order for us to control relationship
 /// rules at a high level of granularity. For now, this is dead simple

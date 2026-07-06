@@ -49,7 +49,7 @@ impl GameButton {
     ) -> Entity {
         let self_id = commands.spawn_empty().id();
 
-        style.add_style_components(self_id, commands, &assets);
+        style.add_style_components(self_id, commands, assets);
 
         commands.entity(self_id).insert((self,));
 
@@ -136,7 +136,7 @@ impl GameButtonStyle {
         }
         if let Some((size, col)) = self.border {
             self.node.border_radius = BorderRadius::all(size);
-            commands.entity(to).insert((BorderColor::all(col)));
+            commands.entity(to).insert(BorderColor::all(col) );
         }
 
         commands.entity(to).insert((im_node, self.node));

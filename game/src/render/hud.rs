@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use crate::shared::{
-    game_kinds::{DefaultClientFilter, SinglePlayer},
+    game_kinds::SinglePlayer,
     players::Player,
     states::*,
     stats::{components::*, xp::XPManager, *},
@@ -319,14 +319,11 @@ pub struct IndividualStatDisplay<C> {
 }
 fn stat_display_container_node(kind: StatDisplayContainerKind) -> Node {
     let mut node = Node::default();
-    match kind {
-        StatDisplayContainerKind::PlayerHud => {
-            node.height = Val::Percent(5.0);
-            node.width = Val::Percent(100.0);
-            node.justify_content = JustifyContent::SpaceEvenly;
-            node.align_items = AlignItems::Center;
-        }
-        _ => {}
+    if let StatDisplayContainerKind::PlayerHud = kind {
+        node.height = Val::Percent(5.0);
+        node.width = Val::Percent(100.0);
+        node.justify_content = JustifyContent::SpaceEvenly;
+        node.align_items = AlignItems::Center;
     }
     node
 }
@@ -378,7 +375,7 @@ fn spawn_individual_stat_hud_elements<C: StatComponent + DisplayableStat>(
         ),
     >,
 ) {
-    for (ent, comp) in &q_component {
+    for (_ent, comp) in &q_component {
         let stat_kind = comp.stat_kind();
         let stat_value = *comp;
         let display_container = commands
@@ -417,7 +414,7 @@ fn spawn_hud_container(mut commands: Commands, assets: Res<AssetServer>) {
 
     // The game clock
     let game_clock_container = commands.spawn((GameTimeDisplay, ChildOf(outer_ent))).id();
-    let game_clock_text = commands
+    let _game_clock_text = commands
         .spawn((GameTimeText, ChildOf(game_clock_container)))
         .id();
 
@@ -554,7 +551,7 @@ fn update_upgrade_slot_display(
         let c_weapon_slots = q_slot_holder
             .weapons
             .iter()
-            .filter_map(|(e, m_weapon)| *m_weapon)
+            .filter_map(|(_e, m_weapon)| *m_weapon)
             .collect::<Vec<WeaponKind>>();
 
         // Check to see if the player weapons are present
@@ -574,11 +571,11 @@ fn update_upgrade_slot_display(
             let next = q_slot_holder
                 .weapons
                 .iter()
-                .position(|(e, m_w)| m_w.is_none())
+                .position(|(_e, m_w)| m_w.is_none())
                 .expect(
                     "This should not have been an offered upgrade if we don't have a free slot",
                 );
-            let mut entry = q_slot_holder.weapons.get_mut(next).unwrap();
+            let entry = q_slot_holder.weapons.get_mut(next).unwrap();
             let weapon_icon_path = w.to_icon_path();
             if let Some(name) = weapon_icon_path {
                 let path = format!("ui/weapon_icons/{}.png", name);
@@ -594,7 +591,7 @@ fn update_upgrade_slot_display(
         let c_stat_slots = q_slot_holder
             .stats
             .iter()
-            .filter_map(|(e, m_stat)| *m_stat)
+            .filter_map(|(_e, m_stat)| *m_stat)
             .collect::<Vec<StatUpgradeKind>>();
 
         // Check to see if the player weapons are present
@@ -614,11 +611,11 @@ fn update_upgrade_slot_display(
             let next = q_slot_holder
                 .stats
                 .iter()
-                .position(|(e, m_s)| m_s.is_none())
+                .position(|(_e, m_s)| m_s.is_none())
                 .expect(
                     "This should not have been an offered upgrade if we don't have a free slot",
                 );
-            let mut entry = q_slot_holder.stats.get_mut(next).unwrap();
+            let entry = q_slot_holder.stats.get_mut(next).unwrap();
             let stat: StatKind = s.into();
             let icon_name = StatDisplayIcon::path_from_stat_kind(&stat);
             if let Some(name) = icon_name {

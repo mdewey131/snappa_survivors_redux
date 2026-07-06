@@ -1,4 +1,3 @@
-use crate::shared::{damage::* /*stats::components::Damage*/};
 use avian2d::prelude::*;
 use bevy::prelude::*;
 use lightyear::prediction::SyncComponent;

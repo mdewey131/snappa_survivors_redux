@@ -1,6 +1,6 @@
 use avian2d::prelude::*;
 use bevy::{ecs::entity::MapEntities, platform::collections::HashMap, prelude::*};
-use lightyear::{prediction::SyncComponent, prelude::*};
+use lightyear::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::shared::{
@@ -145,9 +145,9 @@ fn collision_damage_system(
             } else {
                 contacts.collider1
             };
-            if let Ok(applies_effect) = q_applies_damage.get(applying_entity) {
-                if (layers.memberships.0 & applies_effect.to.0) != 0 {
-                    if recent_collided.with.get(&applying_entity).is_none() {
+            if let Ok(applies_effect) = q_applies_damage.get(applying_entity)
+                && (layers.memberships.0 & applies_effect.to.0) != 0
+                    && recent_collided.with.get(&applying_entity).is_none() {
                         recent_collided
                             .with
                             .insert(applying_entity, CollisionDamageTimer::new());
@@ -155,8 +155,6 @@ fn collision_damage_system(
                             .eff
                             .apply_to(&mut commands, ent_to_damage, applying_entity);
                     }
-                }
-            }
         }
     }
 }
@@ -165,12 +163,12 @@ fn tick_rec_collided(
     time: Res<Time<Fixed>>,
     mut q_recents: Query<(Entity, &mut RecentlyCollided)>,
 ) {
-    for (ent, mut recent) in &mut q_recents {
+    for (_ent, mut recent) in &mut q_recents {
         let mut to_rm = Vec::new();
         for (ent, ref mut timer) in recent.with.iter_mut() {
             timer.tick(time.delta());
             if timer.just_finished() {
-                to_rm.push(ent.clone())
+                to_rm.push(*ent)
             }
         }
         for ent in to_rm {
@@ -209,6 +207,12 @@ impl MapEntities for RecentlyCollided {
 
 #[derive(Debug, Deref, DerefMut, Clone, Serialize, Deserialize, PartialEq)]
 pub struct CollisionDamageTimer(pub Timer);
+impl Default for CollisionDamageTimer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl CollisionDamageTimer {
     pub fn new() -> Self {
         Self(Timer::from_seconds(2.0, TimerMode::Once))

@@ -1,9 +1,8 @@
 use crate::shared::{
-    colliders::CommonColliderBundle, combat::CombatSystemSet, game_kinds::*, projectiles::*,
+    combat::CombatSystemSet, game_kinds::*, projectiles::*,
     states::InGameState,
 };
 use bevy::prelude::*;
-use lightyear::prelude::*;
 
 pub struct ClientProjectilePlugin;
 

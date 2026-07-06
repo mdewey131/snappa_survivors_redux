@@ -1,14 +1,13 @@
-use std::path::{Path, PathBuf};
 
 use crate::{
     shared::{
         colliders::{ColliderTypes, CommonColliderBundle, RecentlyCollided},
         combat::{CharacterFacing, CombatEntityActive},
         damage::Dead,
-        game_kinds::{CurrentGameKind, MultiPlayerComponentOptions, SinglePlayer},
+        game_kinds::{MultiPlayerComponentOptions, SinglePlayer},
         inputs::Movement,
         stats::{
-            Stat, StatKind, StatList,
+            StatKind, StatList,
             components::{Health, MovementSpeed, PickupRadius},
         },
         upgrades::PlayerUpgradeSlots,
@@ -42,7 +41,7 @@ pub struct Player {
 }
 
 impl From<Player> for CommonColliderBundle {
-    fn from(value: Player) -> Self {
+    fn from(_value: Player) -> Self {
         Self::new(
             RigidBody::Dynamic,
             Collider::capsule(20.0, 30.0),
@@ -60,7 +59,7 @@ impl From<Player> for CommonColliderBundle {
 }
 
 impl From<Player> for MultiPlayerComponentOptions {
-    fn from(value: Player) -> Self {
+    fn from(_value: Player) -> Self {
         Self {
             pred: true,
             interp: false,
@@ -85,7 +84,8 @@ pub enum CharacterKind {
 
 impl From<CharacterKind> for String {
     fn from(value: CharacterKind) -> Self {
-        let s = match value {
+        
+        match value {
             CharacterKind::Dewey => "Dewey".into(),
             CharacterKind::Finn => "Finn".into(),
             CharacterKind::Gabe => "Gabe".into(),
@@ -94,8 +94,7 @@ impl From<CharacterKind> for String {
             CharacterKind::Paul => "Paul".into(),
             CharacterKind::Ryan => "Ryan".into(),
             CharacterKind::Shaunt => "Shaunt".into(),
-        };
-        s
+        }
     }
 }
 
@@ -190,7 +189,7 @@ pub fn player_movement<QF: QueryFilter>(
     mut q_lv: Query<(&MovementSpeed, &mut LinearVelocity), (QF, With<Player>, CombatEntityActive)>,
 ) {
     for (val, a_of) in &q_mv_action {
-        if let Ok((ms, mut lv)) = q_lv.get_mut(a_of.entity()) {
+        if let Ok((ms, lv)) = q_lv.get_mut(a_of.entity()) {
             shared_player_movement(lv, ms.current, val.as_axis2d());
         }
     }
@@ -250,13 +249,9 @@ pub fn on_player_death(
         for child in children {
             commands.entity(*child).insert(Disabled);
         }
-        let mut stat = list.remove(&StatKind::Revive);
+        let stat = list.remove(&StatKind::Revive);
         if let Some(mut s) = stat {
-            let rev_val = if let Some(v) = s.get_current() {
-                v
-            } else {
-                0.0 - f32::EPSILON
-            };
+            let rev_val = s.get_current().unwrap_or(0.0 - f32::EPSILON);
             if rev_val > 0.0 {
                 s.base_value -= 1.0;
                 list.list.insert(StatKind::Revive, s);

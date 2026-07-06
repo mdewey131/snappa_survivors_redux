@@ -62,7 +62,7 @@ impl GameClientConfig {
 
     pub fn new_with_random_c_id() -> Self {
         let mut rng = rand::rng();
-        let client_id = rng.random_range((0..u64::MAX));
+        let client_id = rng.random_range(0..u64::MAX);
         Self {
             client_id,
             client_port: SINGLE_PLAYER_CLIENT_PORT,

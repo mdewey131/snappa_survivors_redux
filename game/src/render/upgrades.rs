@@ -6,10 +6,10 @@ use crate::{
         game_kinds::SinglePlayer,
         players::Player,
         states::InGameState,
-        upgrades::{Upgrade, UpgradeOptions, UpgradeSelectionMessage},
+        upgrades::{UpgradeOptions, UpgradeSelectionMessage},
     },
 };
-use bevy::{ecs::entity_disabling::Disabled, prelude::*};
+use bevy::prelude::*;
 use lightyear::prelude::Controlled;
 
 pub struct UpgradeRenderPlugin;

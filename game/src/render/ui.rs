@@ -73,11 +73,10 @@ fn trigger_ui_fade_set_color<C: Component<Mutability = Mutable> + CanFade>(
     t: On<Add, FadeEffect>,
     mut q_node: Query<(&mut C, &FadeEffect)>,
 ) {
-    if let Ok((mut comp, eff)) = q_node.get_mut(t.entity) {
-        if eff.fade_in {
+    if let Ok((mut comp, eff)) = q_node.get_mut(t.entity)
+        && eff.fade_in {
             comp.set_alpha(0.0);
         }
-    }
 }
 
 fn ui_fade_system<C: Component<Mutability = Mutable> + CanFade>(

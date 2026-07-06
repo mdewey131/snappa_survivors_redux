@@ -4,7 +4,6 @@ use crate::{
     utils::AssetFolder,
 };
 use bevy::prelude::*;
-use bevy_inspector_egui::quick::ResourceInspectorPlugin;
 use ron::ser::PrettyConfig;
 
 /// A plugin on the stats editor, only to be used in cases where we're in a dev environment!

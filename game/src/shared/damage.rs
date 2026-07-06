@@ -3,8 +3,7 @@ use lightyear::prelude::{AppComponentExt, PredictionRegistrationExt};
 use serde::{Deserialize, Serialize};
 
 use crate::shared::{
-    combat::{CombatEntityActive, CombatSystemSet, EntityIncapacitated},
-    players::Reviving,
+    combat::{CombatEntityActive, CombatSystemSet},
     stats::components::Health,
 };
 

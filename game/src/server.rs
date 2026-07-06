@@ -25,7 +25,7 @@ use lightyear::{
     link::RecvLinkConditioner,
     netcode::NetcodeServer,
     prelude::{
-        LinkOf, LocalAddr, Replicate, ReplicationReceiver, ReplicationSender,
+        LinkOf, LocalAddr, ReplicationReceiver, ReplicationSender,
         server::{NetcodeConfig, ServerUdpIo, Start},
         *,
     },
@@ -46,7 +46,7 @@ use projectiles::DedicatedServerProjectilePlugin;
 pub struct GameServerPlugin;
 impl Plugin for GameServerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins((ServerPlayerPlugin))
+        app.add_plugins(ServerPlayerPlugin )
             .add_observer(handle_new_client)
             .add_observer(add_player_to_lobby);
     }
@@ -89,7 +89,7 @@ impl GameServer {
                         server,
                     ));
                 }
-                ServerTransports::Steam { local_port } => {
+                ServerTransports::Steam { local_port: _ } => {
                     todo!()
                 }
             }
@@ -158,9 +158,9 @@ fn server_startup(mut commands: Commands, mut state: ResMut<NextState<AppState>>
 pub fn handle_new_client(
     trigger: On<Add, LinkOf>,
     mut commands: Commands,
-    q_peer: Query<&RemoteId>,
+    _q_peer: Query<&RemoteId>,
 ) {
-    let client = commands.entity(trigger.entity).insert((
+    let _client = commands.entity(trigger.entity).insert((
         ReplicationSender::new(
             SEND_INTERVAL,
             lightyear::prelude::SendUpdatesMode::SinceLastAck,

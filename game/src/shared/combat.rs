@@ -1,9 +1,5 @@
 use avian2d::math::PI;
 use bevy::prelude::*;
-use bevy_enhanced_input::{
-    action::Action,
-    prelude::{ActionValue, Actions},
-};
 use lightyear::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -12,8 +8,7 @@ pub type CombatEntityActive = (Without<Dead>, Without<Reviving>);
 
 use crate::shared::{
     damage::Dead,
-    inputs::Movement,
-    players::{Player, Reviving},
+    players::Reviving,
 };
 #[derive(SystemSet, Hash, Eq, PartialEq, Debug, Clone, Copy, Default)]
 pub enum CombatSystemSet {

@@ -1,7 +1,5 @@
 use crate::shared::{game_kinds::DefaultServerFilter, projectiles::*, states::*};
-use avian2d::prelude::*;
 use bevy::prelude::*;
-use lightyear::prelude::Replicate;
 
 pub struct DedicatedServerProjectilePlugin;
 

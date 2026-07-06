@@ -41,7 +41,6 @@ use game_rules::SharedGameRulesPlugin;
 use inputs::GameInputProtocolPlugin;
 use loading::*;
 use lobby::LobbyProtocolPlugin;
-use maps::*;
 use projectiles::ProjectileProtocolPlugin;
 use states::SharedStatesPlugin;
 use stats::{plugins::*, xp::SharedXPPlugin};

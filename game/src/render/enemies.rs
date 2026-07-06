@@ -5,7 +5,7 @@ use bevy::{ecs::query::QueryFilter, prelude::*};
 pub struct SharedEnemyRenderPlugin;
 
 impl Plugin for SharedEnemyRenderPlugin {
-    fn build(&self, app: &mut App) {
+    fn build(&self, _app: &mut App) {
         /*
         app.add_systems(
             Update,
@@ -23,7 +23,7 @@ impl Plugin for SharedEnemyRenderPlugin {
 pub fn rendering_on_enemy_add<QF: QueryFilter>(
     mut commands: Commands,
     assets: Res<AssetServer>,
-    mut layouts: ResMut<Assets<TextureAtlasLayout>>,
+    _layouts: ResMut<Assets<TextureAtlasLayout>>,
     q_enemy: Query<(Entity, &Position), (Added<Enemy>, QF)>,
 ) {
     for (e, pos) in &q_enemy {

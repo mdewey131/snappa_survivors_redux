@@ -4,15 +4,12 @@ use crate::shared::{
     weapons::add_weapon_to_character,
 };
 
-use bevy::prelude::*;
-use lightyear::prelude::*;
-use rand::Rng;
 
 // In multiplayer, we spawn just a variety of entities based on their user attributes and the chosen player.
 // This expects an input list of possible positions to take
 pub fn spawn_characters(
-    mut pos_in: &mut Vec<Vec2>,
-    mut commands: &mut Commands,
+    pos_in: &mut Vec<Vec2>,
+    commands: &mut Commands,
     game_kinds: &Res<CurrentGameKind>,
     q_player: &Query<(Entity, &PlayerInLobby, Option<&RemoteId>)>,
 ) {
@@ -22,12 +19,12 @@ pub fn spawn_characters(
         let client = m_peer.map(|p| p.0);
         let char = lobby_player.selected_character.unwrap();
         let player = Player {
-            client: client,
+            client,
             character: char,
         };
 
         let player = spawn_game_object(
-            &mut commands,
+            commands,
             game_kinds.0.unwrap(),
             Some(char),
             MultiPlayerComponentOptions::PREDICTED,
@@ -48,7 +45,7 @@ pub fn spawn_characters(
         add_weapon_to_character(
             player,
             char.starting_weapon(),
-            &mut commands,
+            commands,
             game_kinds.0.unwrap(),
         );
         // This line replicates the logic that I had back when single player and multiplayer character spawning

@@ -1,7 +1,6 @@
 use crate::{
     render::{
         RenderYtoZ,
-        animation::AnimationConfig,
         map::{ChunkOf, MapBackground, MapChunk},
     },
     shared::{
@@ -20,7 +19,7 @@ use avian2d::prelude::{Position, Sensor};
 use bevy::prelude::*;
 use bluenoise::BlueNoise;
 use lightyear::prelude::*;
-use rand::rngs::{SmallRng, ThreadRng};
+use rand::rngs::SmallRng;
 
 pub const THE_GREENS_NUM_TILES: (u32, u32) = (48, 48);
 pub const THE_GREENS_TILE_SIZE: (f32, f32) = (128.0, 128.0);
@@ -115,8 +114,8 @@ pub fn map_chunks_the_greens(mut commands: Commands) {
 
     let total_size_x = (THE_GREENS_NUM_TILES.0 as f32) * THE_GREENS_TILE_SIZE.0;
     let total_size_y = (THE_GREENS_NUM_TILES.1 as f32) * THE_GREENS_TILE_SIZE.1;
-    for x in (0..THE_GREENS_NUM_TILES.0) {
-        for y in (0..THE_GREENS_NUM_TILES.1) {
+    for x in 0..THE_GREENS_NUM_TILES.0  {
+        for y in 0..THE_GREENS_NUM_TILES.1  {
             commands.spawn((
                 Transform::from_translation(Vec3::new(
                     x as f32 * texture_size.x - (total_size_x / 2.0),

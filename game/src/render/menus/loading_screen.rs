@@ -41,5 +41,5 @@ pub struct LoadingScreenText;
 fn popup_loading_screen(mut commands: Commands) {
     commands
         .spawn((LoadingScreen, DespawnOnExit(AppState::LoadingLevel)))
-        .with_child((LoadingScreenText));
+        .with_child(LoadingScreenText );
 }

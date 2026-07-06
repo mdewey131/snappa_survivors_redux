@@ -68,7 +68,7 @@ pub fn client_on_receive_start_game_message(
     mut messages: MessageReader<ClientStartGameMessage>,
 ) {
     let mut run_with = None;
-    for m in messages.read() {
+    for _m in messages.read() {
         run_with = Some(game_rules);
         break;
     }

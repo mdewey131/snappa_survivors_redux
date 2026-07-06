@@ -1,5 +1,5 @@
 use crate::shared::{
-    GameMainChannel, game_kinds::is_single_player, game_rules::*, lobby::*, states::AppState,
+    GameMainChannel, game_rules::*, lobby::*, states::AppState,
 };
 use bevy::prelude::*;
 use lightyear::prelude::*;
@@ -20,10 +20,10 @@ impl Plugin for DedicatedServerLobbyPlugin {
 
 fn server_spawn_lobby(mut commands: Commands) {
     commands.spawn(
-        (Lobby {
+        Lobby {
             players: vec![],
             max_players: 8,
-        }),
+        } ,
     );
 }
 
@@ -67,7 +67,7 @@ fn server_on_receive_character_change_message(
         &mut PlayerInLobby,
     )>,
 ) {
-    for (local, mut rec, mut player) in &mut q_receiver {
+    for (_local, mut rec, mut player) in &mut q_receiver {
         for message in rec.receive() {
             player.selected_character = Some(message.char);
         }

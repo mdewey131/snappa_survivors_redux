@@ -4,7 +4,6 @@ use crate::{
         combat::CombatSystemSet,
         enemies::{spawner::*, *},
         game_kinds::{DefaultClientFilter, SinglePlayer, is_single_player},
-        loading::LevelLoadingState,
         states::{AppState, InGameState},
     },
 };

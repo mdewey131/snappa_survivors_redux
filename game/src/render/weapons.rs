@@ -2,7 +2,6 @@ use crate::{
     render::RenderYtoZ,
     shared::{stats::components::ProjectileBounces, weapons::*},
 };
-use avian2d::prelude::Position;
 use bevy::{ecs::query::QueryFilter, prelude::*};
 const THROW_HANDS_SPRITE_Y_OFFSET: f32 = -0.01;
 
@@ -72,10 +71,10 @@ pub fn add_bouncing_dice_rendering_components<QF: QueryFilter>(
 
         let dice_entity = commands
             .entity(t.entity)
-            .insert((Sprite::from(dice_handle)))
+            .insert(Sprite::from(dice_handle) )
             .id();
 
-        let target_ent = commands
+        let _target_ent = commands
             .spawn((
                 Sprite::from(target_handle),
                 Transform::from_translation(attack.c_target.extend(attack.c_target.y)),
@@ -96,7 +95,7 @@ pub fn update_bouncing_dice_render_components<QF: QueryFilter>(
             &ProjectileBounces,
             &HasBouncingDiceTarget,
         ),
-        (QF),
+        QF ,
     >,
     mut q_target: Query<&mut Transform, (With<BouncingDiceTarget>, Without<BouncingDiceAttack>)>,
 ) {

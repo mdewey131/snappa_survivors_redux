@@ -10,9 +10,9 @@ use crate::{
         enemies::Enemy,
         game_kinds::{GameKinds, MultiPlayerComponentOptions},
         game_object_spawning::spawn_game_object,
-        players::{Player, PlayerWeapons},
+        players::PlayerWeapons,
         states::InGameState,
-        stats::{RawStatsList, components::*},
+        stats::components::*,
         upgrades::PlayerUpgradeSlots,
         weapons::bumpin_tunes::BumpinTunes,
     },
@@ -62,7 +62,7 @@ pub struct Weapon {
 }
 
 impl From<Weapon> for MultiPlayerComponentOptions {
-    fn from(value: Weapon) -> Self {
+    fn from(_value: Weapon) -> Self {
         Self::PREDICTED
     }
 }
@@ -326,7 +326,7 @@ pub fn find_closest_in_list(
     sorted.sort_by(|q1, q2| q1.2.partial_cmp(&q2.2).unwrap());
     sorted.reverse();
     let mut targets = Vec::new();
-    for _i in (0..num_to_find) {
+    for _i in 0..num_to_find  {
         let m_enemy = sorted.pop();
         if let Some(record) = m_enemy {
             targets.push((record.0, record.2))

@@ -31,7 +31,7 @@ pub fn start_camera_follow_on_controlled_player_add(
     mut q_camera: Single<&mut GameMainCamera>,
 ) {
     for e in &q_player {
-        (*q_camera).mode = GameCameraMode::Following(e);
+        q_camera.mode = GameCameraMode::Following(e);
     }
 }
 
@@ -39,25 +39,18 @@ pub fn update_camera_pos_client(
     mut q_camera: Single<(&mut Transform, &GameMainCamera)>,
     q_following: Query<&Transform, (With<Player>, Without<GameMainCamera>)>,
 ) {
-    match q_camera.1.mode {
-        GameCameraMode::Following(e) => {
-            if let Ok(pt) = q_following.get(e) {
-                q_camera.0.translation = (pt.translation.xy()).extend(q_camera.0.translation.z)
-            }
+    if let GameCameraMode::Following(e) = q_camera.1.mode
+        && let Ok(pt) = q_following.get(e) {
+            q_camera.0.translation = (pt.translation.xy()).extend(q_camera.0.translation.z)
         }
-        _ => {}
-    }
 }
 
 pub fn update_free_cam_position(
     input: Res<ButtonInput<KeyCode>>,
     mut q_camera: Single<(&mut Transform, &GameMainCamera)>,
 ) {
-    match q_camera.1.mode {
-        GameCameraMode::Following(_) => {
-            return;
-        }
-        _ => {}
+    if let GameCameraMode::Following(_) = q_camera.1.mode {
+        return;
     }
     let mut to_move = Vec2::ZERO;
     if input.pressed(KeyCode::KeyW) {

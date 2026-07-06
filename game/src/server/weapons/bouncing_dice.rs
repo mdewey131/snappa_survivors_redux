@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use lightyear::prelude::*;
 
 use crate::{
     render::weapons::*,

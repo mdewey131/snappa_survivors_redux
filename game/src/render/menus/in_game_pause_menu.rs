@@ -38,7 +38,7 @@ pub fn spawn_pause_menu(mut commands: Commands, assets: Res<AssetServer>) {
 
     let menu = commands.spawn((PauseMenu, ChildOf(screen))).id();
     let sys_id = commands.register_system(exit_game);
-    let button = GameButton::new(GameButtonOnRelease::TriggerSystem((sys_id)));
+    let button = GameButton::new(GameButtonOnRelease::TriggerSystem(sys_id ));
     let style = GameButtonStyle::default()
         .with_color(Color::srgb(1.0, 0.0, 0.0))
         .with_text(String::from("Exit Game"));

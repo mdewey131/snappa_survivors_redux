@@ -1,9 +1,8 @@
 use crate::{
     render::RenderYtoZ,
     shared::{
-        colliders::CollisionEffect,
         combat::CombatEntityActive,
-        damage::{DamageBuffer, DamageInstance, Dead},
+        damage::{DamageBuffer, DamageInstance},
         despawn_timer::DespawnTimer,
         game_object_spawning::SpawnGameObject,
         weapons::ActivateWeapon,
@@ -94,7 +93,7 @@ pub fn shifty_shot_deactivate<QF: QueryFilter>(
     mut commands: Commands,
     mut q_weapon: Query<(&WeaponShiftyShot, &CooldownRate), QF>,
 ) {
-    if let Ok((weapon, cdr)) = q_weapon.get_mut(trigger.entity) {
+    if let Ok((_weapon, cdr)) = q_weapon.get_mut(trigger.entity) {
         commands.entity(trigger.entity).insert(Cooldown::new(cdr.0));
     }
 }
@@ -191,7 +190,7 @@ pub fn add_shifty_shot_attack_sprite<QF: QueryFilter>(
     trigger: On<Add, ShiftyShotAttack>,
     mut commands: Commands,
     assets: Res<AssetServer>,
-    q_attack: Query<(&Position), (With<ShiftyShotAttack>, QF)>,
+    q_attack: Query<&Position , (With<ShiftyShotAttack>, QF)>,
 ) {
     if let Ok(pos) = q_attack.get(trigger.entity) {
         let image: Handle<Image> = assets.load("weapons/shifty_shot/projectile.png");

@@ -2,10 +2,7 @@ use bevy::{ecs::entity::MapEntities, prelude::*};
 use lightyear::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    client::load_game::client_transition_to_loading_state,
-    shared::{GameMainChannel, game_rules::GameRules, players::CharacterKind, states::AppState},
-};
+use crate::shared::{game_rules::GameRules, players::CharacterKind};
 
 pub struct LobbyProtocolPlugin;
 

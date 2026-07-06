@@ -16,22 +16,18 @@ pub fn apply_collision_effect_on_collision_start<E: CollisionEffect>(
         // fire each one if it's valid.
         // To fire should always be loaded in the order (triggering entity, triggered upon)
         let mut to_fire = Vec::new();
-        if let Ok(t) = q_trigger.get(col.collider1) {
-            if let Ok(layers) = q_collided_with.get(col.collider2) {
-                if (layers.memberships.0 & t.to.0) != 0 {
+        if let Ok(t) = q_trigger.get(col.collider1)
+            && let Ok(layers) = q_collided_with.get(col.collider2)
+                && (layers.memberships.0 & t.to.0) != 0 {
                     to_fire.push((t, col.collider1, col.collider2))
                 }
-            }
-        }
 
         // Test the other side
-        if let Ok(t) = q_trigger.get(col.collider2) {
-            if let Ok(layers) = q_collided_with.get(col.collider1) {
-                if (layers.memberships.0 & t.to.0) != 0 {
+        if let Ok(t) = q_trigger.get(col.collider2)
+            && let Ok(layers) = q_collided_with.get(col.collider1)
+                && (layers.memberships.0 & t.to.0) != 0 {
                     to_fire.push((t, col.collider2, col.collider1))
                 }
-            }
-        }
 
         for (trigger, applies_from, applies_to) in &to_fire {
             trigger

@@ -1,20 +1,11 @@
 use crate::shared::{
-    combat::CharacterFacing,
-    game_kinds::{CurrentGameKind, MultiPlayerComponentOptions},
-    game_object_spawning::spawn_game_object,
     game_rules::GameRules,
     loading::LevelLoadingState,
     maps::*,
-    players::{CharacterKind, Player, PlayerBaseBundle, PlayerWeapons},
     states::*,
     stats::xp::add_xp_manager,
-    upgrades::PlayerUpgradeSlots,
-    weapons::{WeaponKind, add_weapon_to_character},
 };
-use avian2d::prelude::Position;
 use bevy::prelude::*;
-use lightyear::prelude::{ControlledBy, Lifetime, LinkOf, RemoteId};
-use rand::Rng;
 
 pub struct DedicatedServerLoadingPlugin;
 
@@ -37,4 +28,4 @@ impl Plugin for DedicatedServerLoadingPlugin {
     }
 }
 
-fn load_level(mut commands: Commands, game_rules: Res<GameRules>) {}
+fn load_level(_commands: Commands, _game_rules: Res<GameRules>) {}

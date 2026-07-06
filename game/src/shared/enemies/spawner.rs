@@ -8,7 +8,6 @@ use crate::{
 };
 
 use super::*;
-use bevy::{math::VectorSpace, prelude::*};
 use ron::ser::PrettyConfig;
 
 #[derive(Resource, Default, Reflect)]
@@ -59,7 +58,7 @@ pub fn update_enemy_spawn_manager(
             }
         }
         EnemySpawnStyle::EditSpawnerWaves {
-            level,
+            level: _,
             ref mut load,
             ref mut save,
             ref mut list,
@@ -147,14 +146,14 @@ impl From<EnemySpawnerBuilder> for EnemySpawner {
             EnemySpawnerActivation::OneTime { at } => at,
             EnemySpawnerActivation::FixedWaves {
                 start_time,
-                tick_rate,
-                max_ticks,
-                c_ticks,
+                tick_rate: _,
+                max_ticks: _,
+                c_ticks: _,
             } => start_time,
             EnemySpawnerActivation::TimeLimit {
                 start_time,
-                end_time,
-                tick_rate,
+                end_time: _,
+                tick_rate: _,
             } => start_time,
         };
         Self {
@@ -215,21 +214,21 @@ pub fn add_enemy_spawner(
                 MapKind::DevZoo => None,
             };
             if let Some(s) = string {
-                let list = read_ron(s);
-                list
+                
+                read_ron(s)
             } else {
                 EnemySpawnerList(vec![])
             }
         }
         EnemySpawnStyle::EditSpawnerWaves {
-            level,
-            load,
-            save,
+            level: _,
+            load: _,
+            save: _,
             ref list,
         } => list.clone(),
         EnemySpawnStyle::Manual {
-            instruction,
-            should_fire,
+            instruction: _,
+            should_fire: _,
         } => EnemySpawnerList(vec![]),
     };
     for spawner in spawn_list.0 {
@@ -240,7 +239,7 @@ pub fn add_enemy_spawner(
 pub fn update_enemy_spawner(
     mut commands: Commands,
     mut q_spawner: Query<(Entity, &mut EnemySpawner)>,
-    q_player_positions: Query<(&Position), With<Player>>,
+    q_player_positions: Query<&Position , With<Player>>,
     game_timer: Res<Time<Virtual>>,
     in_game_time: Res<InGameTime>,
 ) {
@@ -252,7 +251,7 @@ pub fn update_enemy_spawner(
         if spawner.countdown_timer.just_finished() {
             let spawn_timer = match spawner.activation {
                 EnemySpawnerActivation::FixedWaves {
-                    start_time,
+                    start_time: _,
                     tick_rate,
                     max_ticks,
                     ref mut c_ticks,
@@ -261,8 +260,8 @@ pub fn update_enemy_spawner(
                     Some(Timer::from_seconds(tick_rate, TimerMode::Repeating))
                 }
                 EnemySpawnerActivation::TimeLimit {
-                    start_time,
-                    end_time,
+                    start_time: _,
+                    end_time: _,
                     tick_rate,
                 } => Some(Timer::from_seconds(tick_rate, TimerMode::Repeating)),
                 _ => None,
@@ -281,27 +280,25 @@ pub fn update_enemy_spawner(
 
                 match spawner.activation {
                     EnemySpawnerActivation::FixedWaves {
-                        start_time,
-                        tick_rate,
-                        max_ticks,
+                        start_time: _,
+                        tick_rate: _,
+                        max_ticks: _,
                         ref mut c_ticks,
-                    } => {
-                        if finished {
+                    }
+                        if finished => {
                             *c_ticks -= 1;
                             if *c_ticks == 0 {
                                 should_despawn_self = true
                             }
                         }
-                    }
                     EnemySpawnerActivation::TimeLimit {
-                        start_time,
+                        start_time: _,
                         end_time,
-                        tick_rate,
-                    } => {
-                        if end_time < in_game_time.0.elapsed_secs() {
+                        tick_rate: _,
+                    }
+                        if end_time < in_game_time.0.elapsed_secs() => {
                             should_despawn_self = true;
                         }
-                    }
                     _ => {}
                 }
             }

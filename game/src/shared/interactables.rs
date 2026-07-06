@@ -61,7 +61,7 @@ pub fn charge_beer_shrine(
     cols: Collisions,
     game_time: Res<Time<Virtual>>,
     q_charge_radius: Query<(Entity, &ChildOf), With<BeerShrineChargeRadius>>,
-    q_players: Query<(Entity), (Without<BeerShrineChargeRadius>, With<Player>)>,
+    q_players: Query<Entity , (Without<BeerShrineChargeRadius>, With<Player>)>,
     mut q_shrine: Query<&mut BeerShrine>,
 ) {
     for (radius, parent) in q_charge_radius {

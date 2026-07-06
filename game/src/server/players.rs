@@ -1,10 +1,9 @@
 use bevy::prelude::*;
-use lightyear::prelude::Replicate;
 
 use crate::{
     render::player::rendering_on_player_add,
     shared::{
-        colliders::CommonColliderBundle, combat::CombatSystemSet, game_kinds::DefaultServerFilter,
+        combat::CombatSystemSet, game_kinds::DefaultServerFilter,
         players::*, states::InGameState,
     },
 };

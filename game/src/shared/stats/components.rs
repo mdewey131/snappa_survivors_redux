@@ -1,19 +1,10 @@
-use std::{
-    marker::PhantomData,
-    sync::{Mutex, Weak},
-};
 
 use crate::shared::{
-    combat::CombatSystemSet,
     damage::DamageBuffer,
-    states::InGameState,
     stats::{StatKind, StatList},
 };
-use bevy::{
-    ecs::component::{Immutable, Mutable},
-    prelude::*,
-};
-use serde::{Deserialize, Serialize, de::DeserializeOwned};
+use bevy::prelude::*;
+use serde::{Deserialize, Serialize};
 
 /// Marks a compoonent as being dependent on a stat.
 ///

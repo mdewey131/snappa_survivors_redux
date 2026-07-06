@@ -54,8 +54,8 @@ fn rendering_on_shrine_add(
     mut materials: ResMut<Assets<BeerShrineMaterial>>,
     q_shrine: Query<(Entity, &Position), (Added<BeerShrine>, Without<Sprite>)>,
 ) {
-    for (shrine, pos) in &q_shrine {
-        let layout = TextureAtlasLayout::from_grid(UVec2::splat(96), 8, 1, None, None);
+    for (shrine, _pos) in &q_shrine {
+        let _layout = TextureAtlasLayout::from_grid(UVec2::splat(96), 8, 1, None, None);
         let front_image: Handle<Image> = asset.load("shrines/beer_shrine_front.png");
         let back_image: Handle<Image> = asset.load("shrines/beer_shrine_back.png");
 
@@ -100,7 +100,7 @@ fn animate_beer_shrine(
 
         for child in children {
             if let Ok(material) = q_beer_mesh.get(*child) {
-                let mut asset = materials
+                let asset = materials
                     .get_mut(material.id())
                     .expect("Material not found!");
                 asset.percent = pct_charge_remaining;

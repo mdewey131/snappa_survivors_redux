@@ -1,6 +1,6 @@
 use avian2d::prelude::*;
 use bevy::{
-    ecs::system::{BoxedSystem, SystemId},
+    ecs::system::SystemId,
     prelude::*,
 };
 use bluenoise::BlueNoise;
@@ -24,7 +24,6 @@ use crate::{
         pickups::{HEALTH_PICKUP_SPAWNER_COOLDOWN, HealthPickup, HealthPickupSpawner},
         players::spawn_characters,
         states::AppState,
-        stats::xp::add_xp_manager,
     },
     utils::SpawnPattern,
 };
@@ -140,8 +139,8 @@ impl MapKind {
             MapKind::DevZoo => Box::new(commands.register_system(spawn_zoo_interactables)),
         }
     }
-    fn custom_systems(&self, commands: &mut Commands) -> Vec<Box<SystemId>> {
-        let mut ret = Vec::new();
+    fn custom_systems(&self, _commands: &mut Commands) -> Vec<Box<SystemId>> {
+        let ret = Vec::new();
         match self {
             #[cfg(feature = "dev")]
             MapKind::DevZoo => ret.push(Box::new(commands.register_system((spawn_zoo_weapons)))),
@@ -215,8 +214,8 @@ fn spawn_map_chunks(mut commands: Commands, builder: Res<MapBuilder>) {
 
     let total_size_x = builder.settings.map_size_tiles.0 as f32 * builder.settings.tile_size.x;
     let total_size_y = builder.settings.map_size_tiles.1 as f32 * builder.settings.tile_size.y;
-    for x in (0..builder.settings.map_size_tiles.0 as usize) {
-        for y in (0..builder.settings.map_size_tiles.1 as usize) {
+    for x in 0..builder.settings.map_size_tiles.0 as usize  {
+        for y in 0..builder.settings.map_size_tiles.1 as usize  {
             commands.spawn((
                 Transform::from_translation(Vec3::new(
                     x as f32 * texture_size.x - (total_size_x / 2.0),

@@ -4,7 +4,7 @@ use crate::{
     render::weapons::*,
     shared::{
         combat::CombatSystemSet,
-        game_kinds::{DefaultServerFilter, is_single_player},
+        game_kinds::DefaultServerFilter,
         states::InGameState,
         weapons::throw_hands::*,
     },

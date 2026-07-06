@@ -70,7 +70,7 @@ impl<B: Bundle> SpawnGameObject<B> {
 }
 
 impl<B: Bundle> Command for SpawnGameObject<B> {
-    fn apply(self, world: &mut World) -> () {
+    fn apply(self, world: &mut World) {
         let entity = world.spawn_empty().id();
 
         if let Some(stat_path) = self.stats {

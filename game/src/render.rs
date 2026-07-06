@@ -2,8 +2,6 @@ use crate::{
     render::menus::loading_screen::LoadingScreenPlugin,
     shared::{
         enemies::EnemyKind,
-        game_rules::GameRules,
-        loading::{LevelLoadingState, LoadingAssets},
         players::CharacterKind,
         states::AppState,
         weapons::WeaponKind,
@@ -13,10 +11,8 @@ use avian2d::prelude::Position;
 #[cfg(feature = "avian_debug")]
 use avian2d::prelude::*;
 use bevy::{
-    asset::UntypedAssetId, platform::collections::HashMap, prelude::*, render::RenderSystems,
+    platform::collections::HashMap, prelude::*, render::RenderSystems,
 };
-use bevy_egui::EguiPlugin;
-use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
 pub mod animation;
 pub mod camera;
@@ -42,7 +38,6 @@ use shrines::SharedShrinesRenderPlugin;
 use ui::SharedUIPlugin;
 use upgrades::UpgradeRenderPlugin;
 
-use crate::shared::loading::track_loading_asset;
 #[cfg(feature = "dev")]
 use crate::shared::{
     enemies::editor::EnemySpawnManagerEditorPlugin, stats::editor::StatsEditorPlugin,
@@ -119,7 +114,7 @@ impl RenderYtoZ {
 }
 
 fn startup(mut commands: Commands) {
-    commands.spawn((Camera2d::default(), GameMainCamera::default()));
+    commands.spawn((Camera2d, GameMainCamera::default()));
 }
 
 fn render_y_to_z(mut q_pos: Query<(&mut Transform, &RenderYtoZ), Changed<Transform>>) {

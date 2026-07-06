@@ -53,8 +53,7 @@ impl MapEntities for XPPickup {
     fn map_entities<E: EntityMapper>(&mut self, entity_mapper: &mut E) {
         if self.targeting.is_some() {
             self.targeting = Some(entity_mapper.get_mapped(self.targeting.unwrap()))
-        } else {
-        }
+        } 
     }
 }
 
@@ -136,7 +135,7 @@ fn xp_orb_update(
                 let dir = (t_pos.0 - xp_pos.0).normalize_or_zero();
                 // shoutout parabolas
                 let velo_min =
-                    -1.0 * XP_PICKUP_BASE_MOVE_SPEED * (XP_PICKUP_CURVE_TIME_TO_ZERO).powf(2.0);
+                    -XP_PICKUP_BASE_MOVE_SPEED * (XP_PICKUP_CURVE_TIME_TO_ZERO).powf(2.0);
                 let speed = (XP_PICKUP_BASE_MOVE_SPEED) * pickup.t_time.powf(2.0) + velo_min;
 
                 if dist < 10.0 {
@@ -228,7 +227,7 @@ fn health_pickup(
     on: On<PickupTrigger>,
     mut commands: Commands,
     q_pickup: Query<&HealthPickup>,
-    mut q_target: Query<(&mut Health)>,
+    mut q_target: Query<&mut Health >,
 ) {
     if let Ok(pickup) = q_pickup.get(on.entity) {
         if let Ok(mut hp) = q_target.get_mut(on.apply_to) {

@@ -1,7 +1,4 @@
-use std::{
-    rc::Rc,
-    sync::{Arc, Mutex, Weak},
-};
+use std::sync::{Arc, Mutex, Weak};
 
 use bevy::{platform::collections::HashMap, prelude::*};
 use lightyear::prelude::*;
@@ -15,7 +12,7 @@ pub mod xp;
 
 use components::*;
 
-use crate::{shared::states::InGameState, utils::AssetFolder};
+use crate::utils::AssetFolder;
 
 /// The result of the inevitable "rewrite into an enum"
 #[derive(
@@ -166,7 +163,7 @@ impl Stat {
 
         if let Ok(mut guard) = self.current.lock() {
             *guard = self.base_value + modifier_total;
-            Some((*guard))
+            Some(*guard )
         } else {
             None
         }
@@ -204,7 +201,7 @@ impl StatModifier {
         stat_value.map(|sv| match self.method {
             StatModifierMethod::FlatAdd => sv,
             StatModifierMethod::MultipliyWithBase { coefficient } => {
-                ((base_stat * sv * coefficient) - base_stat)
+                (base_stat * sv * coefficient) - base_stat 
             }
         })
     }
@@ -244,9 +241,9 @@ impl StatList {
     pub fn get_current(&mut self, stat_kind: &StatKind) -> Option<f32> {
         let mut stat = self.list.get_mut(stat_kind);
         if let Some(ref mut s) = stat {
-            return s.get_current();
+            s.get_current()
         } else {
-            return None;
+            None
         }
     }
     pub fn remove(&mut self, stat_kind: &StatKind) -> Option<Stat> {

@@ -1,8 +1,8 @@
 use avian2d::prelude::{Physics, PhysicsTime};
-use bevy::{prelude::*, time::Stopwatch, ui::FixedMeasure};
+use bevy::{prelude::*, time::Stopwatch};
 
 use crate::shared::{
-    combat::{CombatEntityActive, CombatSystemSet},
+    combat::CombatSystemSet,
     damage::Dead,
     players::Player,
 };
@@ -59,10 +59,10 @@ pub fn check_game_over(
     mut res: ResMut<GameOverTimer>,
     q_players: Query<(), (With<Player>, Without<Dead>)>,
 ) {
-    if (q_players.is_empty() && res.timer.is_none()) {
+    if q_players.is_empty() && res.timer.is_none()  {
         res.start_timer();
     } else if q_players.is_empty() {
-        let mut timer = res.timer.as_mut().unwrap();
+        let timer = res.timer.as_mut().unwrap();
         timer.tick(time.delta());
         if timer.is_finished() {
             app_state.set(AppState::GameOver);

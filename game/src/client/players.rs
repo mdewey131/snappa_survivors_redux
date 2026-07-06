@@ -1,16 +1,10 @@
-use avian2d::prelude::*;
 use bevy::prelude::*;
-use bevy_enhanced_input::prelude::*;
-use lightyear::prelude::{Controlled, Predicted, Replicate};
 
 use crate::{
     render::player::rendering_on_player_add,
     shared::{
-        SINGLE_PLAYER_SERVER_PORT,
-        colliders::CommonColliderBundle,
         combat::CombatSystemSet,
-        game_kinds::{DefaultClientFilter, SinglePlayer, is_single_player},
-        inputs::Movement,
+        game_kinds::{DefaultClientFilter, is_single_player},
         players::*,
         states::InGameState,
     },

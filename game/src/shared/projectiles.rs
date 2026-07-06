@@ -26,22 +26,19 @@ pub struct Projectile {
 
 impl MapEntities for Projectile {
     fn map_entities<E: EntityMapper>(&mut self, entity_mapper: &mut E) {
-        match self.movement {
-            ProjectileMovement::Orbital {
+        if let ProjectileMovement::Orbital {
                 ref mut around,
-                speed,
-                radius,
-                c_angle,
-            } => {
-                *around = entity_mapper.get_mapped(*around);
-            }
-            _ => {}
+                speed: _,
+                radius: _,
+                c_angle: _,
+            } = self.movement {
+            *around = entity_mapper.get_mapped(*around);
         }
     }
 }
 
 impl From<Projectile> for CommonColliderBundle {
-    fn from(value: Projectile) -> Self {
+    fn from(_value: Projectile) -> Self {
         Self::new(
             RigidBody::Kinematic,
             Collider::rectangle(20.0, 20.0),
@@ -53,7 +50,7 @@ impl From<Projectile> for CommonColliderBundle {
 }
 
 impl From<Projectile> for MultiPlayerComponentOptions {
-    fn from(value: Projectile) -> Self {
+    fn from(_value: Projectile) -> Self {
         Self {
             pred: true,
             interp: false,
@@ -106,7 +103,7 @@ pub fn projectile_movement<QF: QueryFilter>(
 pub fn add_projectile_components<QF: QueryFilter>(
     trigger: On<Add, Projectile>,
     mut commands: Commands,
-    q_projectile: Query<(&Projectile), QF>,
+    q_projectile: Query<&Projectile , QF>,
 ) {
     if let Ok(p) = q_projectile.get(trigger.entity) {
         commands

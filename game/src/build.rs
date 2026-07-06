@@ -3,7 +3,6 @@ use std::time::Duration;
 use bevy::{prelude::*, state::app::StatesPlugin};
 use clap::{Parser, Subcommand};
 use lightyear::prelude::{client::ClientPlugins, server::ServerPlugins};
-use serde::Deserialize;
 
 use crate::{
     client::{ClientRenderPlugin, GameClientPlugin},
@@ -43,7 +42,7 @@ impl Cli {
     }
 }
 
-pub fn build_game_client_app(app: &mut App, c_id: Option<u64>, render: bool) {
+pub fn build_game_client_app(app: &mut App, _c_id: Option<u64>, render: bool) {
     if render {
         add_bevy_default_app_plugins(app, "Client".into());
         add_shared_game_renderer(app);

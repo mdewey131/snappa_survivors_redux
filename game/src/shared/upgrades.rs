@@ -1,18 +1,17 @@
-use std::fmt::Display;
 
 use crate::shared::{
     GameMainChannel,
     despawn_timer::DespawnTimer,
-    game_kinds::{CurrentGameKind, SinglePlayer, is_single_player},
-    players::{CharacterKind, Player, PlayerWeapons},
+    game_kinds::{CurrentGameKind, is_single_player},
+    players::{Player, PlayerWeapons},
     states::{AppState, InGameState},
     stats::{
-        RawStatsList, StatKind, StatList, StatModifier, TemporaryStatModifier, xp::LevelUpMessage,
+        StatKind, StatList, TemporaryStatModifier, xp::LevelUpMessage,
     },
-    weapons::{Weapon, WeaponKind, add_weapon_to_character},
+    weapons::{WeaponKind, add_weapon_to_character},
 };
 use bevy::{
-    platform::collections::{HashMap, HashSet},
+    platform::collections::HashMap,
     prelude::*,
 };
 use lightyear::prelude::*;
@@ -159,7 +158,7 @@ pub enum UpgradeRarity {
 }
 impl Distribution<UpgradeRarity> for StandardUniform {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> UpgradeRarity {
-        match rng.random_range((0..4)) {
+        match rng.random_range(0..4 ) {
             0 => UpgradeRarity::Common,
             1 => UpgradeRarity::Rare,
             2 => UpgradeRarity::Epic,
@@ -289,7 +288,7 @@ pub fn add_level_up_upgrades_to_queue(
     mut manager: ResMut<UpgradeManager>,
     q_player: Query<(Entity, &PlayerUpgradeSlots), With<Player>>,
 ) {
-    for m in reader.read() {
+    for _m in reader.read() {
         let input_data = q_player.iter().collect();
         let _ = manager.add_level_up_options_to_queue(input_data);
     }
@@ -307,7 +306,7 @@ pub fn add_upgrade_options_to_player(
     if manager.queue.is_none() {
         return Err("queue empty".into());
     }
-    let mut queue = manager.queue.as_mut().unwrap();
+    let queue = manager.queue.as_mut().unwrap();
     let mut player_options = queue
         .pop()
         .expect("The queue must have an entry if it exists");
@@ -362,11 +361,10 @@ pub fn server_on_receive_upgrade_selection_message(
     mut q_players: Query<(&ControlledBy, &mut UpgradeOptions)>,
 ) {
     for (cont, mut options) in &mut q_players {
-        if let Ok((mut messages)) = q_server.get_mut(cont.owner) {
-            if let Some(m) = messages.receive().next() {
+        if let Ok(mut messages ) = q_server.get_mut(cont.owner)
+            && let Some(m) = messages.receive().next() {
                 options.selected = Some(m.0)
             }
-        }
     }
 }
 
@@ -421,9 +419,9 @@ pub fn apply_upgrade(
         &mut StatList,
         &PlayerWeapons,
     )>,
-    mut q_weapon_stats: Query<(&mut StatList), Without<UpgradeOptions>>,
+    mut q_weapon_stats: Query<&mut StatList , Without<UpgradeOptions>>,
 ) {
-    for (ent, mut options, mut slots, mut player_stats, weapons) in &mut q_upgrade_options {
+    for (ent, mut options, mut slots, player_stats, weapons) in &mut q_upgrade_options {
         let index = options.selected.unwrap();
         let m_selected = options.options.get_mut(index);
         let selected = m_selected.unwrap();
@@ -439,9 +437,9 @@ pub fn apply_upgrade(
                 UpgradeReward::AddWeapon(w) => {
                     add_weapon_to_character(ent, w, &mut commands, game_kind.0.unwrap());
                 }
-                UpgradeReward::StatUpgrade { range, kind, value } => {
+                UpgradeReward::StatUpgrade { range: _, kind, value } => {
                     let sk = StatKind::from(kind);
-                    let mut stat = stats_list
+                    let stat = stats_list
                         .list
                         .get_mut(&sk)
                         .unwrap_or_else(|| panic!("This entity is expected to have {:?}", sk));

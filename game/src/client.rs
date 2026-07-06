@@ -19,7 +19,7 @@ use crate::{
 };
 use bevy::prelude::*;
 use lightyear::prelude::{
-    Client, InputTimelineConfig, PeerId, Predicted, ReplicationSender, Server, Timeline,
+    Client, InputTimelineConfig, PeerId, ReplicationSender, Server,
     client::InputDelayConfig,
 };
 use rand::Rng;
