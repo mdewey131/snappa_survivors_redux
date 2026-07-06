@@ -40,9 +40,10 @@ pub fn update_camera_pos_client(
     q_following: Query<&Transform, (With<Player>, Without<GameMainCamera>)>,
 ) {
     if let GameCameraMode::Following(e) = q_camera.1.mode
-        && let Ok(pt) = q_following.get(e) {
-            q_camera.0.translation = (pt.translation.xy()).extend(q_camera.0.translation.z)
-        }
+        && let Ok(pt) = q_following.get(e)
+    {
+        q_camera.0.translation = (pt.translation.xy()).extend(q_camera.0.translation.z)
+    }
 }
 
 pub fn update_free_cam_position(

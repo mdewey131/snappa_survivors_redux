@@ -1,10 +1,4 @@
-use crate::shared::{
-    game_rules::GameRules,
-    loading::LevelLoadingState,
-    maps::*,
-    states::*,
-    stats::xp::add_xp_manager,
-};
+use crate::shared::{loading::LevelLoadingState, maps::*, states::*, stats::xp::add_xp_manager};
 use bevy::prelude::*;
 
 pub struct DedicatedServerLoadingPlugin;
@@ -27,5 +21,3 @@ impl Plugin for DedicatedServerLoadingPlugin {
         );
     }
 }
-
-fn load_level(_commands: Commands, _game_rules: Res<GameRules>) {}

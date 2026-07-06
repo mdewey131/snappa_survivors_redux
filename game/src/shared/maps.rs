@@ -25,9 +25,6 @@ use crate::{
     utils::SpawnPattern,
 };
 
-mod the_greens;
-use the_greens::*;
-
 const MAP_BUILDER_SEED: u64 = 0;
 const MAP_BUILDER_SMALL_RNG_SEED: [u8; 32] = [0; 32];
 
@@ -102,7 +99,7 @@ impl MapKind {
     fn map_background(&self, commands: &mut Commands) -> Box<SystemId> {
         match self {
             #[cfg(feature = "dev")]
-            MapKind::DevZoo => Box::new(commands.register_system(map_chunks_the_greens)),
+            MapKind::DevZoo => Box::new(commands.register_system(spawn_map_chunks)),
             _ => Box::new(commands.register_system(spawn_map_chunks)),
         }
     }
@@ -129,13 +126,6 @@ impl MapKind {
         }
     }
 
-    fn map_elements(&self, commands: &mut Commands) -> Box<SystemId> {
-        match self {
-            MapKind::TheGreens => Box::new(commands.register_system(map_elements_the_greens)),
-            #[cfg(feature = "dev")]
-            MapKind::DevZoo => Box::new(commands.register_system(spawn_zoo_interactables)),
-        }
-    }
     fn custom_systems(&self, _commands: &mut Commands) -> Vec<Box<SystemId>> {
         let mut ret = Vec::new();
         match self {
@@ -160,7 +150,6 @@ pub struct MapBuilderSystems {
     pub characters: Box<SystemId>,
     pub interactables: Box<SystemId>,
     pub enemy_spawners: Box<SystemId>,
-    pub map_elements: Box<SystemId>,
     pub custom_systems: Vec<Box<SystemId>>,
 }
 
@@ -174,7 +163,6 @@ pub fn add_map_loading_systems(mut commands: Commands, game_rules: Res<GameRules
     let characters = game_rules.map_type.character_spawner(&mut commands);
     let interactables = game_rules.map_type.interactables_spawner(&mut commands);
     let enemy_spawners = game_rules.map_type.enemy_spawners(&mut commands);
-    let map_elements = game_rules.map_type.map_elements(&mut commands);
     let custom_systems = game_rules.map_type.custom_systems(&mut commands);
 
     commands.insert_resource(MapBuilderSystems {
@@ -182,14 +170,12 @@ pub fn add_map_loading_systems(mut commands: Commands, game_rules: Res<GameRules
         characters,
         interactables,
         enemy_spawners,
-        map_elements,
         custom_systems,
     });
 }
 
 pub fn run_map_loading_systems(mut commands: Commands, loading_systems: Res<MapBuilderSystems>) {
     commands.run_system(*loading_systems.map_background);
-    commands.run_system(*loading_systems.map_elements);
     commands.run_system(*loading_systems.enemy_spawners);
     commands.run_system(*loading_systems.interactables);
     commands.run_system(*loading_systems.characters);

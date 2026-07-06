@@ -3,9 +3,6 @@ use std::f32::consts::TAU;
 #[cfg(feature = "dev")]
 pub mod zoo;
 
-#[cfg(feature = "dev")]
-use zoo::*;
-
 use bevy::{
     ecs::{
         entity::MapEntities,
@@ -20,7 +17,6 @@ use serde::{Deserialize, Serialize, de::DeserializeOwned};
 /// a concrete instance of type T
 pub fn read_ron<T: DeserializeOwned>(path: String) -> T {
     if let Ok(s) = std::fs::read_to_string(&path) {
-        
         ron::from_str::<T>(&s).expect("Failed to Deserialize Type")
     } else {
         panic!("Failed to read file {:?}", &path);

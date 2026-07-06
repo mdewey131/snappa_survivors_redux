@@ -2,7 +2,6 @@ use crate::shared::{
     combat::CharacterFacing,
     game_kinds::{CurrentGameKind, GameKinds},
     game_rules::GameRules,
-    maps::*,
     players::{CharacterKind, Player, PlayerBaseBundle, PlayerWeapons},
     states::AppState,
     stats::RawStatsList,

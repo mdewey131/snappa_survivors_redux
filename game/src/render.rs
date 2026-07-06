@@ -8,7 +8,7 @@ use avian2d::prelude::*;
 #[cfg(feature = "inspector")]
 use bevy_egui::EguiPlugin;
 #[cfg(feature = "inspector")]
-use bevy_inspector_egui::quick::{ResourceInspectorPlugin, WorldInspectorPlugin};
+use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
 use bevy::{platform::collections::HashMap, prelude::*, render::RenderSystems};
 
