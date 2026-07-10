@@ -68,7 +68,7 @@ pub fn shifty_shot_activate<QF: QueryFilter>(
                 let rem_bounces = bounces.0 as u8;
                 let enemy_pos = q_enemies.get(e.0).unwrap().1;
                 let init_dir = (enemy_pos.0 - player_pos.0).normalize_or_zero();
-                let init_vel = speed.0 * init_dir;
+                let init_vel = init_dir * speed.0;
                 commands.queue(SpawnGameObject::new(
                     MultiPlayerComponentOptions::PREDICTED,
                     (
@@ -190,7 +190,7 @@ pub fn add_shifty_shot_attack_sprite<QF: QueryFilter>(
     trigger: On<Add, ShiftyShotAttack>,
     mut commands: Commands,
     assets: Res<AssetServer>,
-    q_attack: Query<&Position , (With<ShiftyShotAttack>, QF)>,
+    q_attack: Query<&Position, (With<ShiftyShotAttack>, QF)>,
 ) {
     if let Ok(pos) = q_attack.get(trigger.entity) {
         let image: Handle<Image> = assets.load("weapons/shifty_shot/projectile.png");

@@ -1,9 +1,8 @@
-
 use crate::{
     shared::{
         colliders::{ColliderTypes, CommonColliderBundle, RecentlyCollided},
         combat::{CharacterFacing, CombatEntityActive},
-        damage::Dead,
+        damage::{DeathState, EntityKilledMessage},
         game_kinds::{MultiPlayerComponentOptions, SinglePlayer},
         inputs::Movement,
         stats::{
@@ -84,7 +83,6 @@ pub enum CharacterKind {
 
 impl From<CharacterKind> for String {
     fn from(value: CharacterKind) -> Self {
-        
         match value {
             CharacterKind::Dewey => "Dewey".into(),
             CharacterKind::Finn => "Finn".into(),
@@ -97,24 +95,6 @@ impl From<CharacterKind> for String {
         }
     }
 }
-
-/*
-impl From<CharacterKind> for Path {
-    fn from(value: CharacterKind) -> Self {
-        let s: String = match value {
-            CharacterKind::Dewey => "survivors/dewey".into(),
-            CharacterKind::Finn => "survivors/finn".into(),
-            CharacterKind::Gabe => "survivors/gabe".into(),
-            CharacterKind::Mark => "survivors/mark".into(),
-            CharacterKind::Matthew => "survivors/matthew".into(),
-            CharacterKind::Paul => "survivors/paul".into(),
-            CharacterKind::Ryan => "survivors/ryan".into(),
-            CharacterKind::Shaunt => "survivors/shaunt".into(),
-        };
-        Self::new(&s)
-    }
-}
-*/
 
 impl From<CharacterKind> for AssetFolder {
     fn from(value: CharacterKind) -> Self {
@@ -165,9 +145,6 @@ pub struct PlayerBaseBundle {
     pub weapons: PlayerWeapons,
     pub facing: CharacterFacing,
 }
-
-#[derive(Component, Debug)]
-pub struct Reviving(pub Timer);
 
 /// Marker component for the pickup radius that a player has
 #[derive(Component, Debug, Clone, Copy)]
@@ -233,55 +210,71 @@ pub fn add_non_networked_player_components<QF: QueryFilter>(
     }
 }
 
-/// Need to do a variety of things on player death
-///
-/// pull stats to remove revives,
-pub fn on_player_death(
+pub fn check_player_death<QF: QueryFilter>(
     mut commands: Commands,
-    mut q_player: Query<
-        (Entity, &mut LinearVelocity, &Children, &mut StatList),
-        (With<Player>, Added<Dead>),
-    >,
+    mut messages: MessageReader<EntityKilledMessage>,
+    mut q_player: Query<(&mut LinearVelocity, &Children), (With<Player>, QF)>,
 ) {
-    for (ent, mut velo, children, mut list) in &mut q_player {
-        velo.0 = Vec2::ZERO;
-        commands.entity(ent).insert(ColliderDisabled);
-        for child in children {
-            commands.entity(*child).insert(Disabled);
-        }
-        let stat = list.remove(&StatKind::Revive);
-        if let Some(mut s) = stat {
-            let rev_val = s.get_current().unwrap_or(0.0 - f32::EPSILON);
-            if rev_val > 0.0 {
-                s.base_value -= 1.0;
-                list.list.insert(StatKind::Revive, s);
-                commands
-                    .entity(ent)
-                    .remove::<Dead>()
-                    .insert(Reviving(Timer::from_seconds(1.0, TimerMode::Once)));
+    for message in messages.read() {
+        if let Ok((mut velo, children)) = q_player.get_mut(message.dead_entity) {
+            velo.0 = Vec2::ZERO;
+            for child in children.iter() {
+                commands.entity(child).insert(Disabled);
             }
-        } else {
-            commands.entity(ent).insert(Text2d::from("DEAD"));
+            commands
+                .entity(message.dead_entity)
+                .insert(DeathState::Dying(Timer::from_seconds(1.0, TimerMode::Once)));
         }
     }
 }
 
-pub fn on_player_revive(
-    time: Res<Time<Virtual>>,
+pub fn while_player_dead<QF: QueryFilter>(
     mut commands: Commands,
-    mut q_player: Query<(Entity, &mut Reviving, &Children, &mut Health), With<Player>>,
+    time: Res<Time<Virtual>>,
+    mut q_player: Query<
+        (
+            Entity,
+            &mut Deat,s
+            &mut StatList,
+            &mut Health,
+            &Children,
+        ),
+        (With<Player>, QF),
+    >,
 ) {
-    for (player, mut rev, children, mut health) in &mut q_player {
-        rev.0.tick(time.delta());
-        if rev.0.is_finished() {
-            commands
-                .entity(player)
-                .remove::<Reviving>()
-                .remove::<ColliderDisabled>();
-
-            health.current = health.max() * 0.5;
-            for child in children {
-                commands.entity(*child).remove::<Disabled>();
+    for (player, mut death, mut list, mut health, children) in &mut q_player {
+        match *death {
+            DeathState::Dying(ref mut t) => {
+                t.tick(time.delta());
+                if t.just_finished() {
+                    info!("Done Dying!");
+                    let stat = list.remove(&StatKind::Revive);
+                    if let Some(mut s) = stat {
+                        let rev_val = s.get_current().unwrap_or(0.0 - f32::EPSILON);
+                        if rev_val > 0.0 {
+                            s.base_value -= 1.0;
+                            list.list.insert(StatKind::Revive, s);
+                            *death = DeathState::Reviving(Timer::from_seconds(1.0, TimerMode::Once))
+                        }
+                    }
+                }
+            }
+            DeathState::Reviving(ref mut t) => {
+                t.tick(time.delta());
+                if t.is_finished() {
+                    info!("Reviving!");
+                    commands
+                        .entity(player)
+                        .remove::<DeathState>()
+                        .remove::<ColliderDisabled>();
+                    health.current = health.max() * 0.5;
+                    for child in children {
+                        commands.entity(*child).remove::<Disabled>();
+                    }
+                }
+            }
+            DeathState::Dead => {
+                info!("Dead!");
             }
         }
     }

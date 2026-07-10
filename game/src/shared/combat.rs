@@ -3,13 +3,10 @@ use bevy::prelude::*;
 use lightyear::prelude::*;
 use serde::{Deserialize, Serialize};
 
-pub type EntityIncapacitated = Or<(With<Dead>, With<Reviving>)>;
-pub type CombatEntityActive = (Without<Dead>, Without<Reviving>);
+use crate::shared::damage::DeathState;
+pub type EntityIncapacitated = With<DeathState>;
+pub type CombatEntityActive = Without<DeathState>;
 
-use crate::shared::{
-    damage::Dead,
-    players::Reviving,
-};
 #[derive(SystemSet, Hash, Eq, PartialEq, Debug, Clone, Copy, Default)]
 pub enum CombatSystemSet {
     /// Used for anything that should make itself known to combat beforehand (e.g. spawning bullets, leveling))

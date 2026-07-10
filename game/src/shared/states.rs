@@ -1,11 +1,7 @@
 use avian2d::prelude::{Physics, PhysicsTime};
 use bevy::{prelude::*, time::Stopwatch};
 
-use crate::shared::{
-    combat::CombatSystemSet,
-    damage::Dead,
-    players::Player,
-};
+use crate::shared::{combat::CombatSystemSet, damage::DeathState, players::Player};
 
 /// Handles all of the logic that is relevant to the game loop.
 #[derive(States, Component, Clone, PartialEq, Eq, Hash, Debug, Default, Copy)]
@@ -57,19 +53,23 @@ pub fn check_game_over(
     mut app_state: ResMut<NextState<AppState>>,
     mut game_state: ResMut<NextState<InGameState>>,
     mut res: ResMut<GameOverTimer>,
-    q_players: Query<(), (With<Player>, Without<Dead>)>,
+    q_players: Query<(&DeathState), (With<Player>,)>,
 ) {
-    if q_players.is_empty() && res.timer.is_none()  {
+    let all_players_dead = q_players.iter().all(|death| match death {
+        DeathState::Dead => true,
+        _ => false,
+    });
+    if q_players.is_empty() && res.timer.is_some() {
+        res.timer = None
+    } else if all_players_dead && res.timer.is_none() {
         res.start_timer();
-    } else if q_players.is_empty() {
+    } else if all_players_dead {
         let timer = res.timer.as_mut().unwrap();
         timer.tick(time.delta());
         if timer.is_finished() {
             app_state.set(AppState::GameOver);
             game_state.set(InGameState::OutOfGame);
         }
-    } else if !q_players.is_empty() && res.timer.is_some() {
-        res.timer = None;
     }
 }
 

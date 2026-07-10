@@ -26,18 +26,16 @@ pub struct DamageInstance {
     pub amount: f32,
 }
 
-#[derive(Component, Clone, Copy, Serialize, Deserialize, PartialEq, PartialOrd, Reflect, Debug)]
-pub struct Dead;
-
-/// Added on entities that are dead, in order to determine when we're going to despawn these units.
-///
-/// This should also be looked for in order to figure out some animation elements, like a dying animation
-#[derive(Component, Clone, Deref, DerefMut, Serialize, Deserialize, PartialEq, Reflect, Debug)]
-pub struct DeathTimer(pub Timer);
-impl DeathTimer {
-    pub fn new(secs: f32) -> Self {
-        Self(Timer::from_seconds(secs, TimerMode::Once))
-    }
+/// This marks that an entity has had their health reduced to below 0.
+/// Entities who are dead may not necessarily end up fully dead. They may
+/// instead end up getting revived. This component gets added to things
+/// to let us know "hey, one of those things is happening", which helps avoid targeting
+/// dead OR reviving OR dying entities
+#[derive(Component, Clone, Serialize, Deserialize, Reflect, Debug)]
+pub enum DeathState {
+    Dying(Timer),
+    Reviving(Timer),
+    Dead,
 }
 
 pub struct SharedDamagePlugin;
@@ -46,12 +44,7 @@ impl Plugin for SharedDamagePlugin {
     fn build(&self, app: &mut App) {
         app.add_message::<EntityKilledMessage>().add_systems(
             FixedPostUpdate,
-            ((
-                tick_death_timer,
-                apply_frame_damage,
-                clear_damage_buffer,
-                apply_dead_component,
-            )
+            ((apply_frame_damage, clear_damage_buffer)
                 .chain()
                 .in_set(CombatSystemSet::Cleanup),),
         );
@@ -69,8 +62,8 @@ impl Plugin for DamageProtocolPlugin {
 
 #[derive(Message)]
 pub struct EntityKilledMessage {
-    dead_entity: Entity,
-    responsible_entity: Entity,
+    pub dead_entity: Entity,
+    pub responsible_entity: Entity,
 }
 
 fn apply_frame_damage(
@@ -112,24 +105,5 @@ fn apply_frame_damage(
 fn clear_damage_buffer(mut q_buffer: Query<&mut DamageBuffer>) {
     for mut buff in &mut q_buffer {
         buff.drain(..);
-    }
-}
-
-fn apply_dead_component(mut commands: Commands, mut events: MessageReader<EntityKilledMessage>) {
-    for e in events.read() {
-        commands.entity(e.dead_entity).insert(Dead);
-    }
-}
-
-fn tick_death_timer(
-    time: Res<Time<Fixed>>,
-    mut commands: Commands,
-    mut q_timer: Query<(Entity, &mut DeathTimer)>,
-) {
-    for (time_ent, mut death_timer) in &mut q_timer {
-        death_timer.tick(time.delta());
-        if death_timer.just_finished() {
-            commands.entity(time_ent).despawn();
-        }
     }
 }

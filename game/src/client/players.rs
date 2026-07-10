@@ -23,7 +23,12 @@ impl Plugin for ClientPlayerPlugin {
                 )
                     .in_set(CombatSystemSet::Combat)
                     .run_if(in_state(InGameState::InGame)),
-                (on_player_death, on_player_revive).run_if(is_single_player),
+                (
+                    check_player_death::<DefaultClientFilter>,
+                    while_player_dead::<DefaultClientFilter>,
+                )
+                    .in_set(CombatSystemSet::Last)
+                    .run_if(in_state(InGameState::InGame)),
             ),
         )
         .add_observer(add_non_networked_player_components::<DefaultClientFilter>);

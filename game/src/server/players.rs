@@ -3,8 +3,7 @@ use bevy::prelude::*;
 use crate::{
     render::player::rendering_on_player_add,
     shared::{
-        combat::CombatSystemSet, game_kinds::DefaultServerFilter,
-        players::*, states::InGameState,
+        combat::CombatSystemSet, game_kinds::DefaultServerFilter, players::*, states::InGameState,
     },
 };
 
@@ -15,11 +14,19 @@ impl Plugin for ServerPlayerPlugin {
         app.add_systems(
             FixedUpdate,
             (
-                player_movement::<DefaultServerFilter>,
-                update_player_facing_direction::<DefaultServerFilter>,
-            )
-                .in_set(CombatSystemSet::Combat)
-                .run_if(in_state(InGameState::InGame)),
+                (
+                    player_movement::<DefaultServerFilter>,
+                    update_player_facing_direction::<DefaultServerFilter>,
+                )
+                    .in_set(CombatSystemSet::Combat)
+                    .run_if(in_state(InGameState::InGame)),
+                (
+                    check_player_death::<DefaultServerFilter>,
+                    while_player_dead::<DefaultServerFilter>,
+                )
+                    .in_set(CombatSystemSet::Last)
+                    .run_if(in_state(InGameState::InGame)),
+            ),
         )
         .add_observer(add_non_networked_player_components::<DefaultServerFilter>);
     }

@@ -23,20 +23,22 @@ impl Plugin for ClientEnemyPlugin {
             (
                 (
                     update_enemy_spawner.run_if(is_single_player),
-                    enemy_state_machine::<
-                        Or<(With<Predicted>, With<SinglePlayer>)>,
-                        Or<(With<Predicted>, With<SinglePlayer>)>,
-                    >,
+                    enemy_state_machine::<DefaultClientFilter, DefaultClientFilter>,
                 )
                     .in_set(CombatSystemSet::Combat)
                     .run_if(in_state(InGameState::InGame)),
-                update_enemy_spawn_manager.run_if(
-                    in_state(InGameState::InGame).and(resource_exists::<EnemySpawnManager>),
-                ),
+                update_enemy_spawn_manager
+                    .run_if(in_state(InGameState::InGame))
+                    .run_if(resource_exists::<EnemySpawnManager>),
+                (
+                    check_enemy_death::<DefaultClientFilter>,
+                    while_enemy_dead::<DefaultClientFilter>,
+                )
+                    .run_if(is_single_player)
+                    .in_set(CombatSystemSet::Last),
             ),
         )
-        .add_observer(add_non_replicated_enemy_components::<DefaultClientFilter>)
-        .add_observer(on_enemy_death);
+        .add_observer(add_non_replicated_enemy_components::<DefaultClientFilter>);
     }
 }
 

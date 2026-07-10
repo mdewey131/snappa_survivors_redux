@@ -6,11 +6,12 @@ use serde::{Deserialize, Serialize};
 use crate::{
     shared::{
         colliders::*,
-        damage::{Dead, DeathTimer},
+        damage::{DeathState, EntityKilledMessage},
         game_kinds::*,
         game_object_spawning::*,
         pickups::XPPickup,
         players::Player,
+        stats::{StatKind, StatList},
     },
     utils::AssetFolder,
 };
@@ -71,7 +72,6 @@ pub enum EnemyState {
     Spawning,
     LookForTargets,
     MovingTo(Entity),
-    Dying,
 }
 
 #[derive(Component, Debug, Clone, PartialEq, Reflect)]
@@ -121,7 +121,7 @@ pub fn enemy_state_machine<EnemyQF: QueryFilter, PlayerQF: QueryFilter>(
             Option<&mut EnemySpawnTimer>,
             Has<ColliderDisabled>,
         ),
-        EnemyQF ,
+        EnemyQF,
     >,
     q_targets: Query<(Entity, &Position), (With<Player>, Without<Enemy>, PlayerQF)>,
 ) {
@@ -161,15 +161,6 @@ pub fn enemy_state_machine<EnemyQF: QueryFilter, PlayerQF: QueryFilter>(
                     enemy.state = EnemyState::LookForTargets
                 }
             }
-            EnemyState::Dying => {
-                // Proxy for "we haven't run this before"
-                if !body_disabled {
-                    commands
-                        .entity(ent)
-                        .insert((ColliderDisabled, DeathTimer::new(0.5)));
-                    e_lv.0 = Vec2::ZERO;
-                }
-            }
         }
     }
 }
@@ -180,7 +171,7 @@ pub fn enemy_state_machine<EnemyQF: QueryFilter, PlayerQF: QueryFilter>(
 pub fn add_non_replicated_enemy_components<QF: QueryFilter>(
     trigger: On<Add, Enemy>,
     mut commands: Commands,
-    q_to_attach: Query<&Enemy, QF >,
+    q_to_attach: Query<&Enemy, QF>,
 ) {
     if let Ok(en) = q_to_attach.get(trigger.entity) {
         commands.entity(trigger.entity).insert((
@@ -192,21 +183,65 @@ pub fn add_non_replicated_enemy_components<QF: QueryFilter>(
     }
 }
 
-pub fn on_enemy_death(
-    trigger: On<Add, Dead>,
+pub fn check_enemy_death<QF: QueryFilter>(
+    mut messages: MessageReader<EntityKilledMessage>,
     mut commands: Commands,
     _gk: Res<CurrentGameKind>,
-    mut q_enemy: Query<(&Position, &mut Enemy)>,
+    mut q_enemy: Query<(&Position, &Enemy, &mut LinearVelocity), QF>,
 ) {
-    if let Ok((pos, mut enemy)) = q_enemy.get_mut(trigger.entity) {
-        let xp_amt = match enemy.kind {
-            EnemyKind::FacelessMan => 1.0,
-        };
-        enemy.state = EnemyState::Dying;
+    for message in messages.read() {
+        if let Ok((pos, enemy, mut lv)) = q_enemy.get_mut(message.dead_entity) {
+            let xp_amt = match enemy.kind {
+                EnemyKind::FacelessMan => 1.0,
+            };
 
-        commands.queue(SpawnGameObject::new(
-            MultiPlayerComponentOptions::PREDICTED,
-            (*pos, XPPickup::new(xp_amt)),
-        ));
+            commands.queue(SpawnGameObject::new(
+                MultiPlayerComponentOptions::PREDICTED,
+                (*pos, XPPickup::new(xp_amt)),
+            ));
+
+            commands.entity(message.dead_entity).insert((
+                ColliderDisabled,
+                DeathState::Dying(Timer::from_seconds(0.5, TimerMode::Once)),
+            ));
+            lv.0 = Vec2::ZERO;
+        }
+    }
+}
+
+pub fn while_enemy_dead<QF: QueryFilter>(
+    mut commands: Commands,
+    time: Res<Time<Virtual>>,
+    mut q_enemy: Query<(Entity, &mut DeathState, &mut StatList), (With<Enemy>, QF)>,
+) {
+    for (enemy, mut death, mut list) in &mut q_enemy {
+        match *death {
+            DeathState::Dying(ref mut t) => {
+                t.tick(time.delta());
+                if t.just_finished() {
+                    let stat = list.remove(&StatKind::Revive);
+                    if let Some(mut s) = stat {
+                        let rev_val = s.get_current().unwrap_or(0.0 - f32::EPSILON);
+                        if rev_val > 0.0 {
+                            s.base_value -= 1.0;
+                            list.list.insert(StatKind::Revive, s);
+                            commands.entity(enemy).insert(DeathState::Reviving(
+                                Timer::from_seconds(1.0, TimerMode::Once),
+                            ));
+                        }
+                    }
+                }
+            }
+            DeathState::Reviving(ref mut t) => {
+                t.tick(time.delta());
+                if t.just_finished() {
+                    commands
+                        .entity(enemy)
+                        .remove::<ColliderDisabled>()
+                        .remove::<DeathState>();
+                }
+            }
+            DeathState::Dead => commands.entity(enemy).despawn(),
+        }
     }
 }
