@@ -247,6 +247,7 @@ pub fn while_player_dead<QF: QueryFilter>(
             DeathState::Dying(ref mut t) => {
                 t.tick(time.delta());
                 if t.just_finished() {
+                    let mut should_kill = false;
                     info!("Done Dying!");
                     let stat = list.remove(&StatKind::Revive);
                     if let Some(mut s) = stat {
@@ -255,7 +256,14 @@ pub fn while_player_dead<QF: QueryFilter>(
                             s.base_value -= 1.0;
                             list.list.insert(StatKind::Revive, s);
                             *death = DeathState::Reviving(Timer::from_seconds(1.0, TimerMode::Once))
+                        } else {
+                            should_kill = true;
                         }
+                    } else {
+                        should_kill = true;
+                    }
+                    if should_kill {
+                        *death = DeathState::Dead
                     }
                 }
             }

@@ -219,16 +219,22 @@ pub fn while_enemy_dead<QF: QueryFilter>(
             DeathState::Dying(ref mut t) => {
                 t.tick(time.delta());
                 if t.just_finished() {
+                    let mut should_kill = false;
                     let stat = list.remove(&StatKind::Revive);
                     if let Some(mut s) = stat {
                         let rev_val = s.get_current().unwrap_or(0.0 - f32::EPSILON);
                         if rev_val > 0.0 {
                             s.base_value -= 1.0;
                             list.list.insert(StatKind::Revive, s);
-                            commands.entity(enemy).insert(DeathState::Reviving(
-                                Timer::from_seconds(1.0, TimerMode::Once),
-                            ));
+                            *death = DeathState::Reviving(Timer::from_seconds(1.0, TimerMode::Once))
+                        } else {
+                            should_kill = true;
                         }
+                    } else {
+                        should_kill = true;
+                    }
+                    if should_kill {
+                        *death = DeathState::Dead
                     }
                 }
             }
