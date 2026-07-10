@@ -234,7 +234,7 @@ pub fn while_player_dead<QF: QueryFilter>(
     mut q_player: Query<
         (
             Entity,
-            &mut Deat,s
+            &mut DeathState,
             &mut StatList,
             &mut Health,
             &Children,
