@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     shared::{
         colliders::*,
+        combat::CombatEntityActive,
         damage::{DeathState, EntityKilledMessage},
         game_kinds::*,
         game_object_spawning::*,
@@ -122,7 +123,10 @@ pub fn enemy_state_machine<EnemyQF: QueryFilter, PlayerQF: QueryFilter>(
         ),
         (EnemyQF, Without<DeathState>),
     >,
-    q_targets: Query<(Entity, &Position), (With<Player>, Without<Enemy>, PlayerQF)>,
+    q_targets: Query<
+        (Entity, &Position),
+        (With<Player>, Without<Enemy>, PlayerQF, CombatEntityActive),
+    >,
 ) {
     for (ent, mut enemy, e_pos, mut e_lv, mut m_timer) in &mut q_enemy {
         match enemy.state {
@@ -199,10 +203,11 @@ pub fn check_enemy_death<QF: QueryFilter>(
                 (*pos, XPPickup::new(xp_amt)),
             ));
 
-            commands
-                .entity(message.dead_entity)
-                .insert((DeathState::Dying(Timer::from_seconds(0.5, TimerMode::Once)),));
-            info!("Setting enemy {:?} velo to 0", message.dead_entity);
+            commands.entity(message.dead_entity).insert((
+                ColliderDisabled,
+                DeathState::Dying(Timer::from_seconds(0.5, TimerMode::Once)),
+            ));
+            trace!("Setting enemy {:?} velo to 0", message.dead_entity);
             lv.0 = Vec2::ZERO;
         }
     }

@@ -223,6 +223,7 @@ pub fn check_player_death<QF: QueryFilter>(
             }
             commands
                 .entity(message.dead_entity)
+                .insert(ColliderDisabled)
                 .insert(DeathState::Dying(Timer::from_seconds(1.0, TimerMode::Once)));
         }
     }
