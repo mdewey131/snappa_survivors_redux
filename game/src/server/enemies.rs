@@ -27,21 +27,22 @@ impl Plugin for DedicatedServerEnemyPlugin {
         )
         .add_systems(
             FixedUpdate,
+            ((
+                update_enemy_spawn_manager.run_if(resource_exists::<EnemySpawnManager>),
+                update_enemy_spawner,
+                enemy_state_machine::<With<Replicate>, With<Replicate>>,
+            )
+                .run_if(in_state(InGameState::InGame))
+                .in_set(CombatSystemSet::Combat),),
+        )
+        .add_systems(
+            FixedPostUpdate,
             (
-                (
-                    update_enemy_spawn_manager.run_if(resource_exists::<EnemySpawnManager>),
-                    update_enemy_spawner,
-                    enemy_state_machine::<With<Replicate>, With<Replicate>>,
-                )
-                    .run_if(in_state(InGameState::InGame))
-                    .in_set(CombatSystemSet::Combat),
-                (
-                    check_enemy_death::<DefaultServerFilter>,
-                    while_enemy_dead::<DefaultServerFilter>,
-                )
-                    .run_if(in_state(InGameState::InGame))
-                    .in_set(CombatSystemSet::Last),
-            ),
+                check_enemy_death::<DefaultServerFilter>,
+                while_enemy_dead::<DefaultServerFilter>,
+            )
+                .run_if(in_state(InGameState::InGame))
+                .in_set(CombatSystemSet::Last),
         )
         .add_observer(add_non_replicated_enemy_components::<DefaultServerFilter>);
     }

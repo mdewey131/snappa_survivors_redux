@@ -119,13 +119,12 @@ pub fn enemy_state_machine<EnemyQF: QueryFilter, PlayerQF: QueryFilter>(
             &Position,
             &mut LinearVelocity,
             Option<&mut EnemySpawnTimer>,
-            Has<ColliderDisabled>,
         ),
-        EnemyQF,
+        (EnemyQF, Without<DeathState>),
     >,
     q_targets: Query<(Entity, &Position), (With<Player>, Without<Enemy>, PlayerQF)>,
 ) {
-    for (ent, mut enemy, e_pos, mut e_lv, mut m_timer, body_disabled) in &mut q_enemy {
+    for (ent, mut enemy, e_pos, mut e_lv, mut m_timer) in &mut q_enemy {
         match enemy.state {
             EnemyState::Spawning => {
                 let timer = if m_timer.is_none() {
@@ -200,10 +199,10 @@ pub fn check_enemy_death<QF: QueryFilter>(
                 (*pos, XPPickup::new(xp_amt)),
             ));
 
-            commands.entity(message.dead_entity).insert((
-                ColliderDisabled,
-                DeathState::Dying(Timer::from_seconds(0.5, TimerMode::Once)),
-            ));
+            commands
+                .entity(message.dead_entity)
+                .insert((DeathState::Dying(Timer::from_seconds(0.5, TimerMode::Once)),));
+            info!("Setting enemy {:?} velo to 0", message.dead_entity);
             lv.0 = Vec2::ZERO;
         }
     }

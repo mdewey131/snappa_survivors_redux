@@ -248,7 +248,6 @@ pub fn while_player_dead<QF: QueryFilter>(
                 t.tick(time.delta());
                 if t.just_finished() {
                     let mut should_kill = false;
-                    info!("Done Dying!");
                     let stat = list.remove(&StatKind::Revive);
                     if let Some(mut s) = stat {
                         let rev_val = s.get_current().unwrap_or(0.0 - f32::EPSILON);
@@ -270,7 +269,6 @@ pub fn while_player_dead<QF: QueryFilter>(
             DeathState::Reviving(ref mut t) => {
                 t.tick(time.delta());
                 if t.is_finished() {
-                    info!("Reviving!");
                     commands
                         .entity(player)
                         .remove::<DeathState>()
@@ -281,9 +279,7 @@ pub fn while_player_dead<QF: QueryFilter>(
                     }
                 }
             }
-            DeathState::Dead => {
-                info!("Dead!");
-            }
+            DeathState::Dead => {}
         }
     }
 }
