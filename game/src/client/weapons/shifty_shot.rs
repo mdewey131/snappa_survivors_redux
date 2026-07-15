@@ -23,6 +23,11 @@ impl Plugin for ClientShiftyShotPlugin {
 pub struct ClientShiftyShotRenderPlugin;
 impl Plugin for ClientShiftyShotRenderPlugin {
     fn build(&self, app: &mut App) {
-        app.add_observer(add_shifty_shot_attack_sprite::<DefaultClientFilter>);
+        app.add_systems(
+            Update,
+            (reduce_orphaned_attack, restore_attack_size_on_target_found)
+                .run_if(in_state(InGameState::InGame)),
+        )
+        .add_observer(add_shifty_shot_attack_sprite::<DefaultClientFilter>);
     }
 }

@@ -146,8 +146,8 @@ pub fn update_shifty_shot_attack<QF: QueryFilter>(
         if should_retarget {
             let enemy_vec = q_enemies.iter().collect::<Vec<(Entity, &Position)>>();
             // Find a few different options potentially in the area for variety
-            let closest_2 = find_closest_in_list(5, pos.0, &enemy_vec);
-            let mut filtered_list = closest_2
+            let closest = find_closest_in_list(5, pos.0, &enemy_vec);
+            let mut filtered_list = closest
                 .into_iter()
                 .filter(|record| (record.0 != attack_data.target) && (record.1 <= range.0))
                 .map(|record| record.0)
@@ -174,7 +174,7 @@ pub fn update_shifty_shot_attack<QF: QueryFilter>(
 /// We don't handle this with collisions because it gets real hard to manage real fast, and it's likely going to be chaos to
 /// orchestrate without causing many bugs
 #[derive(Component, Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Reflect)]
-#[require(RigidBody::Dynamic)]
+#[require(RigidBody::Dynamic, Name = Name::from("Shifty Shot Attack"))]
 pub struct ShiftyShotAttack {
     pub target: Entity,
     pub remaining_bounces: u8,
@@ -199,5 +199,28 @@ pub fn add_shifty_shot_attack_sprite<QF: QueryFilter>(
             Transform::from_translation(pos.0.extend(pos.0.y)),
             RenderYtoZ::default(),
         ));
+    }
+}
+
+/// In the event that this shot doesn't have a target (synonym: has a DespawnTimer)
+/// We slowly shrink it down while its dying
+///
+/// If it gets a target and this component gets removed, we'll restore that size
+pub fn reduce_orphaned_attack(
+    mut q_sprite: Query<(&mut Transform, &DespawnTimer), With<ShiftyShotAttack>>,
+) {
+    for (mut pos, timer) in &mut q_sprite {
+        pos.scale = Vec3::splat(timer.fraction_remaining())
+    }
+}
+
+pub fn restore_attack_size_on_target_found(
+    mut removed: RemovedComponents<DespawnTimer>,
+    mut q_attack: Query<(&mut Transform), With<ShiftyShotAttack>>,
+) {
+    for rm in removed.read() {
+        if let Ok(mut t) = q_attack.get_mut(rm) {
+            t.scale = Vec3::splat(1.0)
+        }
     }
 }
