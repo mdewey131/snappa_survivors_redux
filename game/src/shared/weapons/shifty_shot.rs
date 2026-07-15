@@ -109,13 +109,16 @@ pub fn update_shifty_shot_attack<QF: QueryFilter>(
             &Damage,
             &AttackRange,
             &ProjectileSpeed,
+            Has<DespawnTimer>,
         ),
         (QF, Without<Enemy>),
     >,
     q_enemies: Query<(Entity, &Position), (With<Enemy>, CombatEntityActive)>,
     mut q_enemy_damage: Query<&mut DamageBuffer, With<Enemy>>,
 ) {
-    for (attack_ent, mut velo, pos, mut attack_data, dam, range, p_speed) in &mut q_attack {
+    for (attack_ent, mut velo, pos, mut attack_data, dam, range, p_speed, has_timer) in
+        &mut q_attack
+    {
         let mut should_retarget = false;
         let enemy_data = q_enemies.get(attack_data.target);
         // Enemy could die while this is in flight
@@ -124,7 +127,10 @@ pub fn update_shifty_shot_attack<QF: QueryFilter>(
             let new_vec = direction_vec * p_speed.0;
             velo.0 = new_vec;
 
-            if pos.0.distance(enemy_pos.0) <= ATTACK_DISTANCE_THRESHOLD {
+            // has_timer is being used in this case as a shorthand for
+            // "we previously damaged exactly this unit"
+            // may want to do that in a different way later, but good enough for now
+            if pos.0.distance(enemy_pos.0) <= ATTACK_DISTANCE_THRESHOLD && !has_timer {
                 let mut buffer = q_enemy_damage
                     .get_mut(e_ent)
                     .expect("Enemy without damage buffer");
@@ -156,12 +162,16 @@ pub fn update_shifty_shot_attack<QF: QueryFilter>(
             filtered_list.shuffle(&mut rand::rng());
             // There could be no one!
             if let Some(new_enemy_ent) = filtered_list.first() {
+                info!(
+                    "Shifty Shot Switching from {} to {}",
+                    attack_data.target, new_enemy_ent
+                );
                 attack_data.target = *new_enemy_ent;
                 // It could be the case that we previously gave this a despawn timer, but
                 // "now" there's an enemy and we just found them, so we always do this, but it
                 // will sometimes do nothing
                 commands.entity(attack_ent).remove::<DespawnTimer>();
-            } else {
+            } else if !has_timer {
                 velo.0 = Vec2::ZERO;
                 commands.entity(attack_ent).insert(DespawnTimer::new(0.5));
             }
@@ -174,7 +184,7 @@ pub fn update_shifty_shot_attack<QF: QueryFilter>(
 /// We don't handle this with collisions because it gets real hard to manage real fast, and it's likely going to be chaos to
 /// orchestrate without causing many bugs
 #[derive(Component, Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Reflect)]
-#[require(RigidBody::Dynamic, Name = Name::from("Shifty Shot Attack"))]
+#[require(RigidBody::Dynamic, Name = Name::from("Shifty Shot Attack"), CombatEntity = CombatEntity)]
 pub struct ShiftyShotAttack {
     pub target: Entity,
     pub remaining_bounces: u8,

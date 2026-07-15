@@ -22,6 +22,11 @@ pub enum CombatSystemSet {
     Last,
 }
 
+/// A simple marker component to help with some special behavior when states transition ,
+/// without invalidating the simplicity of other plugins
+#[derive(Component, Debug, Serialize, Deserialize)]
+pub struct CombatEntity;
+
 pub struct CombatPlugin;
 
 impl Plugin for CombatPlugin {

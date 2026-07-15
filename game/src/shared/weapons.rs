@@ -6,7 +6,7 @@ use strum::EnumIter;
 
 use crate::{
     shared::{
-        combat::{CombatSystemSet, Cooldown},
+        combat::{CombatEntity, CombatSystemSet, Cooldown},
         enemies::Enemy,
         game_kinds::{GameKinds, MultiPlayerComponentOptions},
         game_object_spawning::spawn_game_object,
@@ -56,6 +56,7 @@ impl Plugin for WeaponProtocolPlugin {
 }
 
 #[derive(Component, Serialize, Deserialize, Debug, PartialEq, Reflect, Clone, Copy)]
+#[require(Name = Name::from("Weapon"), CombatEntity = CombatEntity)]
 pub struct Weapon {
     kind: WeaponKind,
     activity_pattern: WeaponActivityPattern,

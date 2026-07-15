@@ -1,7 +1,7 @@
 use crate::{
     shared::{
         colliders::{ColliderTypes, CommonColliderBundle, RecentlyCollided},
-        combat::{CharacterFacing, CombatEntityActive},
+        combat::{CharacterFacing, CombatEntity, CombatEntityActive},
         damage::{DeathState, EntityKilledMessage},
         game_kinds::{MultiPlayerComponentOptions, SinglePlayer},
         inputs::Movement,
@@ -34,6 +34,7 @@ pub use spawning::*;
 /// state of the character while we wait for that person
 /// to come back
 #[derive(Component, Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Reflect)]
+#[require(Name = Name::from("player"), CombatEntity = CombatEntity)]
 pub struct Player {
     pub client: Option<PeerId>,
     pub character: CharacterKind,

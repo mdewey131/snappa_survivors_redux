@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::shared::{
     colliders::{ColliderTypes, CommonColliderBundle},
+    combat::CombatEntity,
     game_kinds::MultiPlayerComponentOptions,
 };
 
@@ -20,6 +21,7 @@ impl Plugin for ProjectileProtocolPlugin {
     }
 }
 #[derive(Component, Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[require(Name = Name::from("Projectile"), CombatEntity = CombatEntity)]
 pub struct Projectile {
     pub movement: ProjectileMovement,
 }
@@ -27,11 +29,12 @@ pub struct Projectile {
 impl MapEntities for Projectile {
     fn map_entities<E: EntityMapper>(&mut self, entity_mapper: &mut E) {
         if let ProjectileMovement::Orbital {
-                ref mut around,
-                speed: _,
-                radius: _,
-                c_angle: _,
-            } = self.movement {
+            ref mut around,
+            speed: _,
+            radius: _,
+            c_angle: _,
+        } = self.movement
+        {
             *around = entity_mapper.get_mapped(*around);
         }
     }
@@ -103,7 +106,7 @@ pub fn projectile_movement<QF: QueryFilter>(
 pub fn add_projectile_components<QF: QueryFilter>(
     trigger: On<Add, Projectile>,
     mut commands: Commands,
-    q_projectile: Query<&Projectile , QF>,
+    q_projectile: Query<&Projectile, QF>,
 ) {
     if let Ok(p) = q_projectile.get(trigger.entity) {
         commands
