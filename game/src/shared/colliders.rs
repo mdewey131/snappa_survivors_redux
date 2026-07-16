@@ -41,15 +41,13 @@ impl Plugin for SharedColliderPlugin {
 pub struct CollidersProtocolPlugin;
 impl Plugin for CollidersProtocolPlugin {
     fn build(&self, app: &mut App) {
-        app.register_component::<AppliesCollisionEffect<ApplyDamage>>()
-            .add_prediction();
-        app.register_component::<AppliesCollisionEffect<XPPickupFollowPlayer>>()
-            .add_prediction();
-        app.register_component::<AppliesCollisionEffect<TriggerPickup>>()
-            .add_prediction();
-        app.register_component::<RecentlyCollided>()
-            .add_prediction()
-            .add_map_entities();
+        app.component::<AppliesCollisionEffect<ApplyDamage>>()
+            .predict();
+        app.component::<AppliesCollisionEffect<XPPickupFollowPlayer>>()
+            .predict();
+        app.component::<AppliesCollisionEffect<TriggerPickup>>()
+            .predict();
+        app.component::<RecentlyCollided>().predict();
     }
 }
 
@@ -147,14 +145,15 @@ fn collision_damage_system(
             };
             if let Ok(applies_effect) = q_applies_damage.get(applying_entity)
                 && (layers.memberships.0 & applies_effect.to.0) != 0
-                    && recent_collided.with.get(&applying_entity).is_none() {
-                        recent_collided
-                            .with
-                            .insert(applying_entity, CollisionDamageTimer::new());
-                        applies_effect
-                            .eff
-                            .apply_to(&mut commands, ent_to_damage, applying_entity);
-                    }
+                && recent_collided.with.get(&applying_entity).is_none()
+            {
+                recent_collided
+                    .with
+                    .insert(applying_entity, CollisionDamageTimer::new());
+                applies_effect
+                    .eff
+                    .apply_to(&mut commands, ent_to_damage, applying_entity);
+            }
         }
     }
 }

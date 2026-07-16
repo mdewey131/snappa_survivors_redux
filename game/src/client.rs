@@ -19,10 +19,9 @@ use crate::{
 };
 use bevy::prelude::*;
 use lightyear::prelude::{
-    Client, InputTimelineConfig, PeerId, ReplicationSender, Server,
-    client::InputDelayConfig,
+    Client, InputTimelineConfig, PeerId, ReplicationSender, Server, client::InputDelayConfig,
 };
-use rand::Rng;
+use rand::RngExt;
 
 pub mod camera;
 pub mod client_states;
@@ -152,6 +151,7 @@ fn add_input_delay_on_client_add(trigger: On<Add, Client>, mut commands: Command
     let input =
         InputTimelineConfig::default().with_input_delay(InputDelayConfig::fixed_input_delay(10));
 
+    /*
     commands.entity(trigger.entity).insert((
         ReplicationSender::new(
             SEND_INTERVAL,
@@ -160,6 +160,7 @@ fn add_input_delay_on_client_add(trigger: On<Add, Client>, mut commands: Command
         ),
         input,
     ));
+    */
 }
 
 fn delete_client(mut commands: Commands, q_client: Single<Entity, With<Client>>) {

@@ -8,12 +8,10 @@ pub struct LobbyProtocolPlugin;
 
 impl Plugin for LobbyProtocolPlugin {
     fn build(&self, app: &mut App) {
-        app.register_component::<Lobby>()
-            .add_prediction()
-            .add_map_entities();
+        app.component::<Lobby>().predict();
 
-        app.register_component::<LobbyCaptain>();
-        app.register_component::<PlayerInLobby>().add_prediction();
+        app.component::<LobbyCaptain>();
+        app.component::<PlayerInLobby>().predict();
 
         app.add_message::<ClientStartGameMessage>();
         app.register_message::<ClientStartGameMessage>()

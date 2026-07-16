@@ -15,7 +15,8 @@ impl Plugin for SharedLoadingPlugin {
             .add_systems(
                 Update,
                 (check_loading_assets,).run_if(
-                    in_state(AppState::LoadingLevel).and(in_state(LevelLoadingState::LevelLoading)),
+                    in_state(AppState::LoadingLevel)
+                        .and_then(in_state(LevelLoadingState::LevelLoading)),
                 ),
             );
     }

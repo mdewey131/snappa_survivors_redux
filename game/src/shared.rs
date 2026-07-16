@@ -141,14 +141,14 @@ impl Plugin for GameProtocolPlugin {
         })
         .add_direction(NetworkDirection::Bidirectional);
 
-        app.register_component::<Position>()
-            .add_prediction()
+        app.component::<Position>()
+            .predict()
             .add_should_rollback(position_should_rollback)
             .add_linear_interpolation()
             .add_linear_correction_fn();
-        app.register_component::<LinearVelocity>().add_prediction();
+        app.component::<LinearVelocity>().predict();
 
-        app.register_component::<CreatedBy>().add_map_entities();
+        app.component::<CreatedBy>();
     }
 }
 

@@ -53,7 +53,7 @@ impl MapEntities for XPPickup {
     fn map_entities<E: EntityMapper>(&mut self, entity_mapper: &mut E) {
         if self.targeting.is_some() {
             self.targeting = Some(entity_mapper.get_mapped(self.targeting.unwrap()))
-        } 
+        }
     }
 }
 
@@ -90,9 +90,7 @@ impl CollisionEffect for XPPickupFollowPlayer {
 pub struct PickupsProtocolPlugin;
 impl Plugin for PickupsProtocolPlugin {
     fn build(&self, app: &mut App) {
-        app.register_component::<XPPickup>()
-            .add_prediction()
-            .add_map_entities();
+        app.component::<XPPickup>().predict();
     }
 }
 
@@ -227,7 +225,7 @@ fn health_pickup(
     on: On<PickupTrigger>,
     mut commands: Commands,
     q_pickup: Query<&HealthPickup>,
-    mut q_target: Query<&mut Health >,
+    mut q_target: Query<&mut Health>,
 ) {
     if let Ok(pickup) = q_pickup.get(on.entity) {
         if let Ok(mut hp) = q_target.get_mut(on.apply_to) {

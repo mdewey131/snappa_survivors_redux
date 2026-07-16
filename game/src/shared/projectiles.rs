@@ -15,9 +15,7 @@ use crate::shared::{
 pub struct ProjectileProtocolPlugin;
 impl Plugin for ProjectileProtocolPlugin {
     fn build(&self, app: &mut App) {
-        app.register_component::<Projectile>()
-            .add_prediction()
-            .add_map_entities();
+        app.component::<Projectile>().predict();
     }
 }
 #[derive(Component, Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]

@@ -87,7 +87,7 @@ pub struct EnemyProtocolPlugin;
 
 impl Plugin for EnemyProtocolPlugin {
     fn build(&self, app: &mut App) {
-        app.register_component::<Enemy>();
+        app.component::<Enemy>();
     }
 }
 

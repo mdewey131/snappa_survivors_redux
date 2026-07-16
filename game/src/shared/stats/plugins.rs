@@ -20,28 +20,27 @@ pub struct StatsProtocolPlugin;
 
 impl Plugin for StatsProtocolPlugin {
     fn build(&self, app: &mut App) {
-        app.register_component::<Armor>().add_prediction();
-        app.register_component::<AttackRange>().add_prediction();
-        app.register_component::<CritChance>().add_prediction();
-        app.register_component::<CritDamage>().add_prediction();
-        app.register_component::<CooldownRate>().add_prediction();
-        app.register_component::<Damage>().add_prediction();
-        app.register_component::<EffectSize>().add_prediction();
-        app.register_component::<EffectDuration>().add_prediction();
-        app.register_component::<Health>().add_prediction();
-        app.register_component::<HealthRegen>().add_prediction();
-        app.register_component::<Luck>().add_prediction();
-        app.register_component::<LifeSteal>().add_prediction();
-        app.register_component::<MovementSpeed>().add_prediction();
-        app.register_component::<PickupRadius>().add_prediction();
-        app.register_component::<ProjectileBounces>()
-            .add_prediction();
-        app.register_component::<ProjectileCount>().add_prediction();
-        app.register_component::<ProjectileSpeed>().add_prediction();
-        app.register_component::<Shield>().add_prediction();
-        app.register_component::<Thorns>().add_prediction();
-        app.register_component::<XPGain>().add_prediction();
-        app.register_component::<XPManager>().add_prediction();
+        app.component::<Armor>().predict();
+        app.component::<AttackRange>().predict();
+        app.component::<CritChance>().predict();
+        app.component::<CritDamage>().predict();
+        app.component::<CooldownRate>().predict();
+        app.component::<Damage>().predict();
+        app.component::<EffectSize>().predict();
+        app.component::<EffectDuration>().predict();
+        app.component::<Health>().predict();
+        app.component::<HealthRegen>().predict();
+        app.component::<Luck>().predict();
+        app.component::<LifeSteal>().predict();
+        app.component::<MovementSpeed>().predict();
+        app.component::<PickupRadius>().predict();
+        app.component::<ProjectileBounces>().predict();
+        app.component::<ProjectileCount>().predict();
+        app.component::<ProjectileSpeed>().predict();
+        app.component::<Shield>().predict();
+        app.component::<Thorns>().predict();
+        app.component::<XPGain>().predict();
+        app.component::<XPManager>().predict();
     }
 }
 

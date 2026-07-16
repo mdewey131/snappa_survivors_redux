@@ -7,7 +7,7 @@ use crate::shared::{
     game_object_spawning::SpawnGameObject,
 };
 use bevy::ecs::query::QueryFilter;
-use rand::Rng;
+use rand::RngExt;
 
 #[derive(Component)]
 pub struct WeaponBouncingDice;
@@ -42,7 +42,7 @@ impl Curve<f32> for BouncingDiceAttackCurve {
     }
 
     fn sample_unchecked(&self, t: f32) -> f32 {
-        -4.0 * (t - 0.5).powi(2) + 1.0 
+        -4.0 * (t - 0.5).powi(2) + 1.0
     }
 }
 
@@ -67,7 +67,7 @@ pub fn on_activate<QF: QueryFilter>(
         let mut rng = rand::rng();
         let angle_offset = rng.random_range(-(TAU / 36.0)..(TAU / 36.0));
         let base_angle = facing_vector.to_angle();
-        let new_vec = Vec2::from_angle(base_angle + angle_offset );
+        let new_vec = Vec2::from_angle(base_angle + angle_offset);
         let pos_to_target = position.0 + (speed.0 * new_vec);
         let _curve_top = match facing.c_dir {
             FacingDirection::Left | FacingDirection::Right => {
@@ -141,7 +141,7 @@ pub fn bouncing_dice_attack<QF: QueryFilter>(
             for (ent, _buff, e_pos) in &q_enemies {
                 if pos.0.distance(e_pos.0) <= eff_size.0 {
                     entities_to_damage.push(ent)
-                } 
+                }
             }
 
             for e_ent in entities_to_damage {
@@ -159,7 +159,7 @@ pub fn bouncing_dice_attack<QF: QueryFilter>(
                 let mut rng = rand::rng();
                 let angle_offset = rng.random_range(-(TAU / 36.0)..(TAU / 36.0));
                 let base_angle = dir_vec.to_angle();
-                let new_vec = Vec2::from_angle(base_angle + angle_offset );
+                let new_vec = Vec2::from_angle(base_angle + angle_offset);
                 let next_pos = attack.c_target + (new_vec * p_speed.0);
                 attack.init_pos = attack.c_target;
                 attack.c_target = next_pos;

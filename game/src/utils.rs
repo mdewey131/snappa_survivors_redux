@@ -11,7 +11,7 @@ use bevy::{
     prelude::*,
 };
 
-use rand::Rng;
+use rand::RngExt;
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 /// Reads the path that is provided and imports RON, returning
 /// a concrete instance of type T

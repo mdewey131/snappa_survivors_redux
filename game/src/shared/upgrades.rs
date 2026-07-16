@@ -1,22 +1,16 @@
-
 use crate::shared::{
     GameMainChannel,
     despawn_timer::DespawnTimer,
     game_kinds::{CurrentGameKind, is_single_player},
     players::{Player, PlayerWeapons},
     states::{AppState, InGameState},
-    stats::{
-        StatKind, StatList, TemporaryStatModifier, xp::LevelUpMessage,
-    },
+    stats::{StatKind, StatList, TemporaryStatModifier, xp::LevelUpMessage},
     weapons::{WeaponKind, add_weapon_to_character},
 };
-use bevy::{
-    platform::collections::HashMap,
-    prelude::*,
-};
+use bevy::{platform::collections::HashMap, prelude::*};
 use lightyear::prelude::*;
 use rand::{
-    Rng,
+    Rng, RngExt,
     distr::{Distribution, StandardUniform},
 };
 use serde::{Deserialize, Serialize};
@@ -58,11 +52,9 @@ impl Plugin for ClientUpgradePlugin {
                     .run_if(is_single_player),
                 (add_upgrade_options_to_player
                     .pipe(client_move_to_selecting_upgrades_state_on_upgrade_generation))
-                .run_if(
-                    is_single_player.and(
-                        resource_exists::<UpgradeManager>.and(upgrade_manager_queue_has_entries),
-                    ),
-                ),
+                .run_if(is_single_player.and_then(
+                    resource_exists::<UpgradeManager>.and_then(upgrade_manager_queue_has_entries),
+                )),
             )
                 .run_if(in_state(AppState::InGame)),
         );
@@ -83,8 +75,9 @@ impl Plugin for DedicatedServerUpgradePlugin {
         app.add_systems(
             Update,
             ((
-                add_level_up_upgrades_to_queue
-                    .run_if(resource_exists::<UpgradeManager>.and(in_state(InGameState::InGame))),
+                add_level_up_upgrades_to_queue.run_if(
+                    resource_exists::<UpgradeManager>.and_then(in_state(InGameState::InGame)),
+                ),
                 (
                     server_on_receive_upgrade_selection_message,
                     server_send_start_game_message_on_all_selected.run_if(all_players_selected),
@@ -92,7 +85,8 @@ impl Plugin for DedicatedServerUpgradePlugin {
                     .run_if(in_state(InGameState::SelectingUpgrades)),
                 (add_upgrade_options_to_player.pipe(server_send_upgrade_message_to_client),)
                     .run_if(
-                        resource_exists::<UpgradeManager>.and(upgrade_manager_queue_has_entries),
+                        resource_exists::<UpgradeManager>
+                            .and_then(upgrade_manager_queue_has_entries),
                     ),
             )
                 .run_if(in_state(AppState::InGame)),),
@@ -110,7 +104,7 @@ impl Plugin for TempUpgradePlugin {
             .add_direction(NetworkDirection::ClientToServer);
         app.register_message::<ServerStartGameMessage>()
             .add_direction(NetworkDirection::ServerToClient);
-        app.register_component::<UpgradeOptions>().add_prediction();
+        app.component::<UpgradeOptions>().predict();
         #[cfg(feature = "dev")]
         app.add_plugins(UpgradeEditorPlugin);
     }
@@ -158,7 +152,7 @@ pub enum UpgradeRarity {
 }
 impl Distribution<UpgradeRarity> for StandardUniform {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> UpgradeRarity {
-        match rng.random_range(0..4 ) {
+        match rng.random_range(0..4) {
             0 => UpgradeRarity::Common,
             1 => UpgradeRarity::Rare,
             2 => UpgradeRarity::Epic,
@@ -361,10 +355,11 @@ pub fn server_on_receive_upgrade_selection_message(
     mut q_players: Query<(&ControlledBy, &mut UpgradeOptions)>,
 ) {
     for (cont, mut options) in &mut q_players {
-        if let Ok(mut messages ) = q_server.get_mut(cont.owner)
-            && let Some(m) = messages.receive().next() {
-                options.selected = Some(m.0)
-            }
+        if let Ok(mut messages) = q_server.get_mut(cont.owner)
+            && let Some(m) = messages.receive().next()
+        {
+            options.selected = Some(m.0)
+        }
     }
 }
 
@@ -419,7 +414,7 @@ pub fn apply_upgrade(
         &mut StatList,
         &PlayerWeapons,
     )>,
-    mut q_weapon_stats: Query<&mut StatList , Without<UpgradeOptions>>,
+    mut q_weapon_stats: Query<&mut StatList, Without<UpgradeOptions>>,
 ) {
     for (ent, mut options, mut slots, player_stats, weapons) in &mut q_upgrade_options {
         let index = options.selected.unwrap();
@@ -437,7 +432,11 @@ pub fn apply_upgrade(
                 UpgradeReward::AddWeapon(w) => {
                     add_weapon_to_character(ent, w, &mut commands, game_kind.0.unwrap());
                 }
-                UpgradeReward::StatUpgrade { range: _, kind, value } => {
+                UpgradeReward::StatUpgrade {
+                    range: _,
+                    kind,
+                    value,
+                } => {
                     let sk = StatKind::from(kind);
                     let stat = stats_list
                         .list

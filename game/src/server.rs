@@ -46,7 +46,7 @@ use projectiles::DedicatedServerProjectilePlugin;
 pub struct GameServerPlugin;
 impl Plugin for GameServerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(ServerPlayerPlugin )
+        app.add_plugins(ServerPlayerPlugin)
             .add_observer(handle_new_client)
             .add_observer(add_player_to_lobby);
     }
@@ -160,14 +160,9 @@ pub fn handle_new_client(
     mut commands: Commands,
     _q_peer: Query<&RemoteId>,
 ) {
-    let _client = commands.entity(trigger.entity).insert((
-        ReplicationSender::new(
-            SEND_INTERVAL,
-            lightyear::prelude::SendUpdatesMode::SinceLastAck,
-            false,
-        ),
-        ReplicationReceiver::default(),
-    ));
+    let _client = commands
+        .entity(trigger.entity)
+        .insert((ReplicationSender, ReplicationReceiver));
 }
 
 fn add_player_to_lobby(

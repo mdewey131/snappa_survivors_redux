@@ -2,7 +2,7 @@ use avian2d::prelude::*;
 use bevy::{ecs::system::SystemId, prelude::*};
 use bluenoise::BlueNoise;
 use lightyear::core::id::RemoteId;
-use rand::{SeedableRng, prelude::SliceRandom, rngs::SmallRng};
+use rand::{RngExt, SeedableRng, prelude::SliceRandom, rngs::SmallRng};
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "dev")]
@@ -239,11 +239,7 @@ pub fn spawn_interactables_in_map(mut commands: Commands, mut builder: ResMut<Ma
     let num_health_pickups = builder.settings.num_health_spawners as usize;
     let to_spawn = num_shrines + num_health_pickups;
     let noise = &mut builder.noise;
-    let interactables = noise
-        .into_iter()
-        .by_ref()
-        .take(to_spawn)
-        .collect::<Vec<Vec2>>();
+    let interactables: Vec<Vec2> = noise.into_iter().by_ref().take(to_spawn).collect();
 
     let mut range = (0..interactables.len()).collect::<Vec<usize>>();
     range.shuffle(&mut rand::rng());

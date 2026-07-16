@@ -13,15 +13,15 @@ impl Plugin for ClientPauseMenuPlugin {
             (
                 (spawn_pause_menu).run_if(
                     in_state(AppState::InGame)
-                        .and(input_just_pressed(KeyCode::Escape))
-                        .and(|q_screen: Option<Single<&PauseMenuScreen>>| q_screen.is_none())
-                        .and(not(is_single_player)),
+                        .and_then(input_just_pressed(KeyCode::Escape))
+                        .and_then(|q_screen: Option<Single<&PauseMenuScreen>>| q_screen.is_none())
+                        .and_then(not(is_single_player)),
                 ),
                 (despawn_pause_menu).run_if(
                     in_state(AppState::InGame)
-                        .and(|q_screen: Option<Single<&PauseMenuScreen>>| q_screen.is_some())
-                        .and(input_just_pressed(KeyCode::Escape))
-                        .and(not(is_single_player)),
+                        .and_then(|q_screen: Option<Single<&PauseMenuScreen>>| q_screen.is_some())
+                        .and_then(input_just_pressed(KeyCode::Escape))
+                        .and_then(not(is_single_player)),
                 ),
             ),
         );
@@ -32,9 +32,9 @@ impl Plugin for ClientPauseMenuPlugin {
             (
                 (spawn_pause_menu, pause_in_game_state).run_if(
                     in_state(AppState::InGame)
-                        .and(input_just_pressed(KeyCode::Escape))
-                        .and(|q_screen: Option<Single<&PauseMenuScreen>>| q_screen.is_none())
-                        .and(is_single_player),
+                        .and_then(input_just_pressed(KeyCode::Escape))
+                        .and_then(|q_screen: Option<Single<&PauseMenuScreen>>| q_screen.is_none())
+                        .and_then(is_single_player),
                 ),
                 (
                     despawn_pause_menu,
@@ -42,9 +42,11 @@ impl Plugin for ClientPauseMenuPlugin {
                 )
                     .run_if(
                         in_state(AppState::InGame)
-                            .and(|q_screen: Option<Single<&PauseMenuScreen>>| q_screen.is_some())
-                            .and(input_just_pressed(KeyCode::Escape))
-                            .and(is_single_player),
+                            .and_then(|q_screen: Option<Single<&PauseMenuScreen>>| {
+                                q_screen.is_some()
+                            })
+                            .and_then(input_just_pressed(KeyCode::Escape))
+                            .and_then(is_single_player),
                     ),
             ),
         );

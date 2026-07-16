@@ -16,7 +16,7 @@ impl Plugin for ClientThrowHandsPlugin {
         app.add_systems(
             FixedUpdate,
             update_attack::<DefaultClientFilter>
-                .run_if(in_state(InGameState::InGame).and(is_single_player))
+                .run_if(in_state(InGameState::InGame).and_then(is_single_player))
                 .in_set(CombatSystemSet::Combat),
         )
         .add_observer(on_activate::<DefaultClientFilter>)

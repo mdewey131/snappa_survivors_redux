@@ -60,7 +60,7 @@ pub struct CombatProtocolPlugin;
 
 impl Plugin for CombatProtocolPlugin {
     fn build(&self, app: &mut App) {
-        app.register_component::<CharacterFacing>().add_prediction();
+        app.component::<CharacterFacing>().predict();
     }
 }
 

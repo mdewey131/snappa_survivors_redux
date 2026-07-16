@@ -10,7 +10,7 @@ use lightyear::{
     netcode::NetcodeClient,
     prelude::{client::NetcodeConfig, *},
 };
-use rand::Rng;
+use rand::RngExt;
 use serde::{Deserialize, Serialize};
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 

@@ -16,7 +16,7 @@ impl Plugin for ClientStatesPlugin {
         app.add_systems(
             Update,
             transition_to_lobby
-                .run_if(in_state(AppState::EstablishServerConnection).and(client_connected)),
+                .run_if(in_state(AppState::EstablishServerConnection).and_then(client_connected)),
         );
         app.add_systems(
             OnEnter(InGameState::InGame),

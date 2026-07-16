@@ -23,9 +23,7 @@ pub struct ThrowHandsProtocolPlugin;
 
 impl Plugin for ThrowHandsProtocolPlugin {
     fn build(&self, app: &mut App) {
-        app.register_component::<ThrowHandsAttack>()
-            .add_prediction()
-            .add_map_entities();
+        app.component::<ThrowHandsAttack>().predict();
     }
 }
 
@@ -139,7 +137,7 @@ pub fn update_attack<QF: QueryFilter>(
     mut commands: Commands,
     time: Res<Time<Fixed>>,
     mut q_attack: Query<(Entity, &mut ThrowHandsAttack, &Damage), QF>,
-    mut q_target: Query<&mut DamageBuffer >,
+    mut q_target: Query<&mut DamageBuffer>,
 ) {
     for (attack_ent, mut throw, damage) in &mut q_attack {
         match throw.state {

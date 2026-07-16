@@ -1,6 +1,9 @@
 use avian2d::prelude::Position;
 use bevy::prelude::*;
-use lightyear::prelude::{AppComponentExt, PredictionRegistrationExt};
+use lightyear::{
+    prediction::registry::PredictionBuilderExt,
+    prelude::{AppComponentExt, PredictionRegistrationExt},
+};
 use serde::{Deserialize, Serialize};
 use strum::EnumIter;
 
@@ -47,11 +50,9 @@ pub struct WeaponProtocolPlugin;
 impl Plugin for WeaponProtocolPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((ThrowHandsProtocolPlugin, ShiftyShotProtocolPlugin));
-        app.register_component::<Weapon>().add_prediction();
-        app.register_component::<DiceGuardProjectile>()
-            .add_prediction();
-        app.register_component::<BouncingDiceAttack>()
-            .add_prediction();
+        app.component::<Weapon>().predict();
+        app.component::<DiceGuardProjectile>().predict();
+        app.component::<BouncingDiceAttack>().predict();
     }
 }
 

@@ -23,9 +23,7 @@ pub struct ShiftyShotProtocolPlugin;
 
 impl Plugin for ShiftyShotProtocolPlugin {
     fn build(&self, app: &mut App) {
-        app.register_component::<ShiftyShotAttack>()
-            .add_prediction()
-            .add_map_entities();
+        app.component::<ShiftyShotAttack>().predict();
     }
 }
 

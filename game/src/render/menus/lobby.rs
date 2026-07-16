@@ -28,7 +28,7 @@ impl Plugin for LobbyMenuPlugin {
                 Update,
                 (
                     mp_propagate_client_change_character_message_to_server
-                        .run_if(in_state(AppState::Lobby).and(not(is_single_player))),
+                        .run_if(in_state(AppState::Lobby).and_then(not(is_single_player))),
                     animate_character_button,
                 ),
             )

@@ -1,4 +1,3 @@
-
 use super::*;
 use rand::{
     SeedableRng,
@@ -63,7 +62,7 @@ impl UpgradeManager {
             // Pick randomly from these upgrades
             let upgrades: Vec<_> = available_upgrades
                 .into_iter()
-                .choose_multiple(&mut self.rng, 3)
+                .sample(&mut self.rng, 3)
                 .into_iter()
                 .collect();
 
@@ -107,14 +106,16 @@ impl UpgradeManager {
     }
 
     pub fn add_shrine_rewards_to_queue(&mut self, players: Vec<Entity>) -> Result<(), String> {
-        let upgrades = [UpgradeKind::ShrineEffect(ShrineEffect::Stat(StatKind::Health)),
+        let upgrades = [
+            UpgradeKind::ShrineEffect(ShrineEffect::Stat(StatKind::Health)),
             UpgradeKind::ShrineEffect(ShrineEffect::Stat(StatKind::MS)),
             UpgradeKind::ShrineEffect(ShrineEffect::Stat(StatKind::CDR)),
-            UpgradeKind::ShrineEffect(ShrineEffect::Stat(StatKind::EffDuration))];
+            UpgradeKind::ShrineEffect(ShrineEffect::Stat(StatKind::EffDuration)),
+        ];
         let mut entries = HashMap::new();
         for player in players.iter() {
             let mut options = upgrades
-                .choose_multiple(&mut self.rng, 3)
+                .sample(&mut self.rng, 3)
                 .map(|kind| {
                     // All shrine bonuses have the same rarity and
                     self.make_upgrade(*kind, UpgradeRarity::Common, 1)
@@ -158,11 +159,7 @@ impl UpgradeManager {
                         *reward = r
                     }
 
-                    
-
-                    rewards_with_rolls
-                        .into_iter()
-                        .choose_multiple(&mut self.rng, 1)
+                    rewards_with_rolls.into_iter().sample(&mut self.rng, 1)
                 }
             }
         };
@@ -181,7 +178,11 @@ impl UpgradeManager {
         reward: &UpgradeReward,
     ) -> UpgradeReward {
         match reward {
-            UpgradeReward::StatUpgrade { range, kind, value: _ } => {
+            UpgradeReward::StatUpgrade {
+                range,
+                kind,
+                value: _,
+            } => {
                 let diff = range.max - range.min;
                 let i = match *rarity {
                     UpgradeRarity::Common => 0,

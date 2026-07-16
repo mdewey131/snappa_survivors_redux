@@ -154,7 +154,7 @@ pub struct PlayerPickupRadius;
 pub struct PlayerProtocolPlugin;
 impl Plugin for PlayerProtocolPlugin {
     fn build(&self, app: &mut App) {
-        app.register_component::<Player>();
+        app.component::<Player>();
     }
 }
 

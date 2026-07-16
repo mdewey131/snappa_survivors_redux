@@ -93,14 +93,14 @@ fn rendering_on_shrine_add(
 fn animate_beer_shrine(
     mut materials: ResMut<Assets<BeerShrineMaterial>>,
     q_shrine: Query<(&BeerShrine, &Children)>,
-    q_beer_mesh: Query<&MeshMaterial2d<BeerShrineMaterial>>,
+    q_beer_mesh: Query<&mut MeshMaterial2d<BeerShrineMaterial>>,
 ) {
     for (shrine, children) in &q_shrine {
         let pct_charge_remaining = shrine.current_charge / shrine.max_charge;
 
         for child in children {
             if let Ok(material) = q_beer_mesh.get(*child) {
-                let asset = materials
+                let mut asset = materials
                     .get_mut(material.id())
                     .expect("Material not found!");
                 asset.percent = pct_charge_remaining;

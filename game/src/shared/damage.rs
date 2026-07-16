@@ -1,5 +1,8 @@
 use bevy::{ecs::entity::MapEntities, prelude::*};
-use lightyear::prelude::{AppComponentExt, PredictionRegistrationExt};
+use lightyear::{
+    prediction::registry::PredictionBuilderExt,
+    prelude::{AppComponentExt, PredictionRegistrationExt},
+};
 use serde::{Deserialize, Serialize};
 
 use crate::shared::{
@@ -54,9 +57,7 @@ impl Plugin for SharedDamagePlugin {
 pub struct DamageProtocolPlugin;
 impl Plugin for DamageProtocolPlugin {
     fn build(&self, app: &mut App) {
-        app.register_component::<DamageBuffer>()
-            .add_prediction()
-            .add_map_entities();
+        app.component::<DamageBuffer>().predict();
     }
 }
 
