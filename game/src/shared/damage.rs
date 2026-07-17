@@ -13,11 +13,30 @@ use crate::shared::{
 #[derive(
     Component, Debug, Clone, Reflect, Deref, DerefMut, Default, PartialEq, Serialize, Deserialize,
 )]
-pub struct DamageBuffer(Vec<DamageInstance>);
+pub struct DamageBuffer {
+    buff: Vec<DamageInstance>,
+}
+
+impl DamageBuffer {
+    pub fn push_damage(&mut self, from: Entity, dam: f32, crit_chance: Option<f32>) {
+        let mut dam = DamageInstance {
+            damage_source: from,
+            amount: dam,
+            crit_chance: 0.0,
+            result: None,
+        };
+
+        if let Some(cc) = crit_chance {
+            dam.crit_chance = cc
+        }
+
+        self.buff.push(dam);
+    }
+}
 
 impl MapEntities for DamageBuffer {
     fn map_entities<E: EntityMapper>(&mut self, entity_mapper: &mut E) {
-        for inst in &mut self.0 {
+        for inst in &mut self.buff {
             inst.damage_source = entity_mapper.get_mapped(inst.damage_source);
         }
     }
@@ -26,7 +45,32 @@ impl MapEntities for DamageBuffer {
 #[derive(Clone, Copy, Serialize, Deserialize, PartialEq, PartialOrd, Reflect, Debug)]
 pub struct DamageInstance {
     pub damage_source: Entity,
+    // Marks the UNMITIGATED damage
     pub amount: f32,
+    /// Expects a number in [0.0, 1.0]
+    crit_chance: f32,
+    result: Option<DamageResult>,
+}
+
+#[derive(Clone, Copy, Serialize, Deserialize, PartialEq, PartialOrd, Reflect, Debug)]
+pub enum DamageResult {
+    /// The damage is going to go through, this is the amount to apply
+    Apply(f32),
+    /// There's a lot of reasons this can happen, but they generally
+    /// all point to "this entity is invulnerable right now for some reason"
+    DamageNegated,
+}
+
+/// Records when an entity's shield value has gone to 0 as a result of damage
+#[derive(EntityEvent)]
+pub struct ShieldBroken {
+    pub entity: Entity,
+}
+
+/// Sent to player entities responsible for this damage to tell them the net damage dealt
+pub struct DamageMessage {
+    pub dealt_by: Entity,
+    pub damage: f32,
 }
 
 /// This marks that an entity has had their health reduced to below 0.

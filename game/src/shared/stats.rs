@@ -3,6 +3,8 @@ use std::sync::{Arc, Mutex, Weak};
 use bevy::{platform::collections::HashMap, prelude::*};
 use serde::{Deserialize, Serialize};
 
+const MOVESPEED_CAP: f32 = 600.0;
+
 pub mod components;
 pub mod editor;
 pub mod plugins;
@@ -87,7 +89,7 @@ impl StatKind {
             StatKind::MS => {
                 ec.insert(MovementSpeed {
                     current: input,
-                    cap: 600.0,
+                    cap: MOVESPEED_CAP,
                 });
             }
             StatKind::PickupR => {
@@ -184,7 +186,7 @@ pub struct StatModifier {
 }
 
 impl StatModifier {
-    /// TODO: Make this value something other than 0
+    /// This gets initialized at 0, but then updates itself as its changing
     pub fn new(from_stat: Weak<Mutex<f32>>, method: StatModifierMethod) -> Self {
         Self {
             from_stat,
@@ -193,13 +195,17 @@ impl StatModifier {
         }
     }
     fn val(&mut self, base_stat: f32) -> Option<f32> {
-        let stat_value = self.from_stat.upgrade().map(|arc| match arc.lock() {
+        let from_stat_value = self.from_stat.upgrade().map(|arc| match arc.lock() {
             Ok(mutex_guard) => *mutex_guard,
             Err(_) => 0.0,
         });
-        stat_value.map(|sv| match self.method {
-            StatModifierMethod::FlatAdd => sv,
+        from_stat_value.map(|sv| match self.method {
+            StatModifierMethod::FlatAdd => {
+                self.val = sv;
+                sv
+            }
             StatModifierMethod::MultipliyWithBase { coefficient } => {
+                self.val = (base_stat * sv * coefficient) - base_stat;
                 (base_stat * sv * coefficient) - base_stat
             }
         })

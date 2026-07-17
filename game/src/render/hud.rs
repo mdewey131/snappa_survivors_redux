@@ -84,6 +84,7 @@ fn outer_hud_node() -> Node {
 pub struct GameTimeDisplay;
 fn game_time_node() -> Node {
     Node {
+        display: Display::Grid,
         width: Val::Percent(100.0),
         height: Val::Percent(100.0),
         grid_row: GridPlacement::start(2),
@@ -228,7 +229,7 @@ fn xp_bar_node(width: f32, height: f32) -> Node {
     Node {
         width: Val::Percent(width),
         height: Val::Percent(height),
-        align_items: AlignItems::FlexEnd,
+        align_items: AlignItems::Stretch,
         ..default()
     }
 }
@@ -241,10 +242,12 @@ pub struct HealthBar {
 }
 fn health_bar_holder_node() -> Node {
     Node {
+        display: Display::Grid,
         width: Val::Percent(100.0),
         height: Val::Percent(10.0),
         justify_content: JustifyContent::Center,
         align_items: AlignItems::Center,
+        justify_items: JustifyItems::Center,
         grid_column: GridPlacement::start_end(8, 13),
         grid_row: GridPlacement::start_end(16, 21),
         ..default()
@@ -421,13 +424,16 @@ fn spawn_hud_container(mut commands: Commands, assets: Res<AssetServer>) {
     // XP Bar
     let xp_bar = commands.spawn((XPBar, ChildOf(outer_ent))).id();
     let xp_texture: Handle<Image> = assets.load("ui/health_bar_texture.png");
-    let xp_background_node =
-        ImageNode::from(xp_texture.clone()).with_color(Color::srgb(0.2, 0.2, 0.2));
+    let xp_background_node = ImageNode::from(xp_texture.clone())
+        .with_color(Color::srgb(0.2, 0.2, 0.2))
+        .with_mode(NodeImageMode::Stretch);
     let xp_bg = commands
         .spawn((XPBarBackground, ChildOf(xp_bar), xp_background_node))
         .id();
 
-    let xp_foreground_node = ImageNode::from(xp_texture).with_color(Color::srgb(0.3, 0.3, 0.9));
+    let xp_foreground_node = ImageNode::from(xp_texture)
+        .with_color(Color::srgb(0.3, 0.3, 0.9))
+        .with_mode(NodeImageMode::Stretch);
     commands.spawn((XPBarForeground, ChildOf(xp_bg), xp_foreground_node));
 
     // HP Bar
@@ -437,13 +443,16 @@ fn spawn_hud_container(mut commands: Commands, assets: Res<AssetServer>) {
 
     let hp_texture: Handle<Image> = assets.load("ui/health_bar_texture.png");
 
-    let background_node =
-        ImageNode::from(hp_texture.clone()).with_color(Color::srgb(0.2, 0.2, 0.2));
+    let background_node = ImageNode::from(hp_texture.clone())
+        .with_color(Color::srgb(0.2, 0.2, 0.2))
+        .with_mode(NodeImageMode::Stretch);
     let bg = commands
         .spawn((HealthBarBackground, ChildOf(hp), background_node))
         .id();
 
-    let foreground_node = ImageNode::from(hp_texture).with_color(Color::srgb(1.0, 0.0, 0.0));
+    let foreground_node = ImageNode::from(hp_texture)
+        .with_color(Color::srgb(1.0, 0.0, 0.0))
+        .with_mode(NodeImageMode::Stretch);
     commands.spawn((HealthBarForeground, ChildOf(bg), foreground_node));
     commands.spawn((
         StatDisplayContainer {

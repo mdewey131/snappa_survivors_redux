@@ -27,7 +27,7 @@ pub struct GameButton {
 fn game_button_node() -> Node {
     Node {
         height: Val::Percent(50.0),
-        width: Val::Percent(50.0),
+        width: Val::Percent(100.0),
         ..default()
     }
 }
@@ -136,7 +136,7 @@ impl GameButtonStyle {
         }
         if let Some((size, col)) = self.border {
             self.node.border_radius = BorderRadius::all(size);
-            commands.entity(to).insert(BorderColor::all(col) );
+            commands.entity(to).insert(BorderColor::all(col));
         }
 
         commands.entity(to).insert((im_node, self.node));

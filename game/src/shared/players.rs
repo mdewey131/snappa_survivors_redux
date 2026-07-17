@@ -191,6 +191,25 @@ pub fn add_non_networked_player_components<QF: QueryFilter>(
                 Replicate::to_server(),
             ));
         }
+
+        let child_collider = commands
+            .spawn((
+                Collider::circle(pur.0),
+                Sensor,
+                PlayerPickupRadius,
+                CollisionLayers::new(
+                    [ColliderTypes::PlayerPickupRadius],
+                    [ColliderTypes::RemotePickup],
+                ),
+            ))
+            .id();
+
+        if cfg!(feature = "avian_debug") {
+            commands
+                .entity(child_collider)
+                .insert(Transform::from_translation(Vec3::ZERO));
+        }
+
         // regardless, add the collider components
         commands
             .entity(trigger.entity)
@@ -199,15 +218,7 @@ pub fn add_non_networked_player_components<QF: QueryFilter>(
                 Name::from("Player"),
                 RecentlyCollided::default(),
             ))
-            .with_child((
-                Collider::circle(pur.0),
-                Sensor,
-                PlayerPickupRadius,
-                CollisionLayers::new(
-                    [ColliderTypes::PlayerPickupRadius],
-                    [ColliderTypes::RemotePickup],
-                ),
-            ));
+            .add_child(child_collider);
     }
 }
 

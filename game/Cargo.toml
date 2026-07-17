@@ -46,7 +46,7 @@ no_splash = []
 avian2d = "0.7.0"
 bevy = "0.19.0"
 bevy-inspector-egui = "0.37.0"
-bevy_egui = "0.41.0"
+bevy_egui = "0.40.0"
 bevy_enhanced_input = "0.26.0"
 bluenoise = {path = '../bluenoise-rs'}
 clap = {version = "4.5.54", features = ['derive']}

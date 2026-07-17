@@ -1,5 +1,6 @@
 use crate::shared::{
     GameMainChannel,
+    combat::CombatEntity,
     despawn_timer::DespawnTimer,
     game_kinds::{CurrentGameKind, is_single_player},
     players::{Player, PlayerWeapons},
@@ -463,6 +464,7 @@ pub fn apply_upgrade(
                                 stat: stat_kind.unwrap(),
                                 amount: effect,
                             },
+                            CombatEntity,
                             DespawnTimer::new(duration),
                         ));
                     }
