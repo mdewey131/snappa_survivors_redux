@@ -146,10 +146,7 @@ pub fn bouncing_dice_attack<QF: QueryFilter>(
 
             for e_ent in entities_to_damage {
                 let (_, mut buff, _) = q_enemies.get_mut(e_ent).unwrap();
-                buff.push(DamageInstance {
-                    damage_source: ent,
-                    amount: dam.0,
-                });
+                buff.push_damage(ent, dam.0);
             }
             attack.rem_bounces -= 1;
             if attack.rem_bounces == 0 {

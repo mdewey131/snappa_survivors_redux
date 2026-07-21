@@ -52,7 +52,7 @@ pub fn dice_guard_activate<QF: QueryFilter>(
         };
          */
         let iters = p_count.0.floor() as usize;
-        for i in 0..iters  {
+        for i in 0..iters {
             // Shorhand for now
             let r = size.0 * 4.0;
             //spawn_positions.positions_2d().into_iter().enumerate() {
@@ -76,7 +76,7 @@ pub fn dice_guard_activate<QF: QueryFilter>(
                     proj,
                     DiceGuardProjectile,
                     Position(pos),
-                    CreatedBy(dg_ent),
+                    CreatedBy(parent.0),
                     *dam,
                     *size,
                     AppliesCollisionEffect::new([ColliderTypes::Enemy].into(), ApplyDamage),

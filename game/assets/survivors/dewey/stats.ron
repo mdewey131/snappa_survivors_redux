@@ -9,7 +9,7 @@
     ),
     (
         kind: CritChance,
-        val: 0.0,
+        val: 1.0,
     ),
     (
         kind: CritDamage,

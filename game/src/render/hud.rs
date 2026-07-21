@@ -11,7 +11,9 @@ use crate::shared::{
 use bevy::prelude::*;
 use lightyear::prelude::{Controlled, Predicted};
 
+mod popups;
 mod stat_display_trait;
+use popups::*;
 use stat_display_trait::*;
 
 pub struct HudPlugin;
@@ -42,6 +44,8 @@ impl Plugin for HudPlugin {
             StatDisplayPlugin::<Thorns>::new(),
             StatDisplayPlugin::<XPGain>::new(),
         ));
+
+        app.add_plugins(PopupsRenderPlugin);
 
         app.add_systems(OnEnter(AppState::InGame), spawn_hud_container)
             .add_systems(

@@ -18,10 +18,7 @@ pub fn bumpin_tunes_activate<QF: QueryFilter>(
         let player_loc = q_player.get(parent.0).expect("Player position not found!");
         for (e_pos, mut buff) in &mut q_enemies {
             if player_loc.0.distance(e_pos.0) <= size.0 {
-                buff.push(DamageInstance {
-                    damage_source: trigger.entity,
-                    amount: dam.0,
-                })
+                buff.push_damage(trigger.entity, dam.0);
             }
         }
     }

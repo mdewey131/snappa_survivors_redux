@@ -23,4 +23,12 @@
         kind: ProjBounces,
         val: 2.0,
     ),
+    (
+        kind: CritChance,
+        val: 1.0,
+    ),
+    (
+        kind: CritDamage,
+        val: 2.0,
+    ),
 ])

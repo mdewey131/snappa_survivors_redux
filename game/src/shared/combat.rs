@@ -1,6 +1,7 @@
 use avian2d::math::PI;
 use bevy::prelude::*;
 use lightyear::prelude::*;
+use rand::{SeedableRng, rngs::SmallRng};
 use serde::{Deserialize, Serialize};
 
 use crate::shared::damage::DeathState;
@@ -22,6 +23,19 @@ pub enum CombatSystemSet {
     Last,
 }
 
+#[derive(Resource)]
+pub struct CombatManager {
+    pub rng: SmallRng,
+}
+
+impl Default for CombatManager {
+    fn default() -> Self {
+        Self {
+            rng: SmallRng::from_seed([0 as u8; 32]),
+        }
+    }
+}
+
 /// A simple marker component to help with some special behavior when states transition ,
 /// without invalidating the simplicity of other plugins
 #[derive(Component, Debug, Serialize, Deserialize)]
@@ -31,28 +45,29 @@ pub struct CombatPlugin;
 
 impl Plugin for CombatPlugin {
     fn build(&self, app: &mut App) {
-        app.configure_sets(
-            FixedUpdate,
-            (
-                CombatSystemSet::PreCombat,
-                CombatSystemSet::Combat,
-                CombatSystemSet::PostCombatUpdate,
+        app.init_resource::<CombatManager>()
+            .configure_sets(
+                FixedUpdate,
+                (
+                    CombatSystemSet::PreCombat,
+                    CombatSystemSet::Combat,
+                    CombatSystemSet::PostCombatUpdate,
+                )
+                    .chain(), /*
+                              // This does nothing at the moment, per https://github.com/bevyengine/bevy/issues/13064
+                              .run_if(in_state(InGameState::InGame)),
+                              */
             )
-                .chain(), /*
-                          // This does nothing at the moment, per https://github.com/bevyengine/bevy/issues/13064
-                          .run_if(in_state(InGameState::InGame)),
-                          */
-        )
-        .configure_sets(
-            FixedPostUpdate,
-            (
-                CombatSystemSet::PostPhysicsSet,
-                CombatSystemSet::Cleanup,
-                CombatSystemSet::Last,
+            .configure_sets(
+                FixedPostUpdate,
+                (
+                    CombatSystemSet::PostPhysicsSet,
+                    CombatSystemSet::Cleanup,
+                    CombatSystemSet::Last,
+                )
+                    .chain(),
             )
-                .chain(),
-        )
-        .add_systems(FixedPreUpdate, tick_cooldown);
+            .add_systems(FixedPreUpdate, tick_cooldown);
     }
 }
 

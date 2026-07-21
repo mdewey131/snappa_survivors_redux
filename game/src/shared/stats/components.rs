@@ -88,6 +88,14 @@ impl StatComponent for Armor {
         self.0 = val
     }
 }
+impl Armor {
+    pub fn mitigate_incoming_damage(&self, incoming: f32) -> f32 {
+        // Apply the armor equation, whatever that is.
+        // Want armor to be diminishing returns in damage mitigation.
+        // going to blatantly take an equation from LoL just for the purposes of understanding at the moment
+        return incoming * (100.0 / (100.0 + self.0));
+    }
+}
 
 #[derive(Component, Debug, Clone, Copy, Deserialize, Serialize, Default, Reflect, PartialEq)]
 #[reflect(Default)]

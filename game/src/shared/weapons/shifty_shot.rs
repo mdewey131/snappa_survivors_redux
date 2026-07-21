@@ -7,6 +7,7 @@ use crate::{
         game_object_spawning::SpawnGameObject,
         weapons::ActivateWeapon,
     },
+    utils::CreatedBy,
 };
 use avian2d::prelude::*;
 use bevy::{
@@ -50,13 +51,15 @@ pub fn shifty_shot_activate<QF: QueryFilter>(
             &Damage,
             &ProjectileBounces,
             &AttackRange,
+            &CritChance,
+            &CritDamage,
         ),
         (QF, With<WeaponShiftyShot>),
     >,
     q_parent: Query<&Position, Without<Enemy>>,
     q_enemies: Query<(Entity, &Position), (With<Enemy>, CombatEntityActive)>,
 ) {
-    if let Ok((parent, speed, damage, bounces, range)) = q_weapon.get(trigger.entity) {
+    if let Ok((parent, speed, damage, bounces, range, cc, cd)) = q_weapon.get(trigger.entity) {
         let player_pos = q_parent.get(parent.0).unwrap();
         let enemy_vec = q_enemies.iter().collect::<Vec<(Entity, &Position)>>();
         let closest_enemy = find_closest_in_list(1, player_pos.0, &enemy_vec);
@@ -76,9 +79,12 @@ pub fn shifty_shot_activate<QF: QueryFilter>(
                         },
                         *player_pos,
                         LinearVelocity(init_vel),
+                        CreatedBy(parent.0),
                         *damage,
                         *speed,
                         *range,
+                        *cd,
+                        *cc,
                     ),
                 ));
             }
@@ -132,10 +138,7 @@ pub fn update_shifty_shot_attack<QF: QueryFilter>(
                 let mut buffer = q_enemy_damage
                     .get_mut(e_ent)
                     .expect("Enemy without damage buffer");
-                buffer.push(DamageInstance {
-                    damage_source: attack_ent,
-                    amount: dam.0,
-                });
+                buffer.push_damage(attack_ent, dam.0);
                 if attack_data.remaining_bounces >= 1 {
                     attack_data.remaining_bounces -= 1;
                     should_retarget = true;

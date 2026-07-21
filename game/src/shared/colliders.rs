@@ -116,10 +116,7 @@ impl CollisionEffect for ApplyDamage {
             };
             let mut dam_buff = world.get_mut::<DamageBuffer>(to);
             if let Some(ref mut db) = dam_buff {
-                db.push(DamageInstance {
-                    damage_source: from,
-                    amount: dam_val,
-                });
+                db.push_damage(from, dam_val);
             }
         });
     }

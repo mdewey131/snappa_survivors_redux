@@ -151,10 +151,7 @@ pub fn update_attack<QF: QueryFilter>(
                 throw.state = ThrowHandsAttackState::Winddown;
                 throw.timer = ThrowHandsAttack::timer_from_state(throw.state);
                 if let Ok(mut t_buffer) = q_target.get_mut(throw.target) {
-                    t_buffer.push(DamageInstance {
-                        damage_source: attack_ent,
-                        amount: damage.0,
-                    });
+                    t_buffer.push_damage(attack_ent, damage.0);
                 };
             }
             ThrowHandsAttackState::Winddown => {
