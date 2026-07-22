@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::shared::{
     combat::{CombatEntityActive, CombatManager, CombatSystemSet},
-    stats::components::{Armor, CritChance, CritDamage, Health},
+    stats::components::{Armor, CritChance, CritDamage, Evasion, Health},
 };
 
 #[derive(
@@ -52,9 +52,8 @@ pub struct DamageInstance {
 pub enum DamageResult {
     /// The damage is going to go through, this is the amount to apply
     Apply(f32),
-    /// There's a lot of reasons this can happen, but they generally
-    /// all point to "this entity is invulnerable right now for some reason"
-    DamageNegated,
+    Invulnerable,
+    Evaded,
     /// This gets written when something was Apply, but its overkill damage
     EntityAlreadyDead,
 }
@@ -98,8 +97,11 @@ impl Plugin for SharedDamagePlugin {
             .add_systems(
                 FixedPostUpdate,
                 ((
+                    check_invulnerability_conditions,
+                    check_evasion,
                     roll_critical,
                     apply_damage_mitigation_to_incoming_damage,
+                    register_damage_to_apply,
                     apply_frame_damage,
                     clear_damage_buffer,
                 )
@@ -124,9 +126,10 @@ pub struct EntityKilledMessage {
 
 /// Allows us to short-circuit this process, so to speak, because we know that the result of all damage for this
 /// entity is going to be "yeah you can't do that"
-fn check_invulnerability_conditions() {}
+///
+/// As of right now, I don't have any invulnerable conditions, so this is a no op
+fn check_invulnerability_conditions(q_damage: Query<&DamageBuffer>) {}
 
-/// For
 fn roll_critical(
     mut combat_manager: ResMut<CombatManager>,
     mut q_buff: Query<&mut DamageBuffer>,
@@ -158,8 +161,32 @@ fn apply_damage_mitigation_to_incoming_damage(
             } else {
                 instance.amount
             };
-            // Assuming at this point that it's going to be successful. Check this later
-            instance.result = Some(DamageResult::Apply(outgoing_damage))
+            instance.amount = outgoing_damage;
+        }
+    }
+}
+
+fn check_evasion(
+    mut combat: ResMut<CombatManager>,
+    mut q_damage: Query<(&Evasion, &mut DamageBuffer)>,
+) {
+    for (evasion, mut damage) in &mut q_damage {
+        for dam in &mut damage.buff {
+            let roll = combat.rng.random_range(0.0..1.0);
+            if roll <= evasion.0 {
+                dam.result = Some(DamageResult::Evaded)
+            }
+        }
+    }
+}
+
+/// Run after checking invulnerability, evasion, and reducing with armor
+fn register_damage_to_apply(mut q_damage: Query<&mut DamageBuffer>) {
+    for mut damage in &mut q_damage {
+        for dam in &mut damage.buff {
+            if (dam.amount >= 0.0 && dam.result.is_none()) {
+                dam.result = Some(DamageResult::Apply(dam.amount))
+            }
         }
     }
 }

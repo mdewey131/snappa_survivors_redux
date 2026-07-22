@@ -19,7 +19,7 @@ use crate::{
         upgrades::PlayerUpgradeSlots,
         weapons::bumpin_tunes::BumpinTunes,
     },
-    utils::AssetFolder,
+    utils::{AssetFolder, CreatedBy},
 };
 
 pub mod bouncing_dice;
@@ -169,7 +169,13 @@ pub fn add_weapon_to_character(
         game_kind,
         Some(weapon_kind),
         MultiPlayerComponentOptions::from(weapon),
-        (weapon, ChildOf(player), Cooldown::new(0.5)),
+        (
+            weapon,
+            ChildOf(player),
+            // For damage popup purposes
+            CreatedBy(player),
+            Cooldown::new(0.5),
+        ),
     );
 
     // Add the weapon marker components for each

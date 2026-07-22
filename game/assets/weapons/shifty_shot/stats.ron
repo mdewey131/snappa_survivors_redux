@@ -1,11 +1,11 @@
 ([
     (
         kind: AttackRange,
-        val: 500.0,
+        val: 250.0,
     ),
     (
         kind: CDR,
-        val: 2.0,
+        val: 6.0,
     ),
     (
         kind: Damage,
@@ -21,14 +21,14 @@
     ),
     (
         kind: ProjBounces,
-        val: 2.0,
-    ),
-    (
-        kind: CritChance,
         val: 1.0,
     ),
     (
+        kind: CritChance,
+        val: 0.05,
+    ),
+    (
         kind: CritDamage,
-        val: 2.0,
+        val: 1.25,
     ),
 ])

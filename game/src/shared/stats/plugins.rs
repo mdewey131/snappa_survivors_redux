@@ -1,5 +1,9 @@
 use super::{apply_stat_modifier, components::*, relationships::StatRelationshipsPlugin, xp::*};
-use crate::shared::{combat::CombatSystemSet, states::InGameState};
+use crate::shared::{
+    combat::CombatSystemSet,
+    damage::{DamageBuffer, DamageResult, DamageResultMessage},
+    states::InGameState,
+};
 use bevy::prelude::*;
 use lightyear::prelude::*;
 use std::marker::PhantomData;
@@ -12,6 +16,12 @@ impl Plugin for SharedStatsPlugin {
         app.add_systems(
             Update,
             apply_stat_modifier.run_if(in_state(InGameState::InGame)),
+        )
+        .add_systems(
+            FixedUpdate,
+            apply_thorns_damage
+                .in_set(CombatSystemSet::PreCombat)
+                .run_if(in_state(InGameState::InGame)),
         );
     }
 }
@@ -92,5 +102,29 @@ impl<SC: StatComponent> Plugin for StatComponentInnerPlugin<SC> {
                 .in_set(CombatSystemSet::Last)
                 .run_if(in_state(InGameState::InGame)),
         );
+    }
+}
+
+/// Will want to revisit this, as this currently
+///
+/// 1. Can proc off of the thorns of another infinitely
+/// 2. applies percentage of damage,
+/// 3. Can crit
+pub fn apply_thorns_damage(
+    mut messages: MessageReader<DamageResultMessage>,
+    q_thorns_user: Query<&Thorns>,
+    mut q_receiver: Query<&mut DamageBuffer>,
+) {
+    for result in messages.read() {
+        if let Ok(thorns) = q_thorns_user.get(result.damaged_entity) {
+            if let Ok(mut damage) = q_receiver.get_mut(result.damaging_entity) {
+                let dealt = match result.result {
+                    DamageResult::Apply(val) => val,
+                    _ => 0.0,
+                };
+                let to_deal = (thorns.0 * 0.01) * dealt;
+                damage.push_damage(result.damaged_entity, to_deal)
+            }
+        }
     }
 }
