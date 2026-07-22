@@ -3,14 +3,14 @@
         activation: FixedWaves(
             start_time: 0.0,
             tick_rate: 5.0,
-            max_ticks: 20,
+            max_ticks: 1,
             c_ticks: 0,
         ),
         instruction: (
             kind: FacelessMan,
             pattern: AroundAllPlayers(
                 pattern: Circle(
-                    amount: 10,
+                    amount: 1,
                     center: (0.0, 0.0),
                     radius: 1500.0,
                     radius_only: true,

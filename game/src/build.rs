@@ -11,7 +11,7 @@ use crate::{
     shared::GameSharedPlugin,
 };
 
-const TICKRATE: f64 = 1.0 / 64.0;
+pub const TICKRATE: f64 = 1.0 / 64.0;
 /// Responsible for constructing the app when we launch the game via command line arguments
 #[derive(Parser, Debug)]
 #[command(version, about)]

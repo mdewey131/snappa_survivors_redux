@@ -19,8 +19,7 @@ impl Plugin for SharedStatsPlugin {
         )
         .add_systems(
             FixedUpdate,
-            apply_thorns_damage
-                .in_set(CombatSystemSet::PreCombat)
+            (apply_thorns_damage.in_set(CombatSystemSet::PreCombat),)
                 .run_if(in_state(InGameState::InGame)),
         );
     }

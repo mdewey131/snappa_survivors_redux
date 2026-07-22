@@ -1,4 +1,4 @@
-use bevy::{ecs::entity::MapEntities, prelude::*};
+use bevy::{ecs::entity::MapEntities, prelude::*, time::Stopwatch};
 use lightyear::{
     prediction::registry::PredictionBuilderExt,
     prelude::{AppComponentExt, PredictionRegistrationExt},
@@ -6,10 +6,15 @@ use lightyear::{
 use rand::RngExt;
 use serde::{Deserialize, Serialize};
 
-use crate::shared::{
-    combat::{CombatEntityActive, CombatManager, CombatSystemSet},
-    stats::components::{Armor, CritChance, CritDamage, Evasion, Health},
+use crate::{
+    build::TICKRATE,
+    shared::{
+        combat::{CombatEntityActive, CombatManager, CombatSystemSet},
+        stats::components::{Armor, CritChance, CritDamage, Evasion, Health, HealthRegen, Shield},
+    },
 };
+
+pub const SHIELD_RECOVERY_TIME: f32 = 2.0;
 
 #[derive(
     Component, Debug, Clone, Reflect, Deref, DerefMut, Default, PartialEq, Serialize, Deserialize,
@@ -17,6 +22,10 @@ use crate::shared::{
 pub struct DamageBuffer {
     buff: Vec<DamageInstance>,
 }
+#[derive(
+    Component, Debug, Clone, Reflect, Deref, DerefMut, Default, PartialEq, Serialize, Deserialize,
+)]
+pub struct TimeSinceLastDamage(pub Stopwatch);
 
 impl DamageBuffer {
     pub fn push_damage(&mut self, from: Entity, dam: f32) {
@@ -97,6 +106,7 @@ impl Plugin for SharedDamagePlugin {
             .add_systems(
                 FixedPostUpdate,
                 ((
+                    apply_health_regen,
                     check_invulnerability_conditions,
                     check_evasion,
                     roll_critical,
@@ -104,6 +114,8 @@ impl Plugin for SharedDamagePlugin {
                     register_damage_to_apply,
                     apply_frame_damage,
                     clear_damage_buffer,
+                    tick_damage_timer,
+                    recharge_shield,
                 )
                     .chain()
                     .in_set(CombatSystemSet::Cleanup),),
@@ -122,6 +134,13 @@ impl Plugin for DamageProtocolPlugin {
 pub struct EntityKilledMessage {
     pub dead_entity: Entity,
     pub responsible_entity: Entity,
+}
+
+fn apply_health_regen(mut q_heal: Query<(&mut Health, &HealthRegen)>) {
+    for (mut hp, regen) in &mut q_heal {
+        let to_heal = (TICKRATE as f32) * (5.0 / regen.0);
+        hp.current = (hp.current + to_heal).clamp(0.0, hp.max())
+    }
 }
 
 /// Allows us to short-circuit this process, so to speak, because we know that the result of all damage for this
@@ -194,42 +213,52 @@ fn register_damage_to_apply(mut q_damage: Query<&mut DamageBuffer>) {
 fn apply_frame_damage(
     mut events: MessageWriter<EntityKilledMessage>,
     //mut damage_events: MessageWriter<AppliedDamageLogMessage>,
-    mut q_health: Query<(Entity, &mut DamageBuffer, &mut Health), CombatEntityActive>,
+    mut q_health: Query<
+        (Entity, &mut DamageBuffer, &mut Health, Option<&mut Shield>),
+        CombatEntityActive,
+    >,
 ) {
-    for (ent, mut buff, mut health) in &mut q_health {
-        let mut health_to_set = health.current;
+    for (ent, mut damage, mut health, mut m_shield) in &mut q_health {
         let mut dead = false;
         let mut killed_by = None;
-        let _total_damage = buff
-            .iter_mut()
-            .map(|dam| {
-                let to_apply = match dam.result.unwrap() {
-                    DamageResult::Apply(f) => {
-                        if dead {
-                            dam.result = Some(DamageResult::EntityAlreadyDead);
-                            0.0
-                        } else {
-                            f
-                        }
+        let has_shield = m_shield.is_some();
+        let mut shield_broken = false;
+        for mut dam in &mut damage.buff {
+            let to_apply = match dam.result.unwrap() {
+                DamageResult::Apply(f) => {
+                    if dead {
+                        dam.result = Some(DamageResult::EntityAlreadyDead);
+                        0.0
+                    } else {
+                        f
                     }
-                    _ => 0.0,
-                };
-
-                health_to_set -= to_apply;
-                /*
-                damage_events.write(AppliedDamageLogMessage {
-                    source: dam.damage_source,
-                    amount: dam.amount,
-                });
-                */
-                if health_to_set <= 0.0 && !dead {
-                    killed_by = Some(dam.damage_source);
-                    dead = true;
                 }
+                _ => 0.0,
+            };
+
+            let health_to_sub = if has_shield && !shield_broken {
+                let mut s = m_shield.as_mut().unwrap();
+                info!("Starting shield value {:?}", s.current);
+                s.current -= to_apply;
+                if s.current <= 0.0 {
+                    shield_broken = true;
+                    info!("Ending shield value {:?}", s.current);
+                    (0.0 - s.current)
+                } else {
+                    info!("Ending shield value {:?}", s.current);
+                    0.0
+                }
+            } else {
                 to_apply
-            })
-            .sum::<f32>();
-        health.current = health_to_set.clamp(0.0, health.max());
+            };
+
+            health.current = (health.current - health_to_sub).clamp(-1.0, health.max());
+            info!("Setting health value to be {:?}", health.current);
+            if health.current <= 0.0 && !dead {
+                killed_by = Some(dam.damage_source);
+                dead = true;
+            }
+        }
         if dead {
             events.write(EntityKilledMessage {
                 dead_entity: ent,
@@ -239,13 +268,35 @@ fn apply_frame_damage(
     }
 }
 
+fn recharge_shield(mut q_shield: Query<(&mut Shield, &TimeSinceLastDamage)>) {
+    for (mut shield, time) in &mut q_shield {
+        if shield.current == shield.max() {
+            continue;
+        }
+        if time.elapsed_secs() >= SHIELD_RECOVERY_TIME {
+            let recharge_rate = (3.0 * (time.elapsed_secs() - SHIELD_RECOVERY_TIME).powf(2.0));
+            shield.current =
+                (shield.current + (recharge_rate * shield.max())).clamp(0.0, shield.max())
+        }
+    }
+}
+
 /// Since we're clearing the buffer here, we're going to write the damage logging events for
 /// other systems to look at
 fn clear_damage_buffer(
+    mut commands: Commands,
     mut messages: MessageWriter<DamageResultMessage>,
     mut q_buffer: Query<(Entity, &mut DamageBuffer)>,
+    mut q_not_damaged: Query<&mut TimeSinceLastDamage>,
 ) {
     for (ent, mut buff) in &mut q_buffer {
+        if !buff.is_empty() {
+            if let Ok(mut dt) = q_not_damaged.get_mut(ent) {
+                dt.reset();
+            } else {
+                warn!("Entity with a damage buffer and with no TimeSinceLastDamage")
+            }
+        }
         for mut dam in buff.drain(..) {
             let result = dam.result.take();
             messages.write(DamageResultMessage {
@@ -255,5 +306,11 @@ fn clear_damage_buffer(
                 result: result.unwrap(),
             });
         }
+    }
+}
+
+fn tick_damage_timer(time: Res<Time<Virtual>>, q_timer: Query<&mut TimeSinceLastDamage>) {
+    for mut timer in q_timer {
+        (*timer).tick(time.delta());
     }
 }

@@ -18,7 +18,7 @@ pub const XP_PICKUP_BASE_MOVE_SPEED: f32 = 5000.0;
 pub const XP_PICKUP_CURVE_TIME_TO_ZERO: f32 = 0.25;
 
 #[derive(Component, Serialize, Deserialize, PartialEq, Clone, Copy, Debug)]
-#[require(DespawnOnEnter<AppState> = DespawnOnEnter(AppState::GameOver))]
+#[require(DespawnOnExit<AppState> = DespawnOnExit(AppState::InGame))]
 pub struct HealthPickup {
     pub amount: f32,
 }
@@ -26,7 +26,7 @@ pub struct HealthPickup {
 #[derive(Component)]
 #[require(
     Name = Name::from("Health Pickup Spawner"),
-    DespawnOnEnter<AppState> = DespawnOnEnter(AppState::GameOver)
+    DespawnOnExit<AppState> = DespawnOnExit(AppState::InGame)
 )]
 pub struct HealthPickupSpawner {
     pub pickup: Entity,
@@ -35,6 +35,7 @@ pub struct HealthPickupSpawner {
 }
 
 #[derive(Component, Serialize, Deserialize, PartialEq, Clone, Copy, Debug)]
+#[require(DespawnOnExit<AppState> = DespawnOnExit(AppState::InGame))]
 pub struct XPPickup {
     pub val: f32,
     pub targeting: Option<Entity>,

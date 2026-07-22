@@ -108,7 +108,7 @@ impl StatKind {
                 ec.insert(Revive(input));
             }
             StatKind::Shield => {
-                ec.insert(Shield(input));
+                ec.insert(Shield::new(input));
             }
             StatKind::Thorns => {
                 ec.insert(Thorns(input));

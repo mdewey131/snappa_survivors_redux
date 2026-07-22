@@ -73,7 +73,7 @@
     ),
     (
         kind: Shield,
-        val: 0.0,
+        val: 10.0,
     ),
     (
         kind: Thorns,

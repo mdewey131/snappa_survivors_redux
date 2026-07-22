@@ -1,10 +1,11 @@
 use crate::shared::{
-    damage::{DamageBuffer, DamageInstance},
+    damage::{DamageBuffer, DamageInstance, TimeSinceLastDamage},
     stats::{StatKind, StatList},
 };
 use bevy::{
     ecs::component::{ComponentMutability, Mutable},
     prelude::*,
+    time::Stopwatch,
 };
 use serde::{Deserialize, Serialize};
 
@@ -187,6 +188,7 @@ impl StatComponent for Evasion {
     }
 }
 
+/// For now, this restores health every game tick
 #[derive(Component, Debug, Clone, Copy, Deserialize, Serialize, Default, Reflect, PartialEq)]
 #[reflect(Default)]
 pub struct HealthRegen(pub f32);
@@ -311,14 +313,29 @@ impl StatComponent for ProjectileSpeed {
 
 #[derive(Component, Debug, Clone, Copy, Deserialize, Serialize, Default, Reflect, PartialEq)]
 #[reflect(Default)]
-pub struct Shield(pub f32);
-
+#[require(TimeSinceLastDamage = TimeSinceLastDamage(Stopwatch::new()))]
+pub struct Shield {
+    pub current: f32,
+    max: f32,
+}
+impl Shield {
+    pub fn new(max: f32) -> Self {
+        Self { current: max, max }
+    }
+    pub fn max(&self) -> f32 {
+        self.max
+    }
+}
 impl StatComponent for Shield {
     fn stat_kind(&self) -> StatKind {
         StatKind::Shield
     }
     fn update_self(&mut self, val: f32) {
-        self.0 = val
+        if self.max == val {
+        } else {
+            let c_pct = self.current / self.max;
+            self.current = val * c_pct;
+        }
     }
 }
 

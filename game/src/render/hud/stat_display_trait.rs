@@ -101,7 +101,7 @@ impl DisplayableStat for ProjectileSpeed {
 
 impl DisplayableStat for Shield {
     fn display_value(&self) -> f32 {
-        self.0
+        self.max()
     }
 }
 

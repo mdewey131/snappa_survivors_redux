@@ -11,7 +11,10 @@ use crate::{
 };
 use avian2d::prelude::*;
 use bevy::{
-    ecs::{entity::MapEntities, query::QueryFilter},
+    ecs::{
+        entity::MapEntities,
+        query::{QueryEntityError, QueryFilter},
+    },
     prelude::*,
 };
 use lightyear::prelude::*;
@@ -126,9 +129,9 @@ pub fn update_shifty_shot_attack<QF: QueryFilter>(
         let mut should_retarget = false;
         let mut despawn = false;
         let enemy_data = if let Some(t) = attack_data.target {
-            q_enemies.get(t)
+            q_enemies.get(t).map_err(|_e| String::from("not found"))
         } else {
-            continue;
+            Err(String::new())
         };
 
         // Enemy could die while this is in flight
@@ -137,9 +140,7 @@ pub fn update_shifty_shot_attack<QF: QueryFilter>(
             let new_vec = direction_vec * p_speed.0;
             velo.0 = new_vec;
 
-            if pos.0.distance(enemy_pos.0) <= ATTACK_DISTANCE_THRESHOLD
-                && attack_data.target.is_none()
-            {
+            if pos.0.distance(enemy_pos.0) <= ATTACK_DISTANCE_THRESHOLD {
                 let mut buffer = q_enemy_damage
                     .get_mut(e_ent)
                     .expect("Enemy without damage buffer");
