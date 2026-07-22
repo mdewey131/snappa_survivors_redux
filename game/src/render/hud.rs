@@ -238,6 +238,46 @@ fn xp_bar_node(width: f32, height: f32) -> Node {
     }
 }
 
+#[derive(Component, Clone, Copy)]
+pub struct ShieldBar;
+fn shield_bar() -> impl Scene {
+    bsn! {
+        Node {
+            width: percent(100),
+            height: percent(5),
+            align_items: AlignItems::Center,
+            justify_content: JustifyContent::Center,
+            grid_column: GridPlacement::start_end(7, 8),
+            grid_row: GridPlacement::start_end(16, 21),
+        }
+        Children [
+            (
+            bsn_hp_bar_node(100.0)
+            ImageNode {
+                image: "ui/health_bar_texture.png",
+                color: Color::srgb(0.2, 0.2, 0.2)
+            }
+            ShieldBarBackground
+            Children [
+                (
+                bsn_hp_bar_node(100.0)
+                ImageNode {
+                    image: "ui/health_bar_texture.png",
+                    color: Color::srgb(0.1, 0.1, 0.9)
+                }
+                ShieldBarForeground
+                )
+            ]
+        )]
+    }
+}
+
+#[derive(Component, Clone, Copy, Default)]
+pub struct ShieldBarBackground;
+
+#[derive(Component, Clone, Copy, Default)]
+pub struct ShieldBarForeground;
+
 #[derive(Component)]
 #[require(Node = health_bar_holder_node())]
 pub struct HealthBar {
@@ -261,6 +301,14 @@ fn health_bar_holder_node() -> Node {
 #[derive(Component)]
 #[require(Node = hp_bar_node(100.0))]
 pub struct HealthBarBackground;
+fn bsn_hp_bar_node(height: f32) -> impl Scene {
+    bsn! {
+        Node {
+            width: Val::Percent(100.0),
+            height: Val::Percent(height),
+        }
+    }
+}
 fn hp_bar_node(height: f32) -> Node {
     Node {
         width: Val::Percent(100.0),
@@ -439,6 +487,9 @@ fn spawn_hud_container(mut commands: Commands, assets: Res<AssetServer>) {
         .with_color(Color::srgb(0.3, 0.3, 0.9))
         .with_mode(NodeImageMode::Stretch);
     commands.spawn((XPBarForeground, ChildOf(xp_bg), xp_foreground_node));
+
+    // Shield bar
+    commands.spawn_scene(shield_bar());
 
     // HP Bar
     let hp = commands
