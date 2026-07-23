@@ -18,7 +18,7 @@ pub enum CombatSystemSet {
     PostCombatUpdate,
     /// Runs things like updating collider positions and checking for damage, in `FixedPostUpdate`
     PostPhysicsSet,
-    /// Finally resovles the DamageBuffer
+    /// Finally resovles the HealthBuffer
     Cleanup,
     Last,
 }
@@ -38,7 +38,7 @@ impl Default for CombatManager {
 
 /// A simple marker component to help with some special behavior when states transition ,
 /// without invalidating the simplicity of other plugins
-#[derive(Component, Debug, Serialize, Deserialize)]
+#[derive(Component, Debug, Serialize, Deserialize, Clone, Default)]
 pub struct CombatEntity;
 
 pub struct CombatPlugin;

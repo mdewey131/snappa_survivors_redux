@@ -1,1 +1,90 @@
-([(kind: Health, val: 50.0)])
+([
+    (
+        kind: AttackRange,
+        val: 1.0,
+    ),
+    (
+        kind: Armor,
+        val: 30.0,
+    ),
+    (
+        kind: CritChance,
+        val: 1.0,
+    ),
+    (
+        kind: CritDamage,
+        val: 1.0,
+    ),
+    (
+        kind: CDR,
+        val: 1.0,
+    ),
+    (
+        kind: Damage,
+        val: 1.0,
+    ),
+    (
+        kind: Health,
+        val: 50.0,
+    ),
+    (
+        kind: HealthRegen,
+        val: 10.0,
+    ),
+    (
+        kind: MS,
+        val: 150.0,
+    ),
+    (
+        kind: EffDuration,
+        val: 1.0,
+    ),
+    (
+        kind: EffSize,
+        val: 1.0,
+    ),
+    (
+        kind: Evasion,
+        val: 0.0,
+    ),
+    (
+        kind: Luck,
+        val: 1.0,
+    ),
+    (
+        kind: LifeSteal,
+        val: 0.0,
+    ),
+    (
+        kind: PickupR,
+        val: 50.0,
+    ),
+    (
+        kind: ProjCount,
+        val: 0.0,
+    ),
+    (
+        kind: ProjSpeed,
+        val: 1.0,
+    ),
+    (
+        kind: Revive,
+        val: 2.0,
+    ),
+    (
+        kind: Shield,
+        val: 10.0,
+    ),
+    (
+        kind: Thorns,
+        val: 100.0,
+    ),
+    (
+        kind: XPGain,
+        val: 1.0,
+    ),
+    (
+        kind: ProjBounces,
+        val: 0.0,
+    ),
+])

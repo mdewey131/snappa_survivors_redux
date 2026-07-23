@@ -3,7 +3,7 @@ use std::f32::consts::TAU;
 use super::*;
 use crate::shared::{
     combat::{CharacterFacing, FacingDirection},
-    damage::{DamageBuffer, DamageInstance},
+    damage::{HealthBuffer, HealthChangeInstance},
     game_object_spawning::SpawnGameObject,
 };
 use bevy::ecs::query::QueryFilter;
@@ -121,7 +121,7 @@ pub fn bouncing_dice_attack<QF: QueryFilter>(
         ),
         QF,
     >,
-    mut q_enemies: Query<(Entity, &mut DamageBuffer, &Position), Without<BouncingDiceAttack>>,
+    mut q_enemies: Query<(Entity, &mut HealthBuffer, &Position), Without<BouncingDiceAttack>>,
 ) {
     for (ent, mut pos, mut attack, dam, p_speed, eff_size) in &mut q_dice {
         attack.time_to_bounce.tick(time.delta());
@@ -146,7 +146,7 @@ pub fn bouncing_dice_attack<QF: QueryFilter>(
 
             for e_ent in entities_to_damage {
                 let (_, mut buff, _) = q_enemies.get_mut(e_ent).unwrap();
-                buff.push_damage(ent, dam.0);
+                buff.push_damage(ent, dam.0, None);
             }
             attack.rem_bounces -= 1;
             if attack.rem_bounces == 0 {

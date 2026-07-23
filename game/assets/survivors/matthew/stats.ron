@@ -5,11 +5,11 @@
     ),
     (
         kind: Armor,
-        val: 0.0,
+        val: 30.0,
     ),
     (
         kind: CritChance,
-        val: 0.0,
+        val: 1.0,
     ),
     (
         kind: CritDamage,
@@ -29,11 +29,11 @@
     ),
     (
         kind: HealthRegen,
-        val: 0.0,
+        val: 10.0,
     ),
     (
         kind: MS,
-        val: 100.0,
+        val: 150.0,
     ),
     (
         kind: EffDuration,
@@ -57,7 +57,7 @@
     ),
     (
         kind: PickupR,
-        val: 200.0,
+        val: 50.0,
     ),
     (
         kind: ProjCount,
@@ -68,15 +68,23 @@
         val: 1.0,
     ),
     (
+        kind: Revive,
+        val: 2.0,
+    ),
+    (
         kind: Shield,
-        val: 0.0,
+        val: 10.0,
     ),
     (
         kind: Thorns,
-        val: 0.0,
+        val: 100.0,
     ),
     (
         kind: XPGain,
         val: 1.0,
+    ),
+    (
+        kind: ProjBounces,
+        val: 0.0,
     ),
 ])

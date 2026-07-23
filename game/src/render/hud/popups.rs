@@ -5,7 +5,7 @@ use lightyear::prelude::Controlled;
 use crate::{
     shared::{
         combat::CombatEntity,
-        damage::{DamageResult, DamageResultMessage},
+        damage::{HealthChange, HealthChangeMessage, HealthChangeResult},
         despawn_timer::DespawnTimer,
         enemies::Enemy,
         game_kinds::SinglePlayer,
@@ -18,61 +18,89 @@ pub struct PopupsRenderPlugin;
 
 impl Plugin for PopupsRenderPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, (spawn_damage_popup, animate_damage_popup).chain());
+        app.add_systems(Update, (spawn_popup, animate_damage_popup).chain());
     }
 }
 
 /// Floats over the head of the entity that's just been damaged
 /// For now, the idea is that this will become a child of the entity.
 /// I may want to revisit that
-#[derive(Component)]
+#[derive(Component, Clone, Copy, Debug, Default)]
 #[require(Name = "popup")]
 pub struct DamagePopup;
 
-fn spawn_damage_popup(
+fn health_change_popup(
+    on: Entity,
+    kind: HealthChange,
+    res: HealthChangeResult,
+    amount: f32,
+) -> impl Scene {
+    let (text_color, text) = match res {
+        HealthChangeResult::Normal => {
+            let formatted = format!("{:.1}", amount);
+            match kind {
+                HealthChange::Heal => (Color::srgba(0.8, 0.8, 0.4, 1.0), formatted),
+                HealthChange::Damage => (Color::WHITE, formatted),
+            }
+        }
+        HealthChangeResult::Crit => {
+            let formatted = format!("{:.1}", amount);
+            match kind {
+                HealthChange::Heal => (Color::srgba(1.0, 1.0, 0.4, 1.0), formatted),
+                HealthChange::Damage => (Color::srgb(1.0, 0.0, 0.0), formatted),
+            }
+        }
+        HealthChangeResult::Evaded => (Color::srgba(0.1, 0.1, 0.9, 1.0), "Evaded!".into()),
+        HealthChangeResult::Invulnerable => (Color::WHITE, "Invulnerable!".into()),
+        _ => unimplemented!(),
+    };
+
+    bsn! {
+        ChildOf(on)
+        DamagePopup
+        Text2d::from(text)
+        TextColor(text_color)
+        Transform::from_translation(Vec3::Y * 20.0)
+        CombatEntity
+        DespawnTimer::new(0.5)
+    }
+}
+
+fn spawn_popup(
     mut commands: Commands,
-    mut messages: MessageReader<DamageResultMessage>,
+    mut messages: MessageReader<HealthChangeMessage>,
     q_controlling_player: Query<(), (With<Player>, Or<(With<Controlled>, With<SinglePlayer>)>)>,
     q_creator: Query<&CreatedBy>,
 ) {
     for m in messages.read() {
         let mut target = None;
-        let entity_to_credit = if let Ok(e) = q_creator.get(m.damaging_entity) {
+        let entity_to_credit = if let Ok(e) = q_creator.get(m.source_entity) {
             e.0
         } else {
-            m.damaging_entity
+            m.source_entity
         };
         info!("Entity to credit: {:?}", entity_to_credit);
         if q_controlling_player.get(entity_to_credit).is_ok() {
-            target = Some(m.damaged_entity)
+            target = Some(m.receiving_entity)
         }
-        if q_controlling_player.get(m.damaged_entity).is_ok() {
-            target = Some(m.damaged_entity)
+        if q_controlling_player.get(m.receiving_entity).is_ok() {
+            target = Some(m.receiving_entity)
         }
-
         info!("Target to spawn {:?}", target);
         if target.is_none() {
             continue;
         }
 
-        let text_color = if m.crit {
-            Color::srgb(1.0, 0.0, 0.0)
-        } else {
-            Color::WHITE
-        };
-
         match m.result {
-            DamageResult::Apply(val) => {
-                commands.entity(target.unwrap()).with_child((
-                    DamagePopup,
-                    Text2d::from(format!("{}", val)),
-                    TextColor(text_color),
-                    Transform::from_translation(Vec3::Y * 20.0),
-                    CombatEntity,
-                    DespawnTimer::new(0.5),
+            HealthChangeResult::EntityAlreadyDead | HealthChangeResult::DidNothing => {}
+            _ => {
+                commands.spawn_scene(health_change_popup(
+                    target.unwrap(),
+                    m.kind,
+                    m.result,
+                    m.amount,
                 ));
             }
-            _ => {}
         }
     }
 }

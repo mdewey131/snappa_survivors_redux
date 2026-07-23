@@ -103,7 +103,7 @@ pub fn spawn_enemy(commands: &mut Commands, e_kind: EnemyKind, position: Vec2) {
             enemy,
             Position(Vec2::new(position.x, position.y)),
             EnemySpawnTimer::default(),
-            AppliesCollisionEffect::new([ColliderTypes::Player].into(), ApplyDamage),
+            AppliesCollisionEffect::new([ColliderTypes::Player].into(), ApplyDamage::default()),
         ),
     );
     command.stats = Some(enemy.kind.into());

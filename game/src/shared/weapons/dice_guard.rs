@@ -18,8 +18,10 @@ use bevy::{ecs::query::QueryFilter, prelude::*};
 use serde::{Deserialize, Serialize};
 
 /// Marker component for a weapon
-#[derive(Component)]
-pub struct DiceGuard;
+#[derive(Component, Default)]
+pub struct DiceGuard {
+    pub projectiles: Option<Vec<Entity>>,
+}
 
 #[derive(Component, Debug, Serialize, Deserialize, PartialEq, Clone, Copy)]
 pub struct DiceGuardProjectile;
@@ -28,7 +30,7 @@ pub fn dice_guard_activate<QF: QueryFilter>(
     trigger: On<ActivateWeapon>,
     mut commands: Commands,
     game_kind: Res<CurrentGameKind>,
-    q_dice_guards: Query<
+    mut q_dice_guards: Query<
         (
             Entity,
             &ChildOf,
@@ -36,12 +38,16 @@ pub fn dice_guard_activate<QF: QueryFilter>(
             &EffectSize,
             &ProjectileSpeed,
             &Damage,
+            &mut DiceGuard,
         ),
-        (With<DiceGuard>, QF),
+        (QF),
     >,
     q_parent: Query<&Position, With<Player>>,
 ) {
-    if let Ok((dg_ent, parent, p_count, size, speed, dam)) = q_dice_guards.get(trigger.entity) {
+    if let Ok((dg_ent, parent, p_count, size, speed, dam, mut dg)) =
+        q_dice_guards.get_mut(trigger.entity)
+    {
+        let mut projectiles = vec![];
         info!("Dice guard activated!");
         let par_pos = q_parent.get(parent.parent()).unwrap();
         /*
@@ -67,7 +73,7 @@ pub fn dice_guard_activate<QF: QueryFilter>(
             };
             let pos = par_pos.0 + Vec2::from_angle(angle) * r;
             trace!("Found angle to be {angle}, position is {:?}", pos);
-            spawn_game_object(
+            let ent = spawn_game_object(
                 &mut commands,
                 game_kind.0.unwrap(),
                 None::<()>,
@@ -79,21 +85,29 @@ pub fn dice_guard_activate<QF: QueryFilter>(
                     CreatedBy(parent.0),
                     *dam,
                     *size,
-                    AppliesCollisionEffect::new([ColliderTypes::Enemy].into(), ApplyDamage),
+                    AppliesCollisionEffect::new(
+                        [ColliderTypes::Enemy].into(),
+                        ApplyDamage::default(),
+                    ),
                 ),
             );
+            projectiles.push(ent);
         }
+        dg.projectiles = Some(projectiles);
     }
 }
 
 pub fn dice_guard_deactivate<QF: QueryFilter>(
     trigger: On<DeactivateWeapon>,
     mut commands: Commands,
-    q_dice_guards: Query<(Entity, &CreatorOf, &CooldownRate), (With<DiceGuard>, QF)>,
+    mut q_dice_guards: Query<(Entity, &CooldownRate, &mut DiceGuard), (With<DiceGuard>, QF)>,
 ) {
-    if let Ok((ent, created, cdr)) = q_dice_guards.get(trigger.entity) {
-        for proj in created.iter() {
-            commands.entity(proj).despawn();
+    if let Ok((ent, cdr, mut dg)) = q_dice_guards.get_mut(trigger.entity) {
+        let projectiles = dg.projectiles.take();
+        if let Some(ps) = projectiles {
+            for proj in ps {
+                commands.entity(proj).despawn();
+            }
         }
         commands.entity(ent).insert(Cooldown::new(cdr.0));
     }

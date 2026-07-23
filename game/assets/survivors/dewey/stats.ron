@@ -33,7 +33,7 @@
     ),
     (
         kind: MS,
-        val: 100.0,
+        val: 150.0,
     ),
     (
         kind: EffDuration,

@@ -2,7 +2,7 @@ use crate::{
     render::RenderYtoZ,
     shared::{
         combat::CombatEntityActive,
-        damage::{DamageBuffer, DamageInstance, DeathState},
+        damage::{DeathState, HealthBuffer, HealthChangeInstance},
         despawn_timer::DespawnTimer,
         game_object_spawning::SpawnGameObject,
         weapons::ActivateWeapon,
@@ -116,14 +116,16 @@ pub fn update_shifty_shot_attack<QF: QueryFilter>(
             &Damage,
             &AttackRange,
             &ProjectileSpeed,
+            &CritChance,
+            &CritDamage,
             Has<DespawnTimer>,
         ),
         (QF, Without<Enemy>),
     >,
     q_enemies: Query<(Entity, &Position), (With<Enemy>, CombatEntityActive)>,
-    mut q_enemy_damage: Query<&mut DamageBuffer, With<Enemy>>,
+    mut q_enemy_damage: Query<&mut HealthBuffer, With<Enemy>>,
 ) {
-    for (attack_ent, mut velo, pos, mut attack_data, dam, range, p_speed, has_timer) in
+    for (attack_ent, mut velo, pos, mut attack_data, dam, range, p_speed, cc, cd, has_timer) in
         &mut q_attack
     {
         let mut should_retarget = false;
@@ -144,7 +146,7 @@ pub fn update_shifty_shot_attack<QF: QueryFilter>(
                 let mut buffer = q_enemy_damage
                     .get_mut(e_ent)
                     .expect("Enemy without damage buffer");
-                buffer.push_damage(attack_ent, dam.0);
+                buffer.push_damage(attack_ent, dam.0, Some((cc.0, cd.0)));
                 if attack_data.remaining_bounces >= 1 {
                     attack_data.remaining_bounces -= 1;
                     should_retarget = true;

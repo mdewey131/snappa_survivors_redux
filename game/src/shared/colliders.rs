@@ -5,11 +5,10 @@ use serde::{Deserialize, Serialize};
 
 use crate::shared::{
     combat::CombatSystemSet,
-    damage::{DamageBuffer, DamageInstance},
+    damage::{HealthBuffer, HealthChangeInstance},
     pickups::{TriggerPickup, XPPickupFollowPlayer},
     states::InGameState,
-    stats::components::Damage,
-    //stats::components::Damage,
+    stats::components::{CritChance, CritDamage, Damage},
 };
 
 mod generic_message_system;
@@ -101,22 +100,30 @@ pub enum ColliderTypes {
     SolidObject,
 }
 
-#[derive(Component, Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Reflect)]
-pub struct ApplyDamage;
+#[derive(Component, Default, Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Reflect)]
+pub struct ApplyDamage {
+    can_crit: bool,
+}
 
 impl CollisionEffect for ApplyDamage {
     fn apply_to(&self, coms: &mut Commands, to: Entity, from: Entity) {
+        let can_crit = self.can_crit;
         coms.queue(move |world: &mut World| {
-            // Get damage of the entity applying it
-            let ent_dam = world.get::<Damage>(from);
-            let dam_val = if let Some(d) = ent_dam {
-                d.0
+            let mut q_dam = world.query::<(&Damage, Option<&CritChance>, Option<&CritDamage>)>();
+            let (dam, m_cc, m_cd) = q_dam.get(world, from).unwrap();
+            let damage = dam.0;
+            let c_info = if can_crit {
+                if let (Some(cd), Some(cc)) = (m_cc, m_cd) {
+                    Some((cd.0, cc.0))
+                } else {
+                    None
+                }
             } else {
-                return;
+                None
             };
-            let mut dam_buff = world.get_mut::<DamageBuffer>(to);
-            if let Some(ref mut db) = dam_buff {
-                db.push_damage(from, dam_val);
+            let mut hp_buff = world.get_mut::<HealthBuffer>(to);
+            if let Some(ref mut hp) = hp_buff {
+                hp.push_damage(from, damage, c_info);
             }
         });
     }

@@ -181,7 +181,7 @@ pub fn add_weapon_to_character(
     // Add the weapon marker components for each
     match weapon_kind {
         WeaponKind::DiceGuard => {
-            commands.entity(w_ent).insert(DiceGuard);
+            commands.entity(w_ent).insert(DiceGuard::default());
         }
         WeaponKind::ThrowHands => {
             commands.entity(w_ent).insert(ThrowHands {

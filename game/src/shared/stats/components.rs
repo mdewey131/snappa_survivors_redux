@@ -1,5 +1,5 @@
 use crate::shared::{
-    damage::{DamageBuffer, DamageInstance, TimeSinceLastDamage},
+    damage::{HealthBuffer, HealthChangeInstance, TimeSinceLastDamage},
     stats::{StatKind, StatList},
 };
 use bevy::{
@@ -34,7 +34,7 @@ pub trait StatComponent: Component<Mutability = Mutable> + Sized + Clone + Copy 
 
 #[derive(Component, Debug, Clone, Copy, Deserialize, Serialize, Default, Reflect, PartialEq)]
 #[reflect(Default)]
-#[require(DamageBuffer)]
+#[require(HealthBuffer)]
 pub struct Health {
     max: f32,
     pub current: f32,
@@ -59,6 +59,7 @@ impl StatComponent for Health {
         if self.max == val {
         } else {
             let c_pct = self.current / self.max;
+            self.max = val;
             self.current = val * c_pct;
         }
     }

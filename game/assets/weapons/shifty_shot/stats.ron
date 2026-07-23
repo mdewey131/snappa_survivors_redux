@@ -1,15 +1,15 @@
 ([
     (
         kind: AttackRange,
-        val: 250.0,
+        val: 350.0,
     ),
     (
         kind: CDR,
-        val: 6.0,
+        val: 4.0,
     ),
     (
         kind: Damage,
-        val: 5.0,
+        val: 10.0,
     ),
     (
         kind: ProjCount,

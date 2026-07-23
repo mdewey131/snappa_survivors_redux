@@ -2,7 +2,7 @@ use bevy::{ecs::query::QueryFilter, prelude::*};
 
 use crate::shared::{combat::CombatEntity, states::InGameState};
 
-#[derive(Component, Clone, Debug, Deref, DerefMut, Reflect)]
+#[derive(Component, Clone, Debug, Deref, DerefMut, Reflect, Default)]
 pub struct DespawnTimer(pub Timer);
 
 impl DespawnTimer {

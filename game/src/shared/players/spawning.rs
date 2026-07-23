@@ -4,7 +4,6 @@ use crate::shared::{
     weapons::add_weapon_to_character,
 };
 
-
 // In multiplayer, we spawn just a variety of entities based on their user attributes and the chosen player.
 // This expects an input list of possible positions to take
 pub fn spawn_characters(

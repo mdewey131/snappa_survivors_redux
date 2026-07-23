@@ -1,7 +1,8 @@
 use super::{apply_stat_modifier, components::*, relationships::StatRelationshipsPlugin, xp::*};
 use crate::shared::{
     combat::CombatSystemSet,
-    damage::{DamageBuffer, DamageResult, DamageResultMessage},
+    damage::{HealthBuffer, HealthChange, HealthChangeMessage, HealthChangeResult},
+    enemies::Enemy,
     states::InGameState,
 };
 use bevy::prelude::*;
@@ -104,25 +105,29 @@ impl<SC: StatComponent> Plugin for StatComponentInnerPlugin<SC> {
     }
 }
 
-/// Will want to revisit this, as this currently
-///
 /// 1. Can proc off of the thorns of another infinitely
 /// 2. applies percentage of damage,
-/// 3. Can crit
 pub fn apply_thorns_damage(
-    mut messages: MessageReader<DamageResultMessage>,
-    q_thorns_user: Query<&Thorns>,
-    mut q_receiver: Query<&mut DamageBuffer>,
+    mut messages: MessageReader<HealthChangeMessage>,
+    q_thorns_user: Query<(&Thorns)>,
+    mut q_receiver: Query<&mut HealthBuffer>,
 ) {
     for result in messages.read() {
-        if let Ok(thorns) = q_thorns_user.get(result.damaged_entity) {
-            if let Ok(mut damage) = q_receiver.get_mut(result.damaging_entity) {
-                let dealt = match result.result {
-                    DamageResult::Apply(val) => val,
-                    _ => 0.0,
-                };
-                let to_deal = (thorns.0 * 0.01) * dealt;
-                damage.push_damage(result.damaged_entity, to_deal)
+        match result.kind {
+            HealthChange::Heal => {
+                continue;
+            }
+            _ => {}
+        }
+        if let Ok((thorns)) = q_thorns_user.get(result.receiving_entity) {
+            if let Ok(mut health) = q_receiver.get_mut(result.source_entity) {
+                let to_deal = (thorns.0 * 0.01) * result.amount;
+                match result.result {
+                    HealthChangeResult::Crit | HealthChangeResult::Normal => {
+                        health.push_damage(result.receiving_entity, to_deal, None)
+                    }
+                    _ => {}
+                }
             }
         }
     }

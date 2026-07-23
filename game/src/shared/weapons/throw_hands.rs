@@ -1,6 +1,6 @@
 use crate::shared::{
     combat::{CombatEntityActive, Cooldown},
-    damage::{DamageBuffer, DamageInstance},
+    damage::{HealthBuffer, HealthChangeInstance},
     enemies::Enemy,
     game_kinds::MultiPlayerComponentOptions,
     game_object_spawning::SpawnGameObject,
@@ -136,10 +136,19 @@ pub fn on_deactivate<QF: QueryFilter>(
 pub fn update_attack<QF: QueryFilter>(
     mut commands: Commands,
     time: Res<Time<Fixed>>,
-    mut q_attack: Query<(Entity, &mut ThrowHandsAttack, &Damage), QF>,
-    mut q_target: Query<&mut DamageBuffer>,
+    mut q_attack: Query<
+        (
+            Entity,
+            &mut ThrowHandsAttack,
+            &Damage,
+            &CritChance,
+            &CritDamage,
+        ),
+        QF,
+    >,
+    mut q_target: Query<&mut HealthBuffer>,
 ) {
-    for (attack_ent, mut throw, damage) in &mut q_attack {
+    for (attack_ent, mut throw, damage, cc, cd) in &mut q_attack {
         match throw.state {
             ThrowHandsAttackState::Windup => {
                 throw.timer.tick(time.delta());
@@ -151,7 +160,7 @@ pub fn update_attack<QF: QueryFilter>(
                 throw.state = ThrowHandsAttackState::Winddown;
                 throw.timer = ThrowHandsAttack::timer_from_state(throw.state);
                 if let Ok(mut t_buffer) = q_target.get_mut(throw.target) {
-                    t_buffer.push_damage(attack_ent, damage.0);
+                    t_buffer.push_damage(attack_ent, damage.0, Some((cc.0, cd.0)));
                 };
             }
             ThrowHandsAttackState::Winddown => {

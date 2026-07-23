@@ -238,24 +238,27 @@ fn xp_bar_node(width: f32, height: f32) -> Node {
     }
 }
 
-#[derive(Component, Clone, Copy)]
+#[derive(Component, Clone, Copy, Default)]
 pub struct ShieldBar;
 fn shield_bar() -> impl Scene {
     bsn! {
+        #ShieldBar
+        ShieldBar
         Node {
             width: percent(100),
-            height: percent(5),
-            align_items: AlignItems::Center,
+            height: percent(100),
             justify_content: JustifyContent::Center,
-            grid_column: GridPlacement::start_end(7, 8),
-            grid_row: GridPlacement::start_end(16, 21),
+            align_self: AlignSelf::End
+            grid_column: GridPlacement::start_end(8, 13),
+            grid_row: GridPlacement::start_end(17, 17),
         }
         Children [
             (
             bsn_hp_bar_node(100.0)
             ImageNode {
                 image: "ui/health_bar_texture.png",
-                color: Color::srgb(0.2, 0.2, 0.2)
+                color: Color::srgb(0.2, 0.2, 0.2),
+                image_mode: NodeImageMode::Stretch
             }
             ShieldBarBackground
             Children [
@@ -263,7 +266,8 @@ fn shield_bar() -> impl Scene {
                 bsn_hp_bar_node(100.0)
                 ImageNode {
                     image: "ui/health_bar_texture.png",
-                    color: Color::srgb(0.1, 0.1, 0.9)
+                    color: Color::srgb(0.1, 0.1, 0.9),
+                    image_mode: NodeImageMode::Stretch
                 }
                 ShieldBarForeground
                 )
@@ -288,12 +292,13 @@ fn health_bar_holder_node() -> Node {
     Node {
         display: Display::Grid,
         width: Val::Percent(100.0),
-        height: Val::Percent(10.0),
+        height: Val::Percent(100.0),
         justify_content: JustifyContent::Center,
         align_items: AlignItems::Center,
         justify_items: JustifyItems::Center,
+        align_self: AlignSelf::Start,
         grid_column: GridPlacement::start_end(8, 13),
-        grid_row: GridPlacement::start_end(16, 21),
+        grid_row: GridPlacement::start_end(18, 19),
         ..default()
     }
 }
@@ -489,7 +494,10 @@ fn spawn_hud_container(mut commands: Commands, assets: Res<AssetServer>) {
     commands.spawn((XPBarForeground, ChildOf(xp_bg), xp_foreground_node));
 
     // Shield bar
-    commands.spawn_scene(shield_bar());
+    commands.spawn_scene(bsn! {
+            shield_bar()
+            ChildOf(outer_ent)
+    });
 
     // HP Bar
     let hp = commands
