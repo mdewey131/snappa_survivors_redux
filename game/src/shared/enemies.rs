@@ -20,10 +20,23 @@ use crate::{
 pub mod editor;
 pub mod spawner;
 
+const ENEMY_SPAWN_TIME: f32 = 0.5;
+
 #[derive(Component, Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Reflect)]
 pub struct Enemy {
     pub kind: EnemyKind,
     pub state: EnemyState,
+}
+
+impl Default for Enemy {
+    fn default() -> Self {
+        Self {
+            kind: EnemyKind::default(),
+            state: EnemyState::Spawning {
+                rem_time: ENEMY_SPAWN_TIME,
+            },
+        }
+    }
 }
 
 impl From<Enemy> for CommonColliderBundle {
@@ -70,16 +83,15 @@ impl From<EnemyKind> for AssetFolder {
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Reflect)]
 pub enum EnemyState {
-    Spawning,
+    Spawning { rem_time: f32 },
     LookForTargets,
     MovingTo(Entity),
 }
-
-#[derive(Component, Debug, Clone, PartialEq, Reflect)]
-pub struct EnemySpawnTimer(pub Timer);
-impl Default for EnemySpawnTimer {
+impl Default for EnemyState {
     fn default() -> Self {
-        Self(Timer::from_seconds(0.5, TimerMode::Once))
+        Self::Spawning {
+            rem_time: ENEMY_SPAWN_TIME,
+        }
     }
 }
 
@@ -94,7 +106,7 @@ impl Plugin for EnemyProtocolPlugin {
 pub fn spawn_enemy(commands: &mut Commands, e_kind: EnemyKind, position: Vec2) {
     let enemy = Enemy {
         kind: e_kind,
-        state: EnemyState::Spawning,
+        state: EnemyState::default(),
     };
 
     let mut command = SpawnGameObject::new(
@@ -102,7 +114,6 @@ pub fn spawn_enemy(commands: &mut Commands, e_kind: EnemyKind, position: Vec2) {
         (
             enemy,
             Position(Vec2::new(position.x, position.y)),
-            EnemySpawnTimer::default(),
             AppliesCollisionEffect::new([ColliderTypes::Player].into(), ApplyDamage::default()),
         ),
     );
@@ -111,16 +122,9 @@ pub fn spawn_enemy(commands: &mut Commands, e_kind: EnemyKind, position: Vec2) {
 }
 
 pub fn enemy_state_machine<EnemyQF: QueryFilter, PlayerQF: QueryFilter>(
-    mut commands: Commands,
     time: Res<Time<Virtual>>,
     mut q_enemy: Query<
-        (
-            Entity,
-            &mut Enemy,
-            &Position,
-            &mut LinearVelocity,
-            Option<&mut EnemySpawnTimer>,
-        ),
+        (&mut Enemy, &Position, &mut LinearVelocity),
         (EnemyQF, Without<DeathState>),
     >,
     q_targets: Query<
@@ -128,18 +132,12 @@ pub fn enemy_state_machine<EnemyQF: QueryFilter, PlayerQF: QueryFilter>(
         (With<Player>, Without<Enemy>, PlayerQF, CombatEntityActive),
     >,
 ) {
-    for (ent, mut enemy, e_pos, mut e_lv, mut m_timer) in &mut q_enemy {
+    for (mut enemy, e_pos, mut e_lv) in &mut q_enemy {
         match enemy.state {
-            EnemyState::Spawning => {
-                let timer = if m_timer.is_none() {
-                    continue;
-                } else {
-                    m_timer.as_mut().unwrap()
-                };
-                timer.0.tick(time.delta());
-                if timer.0.just_finished() {
-                    commands.entity(ent).remove::<EnemySpawnTimer>();
-                    enemy.state = EnemyState::LookForTargets
+            EnemyState::Spawning { ref mut rem_time } => {
+                *rem_time -= time.delta_secs();
+                if *rem_time < 0.0 {
+                    enemy.state = EnemyState::LookForTargets;
                 }
             }
             EnemyState::LookForTargets => {
@@ -179,7 +177,6 @@ pub fn add_non_replicated_enemy_components<QF: QueryFilter>(
     if let Ok(en) = q_to_attach.get(trigger.entity) {
         commands.entity(trigger.entity).insert((
             Name::from("Enemy"),
-            EnemySpawnTimer::default(),
             CommonColliderBundle::from(*en),
             RecentlyCollided::default(),
         ));

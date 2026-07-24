@@ -1,6 +1,8 @@
 //! Handles the code related to this game's client, including details around how to initialize
 //! and connect to the server
-use crate::shared::{SHARED_SETTINGS, SINGLE_PLAYER_SERVER_PORT, SharedNetworkingSettings};
+use crate::shared::{
+    SHARED_SETTINGS, SINGLE_PLAYER_SERVER_PORT, SharedNetworkingSettings, states::AppState,
+};
 use bevy::{
     ecs::{lifecycle::HookContext, world::DeferredWorld},
     prelude::*,
@@ -94,6 +96,7 @@ impl GameClient {
                 ReplicationReceiver::default(),
                 PredictionManager::default(),
                 Name::from("Client"),
+                DespawnOnEnter(AppState::MainMenu),
             ));
 
             // Depending on the transport type, do a different thing here

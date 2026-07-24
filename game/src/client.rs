@@ -8,7 +8,7 @@ use crate::{
         mp_selection_menu::MPSelectionMenuPlugin,
         players::ClientPlayerRenderPlugin,
     },
-    render::hud::HudPlugin,
+    render::{hud::HudPlugin, ui::screen_transition::create_screen_transition},
     shared::{
         SEND_INTERVAL,
         game_kinds::{CurrentGameKind, GameKinds, SinglePlayer},
@@ -106,7 +106,6 @@ fn move_to_first_app_state(mut state: ResMut<NextState<AppState>>) {
 pub fn transition_to_single_player(
     mut commands: Commands,
     mut game_choice: ResMut<CurrentGameKind>,
-    mut state: ResMut<NextState<AppState>>,
     q_client: Option<Single<Entity, With<Client>>>,
     q_server: Option<Single<Entity, With<Server>>>,
 ) {
@@ -117,7 +116,6 @@ pub fn transition_to_single_player(
         commands.entity(*s).despawn();
     }
     game_choice.0 = Some(GameKinds::SinglePlayer);
-    state.set(AppState::Lobby);
     // for funsies
     let mut rng = rand::rng();
     let r = rng.random_range(0.0..1.0);
@@ -134,6 +132,10 @@ pub fn transition_to_single_player(
         },
         LobbyCaptain,
     ));
+}
+
+pub fn set_app_state_to_lobby(mut state: ResMut<NextState<AppState>>) {
+    state.set(AppState::Lobby);
 }
 
 pub fn transition_to_multi_player(

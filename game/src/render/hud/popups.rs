@@ -60,7 +60,7 @@ fn health_change_popup(
         DamagePopup
         Text2d::from(text)
         TextColor(text_color)
-        Transform::from_translation(Vec3::Y * 20.0)
+        Transform::from_translation(Vec3::Y * 20.0 + Vec3::Z)
         CombatEntity
         DespawnTimer::new(0.5)
     }

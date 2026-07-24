@@ -1,8 +1,10 @@
 use bevy::{ecs::component::Mutable, prelude::*};
 
 pub mod button;
+pub mod picking;
 pub mod screen_transition;
 use button::GameButtonPlugin;
+use picking::*;
 use screen_transition::ScreenTransitionPlugin;
 
 pub struct SharedUIPlugin;
@@ -74,9 +76,10 @@ fn trigger_ui_fade_set_color<C: Component<Mutability = Mutable> + CanFade>(
     mut q_node: Query<(&mut C, &FadeEffect)>,
 ) {
     if let Ok((mut comp, eff)) = q_node.get_mut(t.entity)
-        && eff.fade_in {
-            comp.set_alpha(0.0);
-        }
+        && eff.fade_in
+    {
+        comp.set_alpha(0.0);
+    }
 }
 
 fn ui_fade_system<C: Component<Mutability = Mutable> + CanFade>(

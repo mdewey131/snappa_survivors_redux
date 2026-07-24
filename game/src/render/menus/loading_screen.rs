@@ -16,30 +16,32 @@ impl Plugin for LoadingScreenPlugin {
     }
 }
 
-#[derive(Component, Debug, Clone)]
-#[require(
-    Node = full_screen(),
-    BackgroundColor = BackgroundColor(Color::srgba(0.05,0.05,0.05,0.0)),
-    FadeEffect = FadeEffect::fade_in(0.1, EaseFunction::CubicOut)
-)]
-pub struct LoadingScreen;
-fn full_screen() -> Node {
-    Node {
-        height: Val::Percent(100.0),
-        width: Val::Percent(100.0),
-        display: Display::Flex,
-        justify_content: JustifyContent::Center,
-        align_items: AlignItems::Center,
-        ..default()
+fn loading_screen() -> impl Scene {
+    bsn! {
+        #LoadingScreen
+        LoadingScreen
+        BackgroundColor(Color::srgba(0.05,0.05,0.05, 1.0))
+        DespawnOnExit<AppState>(AppState::LoadingLevel)
+        Node {
+            height: Val::Percent(100.0),
+            width: Val::Percent(100.0),
+            display: Display::Flex,
+            justify_content: JustifyContent::Center,
+            align_items: AlignItems::Center
+        }
+        Children [
+            LoadingScreenText
+            Text("Loading...")
+        ]
     }
 }
 
-#[derive(Component, Debug, Clone, Copy)]
-#[require(Text = Text::from("Loading..."))]
+#[derive(Component, Debug, Clone, Default)]
+pub struct LoadingScreen;
+
+#[derive(Component, Debug, Clone, Copy, Default)]
 pub struct LoadingScreenText;
 
 fn popup_loading_screen(mut commands: Commands) {
-    commands
-        .spawn((LoadingScreen, DespawnOnExit(AppState::LoadingLevel)))
-        .with_child(LoadingScreenText );
+    commands.spawn_scene(loading_screen());
 }

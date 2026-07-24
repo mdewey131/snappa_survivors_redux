@@ -121,7 +121,10 @@ pub fn bouncing_dice_attack<QF: QueryFilter>(
         ),
         QF,
     >,
-    mut q_enemies: Query<(Entity, &mut HealthBuffer, &Position), Without<BouncingDiceAttack>>,
+    mut q_enemies: Query<
+        (Entity, &mut HealthBuffer, &Position),
+        (With<Enemy>, Without<BouncingDiceAttack>),
+    >,
 ) {
     for (ent, mut pos, mut attack, dam, p_speed, eff_size) in &mut q_dice {
         attack.time_to_bounce.tick(time.delta());

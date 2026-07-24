@@ -27,7 +27,7 @@ impl Plugin for SharedInteractablesPlugin {
 pub struct Interactable;
 
 #[derive(Component)]
-#[require(Interactable, DespawnOnEnter<AppState> = DespawnOnEnter(AppState::GameOver))]
+#[require(Interactable, DespawnOnExit<AppState> = DespawnOnExit(AppState::InGame))]
 pub struct BeerShrine {
     pub max_charge: f32,
     pub current_charge: f32,

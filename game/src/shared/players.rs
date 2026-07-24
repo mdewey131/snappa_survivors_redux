@@ -121,7 +121,7 @@ impl CharacterKind {
             CharacterKind::Gabe => WeaponKind::DiceGuard,
             CharacterKind::Mark => WeaponKind::FlurryOfBlows,
             CharacterKind::Matthew => WeaponKind::BouncingDice,
-            CharacterKind::Paul => WeaponKind::PaddleBack,
+            CharacterKind::Paul => WeaponKind::BumpinTunes,
             CharacterKind::Ryan => WeaponKind::ThrowHands,
             CharacterKind::Shaunt => WeaponKind::ThrowHands,
         }

@@ -1,12 +1,12 @@
-use bevy::{platform::collections::HashMap, prelude::*};
-use lightyear::prelude::{Client, MessageSender};
+use bevy::{picking::hover::Hovered, platform::collections::HashMap, prelude::*};
+use lightyear::prelude::{Client, Controlled, MessageSender};
 use serde::{Deserialize, Serialize};
 use strum::IntoEnumIterator;
 
 pub const BORDER_WIDTH: f32 = 20.0;
 
 use crate::{
-    render::ui::button::*,
+    render::ui::{button::*, picking::SelectedBy},
     shared::{
         GameMainChannel,
         game_kinds::{CurrentGameKind, GameKinds, SinglePlayer, is_single_player},
@@ -26,207 +26,357 @@ impl Plugin for LobbyMenuPlugin {
         app.add_systems(OnEnter(AppState::Lobby), make_lobby)
             .add_systems(
                 Update,
-                (
-                    mp_propagate_client_change_character_message_to_server
-                        .run_if(in_state(AppState::Lobby).and_then(not(is_single_player))),
-                    animate_character_button,
-                ),
+                (mp_propagate_client_change_character_message_to_server
+                    .run_if(in_state(AppState::Lobby).and_then(not(is_single_player)))),
             )
             .add_observer(trigger_game_change_message_callback::<Difficulty>)
             .add_observer(trigger_game_change_message_callback::<MapKind>);
     }
 }
 
-#[derive(Component, Debug, Clone, Copy)]
-#[require(Node = lobby_node())]
+fn lobby() -> impl Scene {
+    bsn! {
+        #LobbyScreen
+        LobbyScreen
+        BorderColor::all(Color::srgba(0.0, 0.0, 0.0, 1.0))
+        Node {
+            width: Val::Percent(100.0),
+            height: Val::Percent(100.0),
+            border: UiRect::all(px(10.0)),
+            justify_content: JustifyContent::FlexStart,
+            flex_direction: FlexDirection::Column,
+        }
+        DespawnOnExit<AppState>(AppState::Lobby)
+        Children[
+            (
+                #TopRail
+                LobbyTopRail
+                Node {
+                    width: Val::Percent(100.0),
+                    height: Val::Percent(10.0),
+                    justify_content: JustifyContent::FlexStart,
+                    border: UiRect::all(px(10.0))
+                }
+                BorderColor::all(Color::srgba(0.0, 0.0, 0.0, 1.0))
+                Children[
+                    LobbyBackButton
+                    BorderColor::all(Color::srgba(0.0, 0.0, 0.0, 1.0))
+                    Node {
+                        width: px(85),
+                        height: px(85)
+                        justify_content: JustifyContent::Center,
+                        border: UiRect::all(px(10.0))
+                    }
+                ]
+
+            ),
+            lobby_main()
+        ]
+    }
+}
+
+#[derive(Component, Debug, Clone, Copy, Default)]
 pub struct LobbyScreen;
-fn lobby_node() -> Node {
-    Node {
-        display: Display::Flex,
-        width: Val::Percent(100.0),
-        height: Val::Percent(100.0),
-        justify_content: JustifyContent::FlexStart,
-        flex_direction: FlexDirection::Column,
-        ..default()
-    }
-}
 
-#[derive(Component, Debug, Clone, Copy)]
-#[require(Node = lobby_top_rail())]
+#[derive(Component, Debug, Clone, Copy, Default)]
 pub struct LobbyTopRail;
-fn lobby_top_rail() -> Node {
-    Node {
-        display: Display::Flex,
-        width: Val::Percent(100.0),
-        height: Val::Percent(10.0),
-        justify_content: JustifyContent::FlexStart,
-        flex_direction: FlexDirection::Row,
-        ..default()
-    }
-}
 
-#[derive(Component, Debug, Clone, Copy)]
-#[require(Node = lobby_main())]
+#[derive(Component, Debug, Clone, Copy, Default)]
 pub struct LobbyMainContainer;
-fn lobby_main() -> Node {
-    Node {
-        display: Display::Flex,
-        width: Val::Percent(100.0),
-        height: Val::Percent(90.0),
-        justify_content: JustifyContent::SpaceAround,
-        flex_direction: FlexDirection::Row,
-        ..default()
+
+fn lobby_main() -> impl Scene {
+    bsn! {
+        #LobbyMainContainer
+        LobbyMainContainer
+        Node {
+                display: Display::Flex,
+                width: Val::Percent(100.0),
+                height: Val::Percent(90.0),
+                justify_content: JustifyContent::SpaceAround,
+                flex_direction: FlexDirection::Row,
+                border: UiRect::all(px(10.0))
+        }
+        BorderColor::all(Color::srgba(0.0, 0.0, 0.0, 1.0))
+        Children[
+            player_info_well(),
+            character_selection_well(),
+        ]
     }
 }
 
-#[derive(Component, Debug, Clone, Copy)]
-#[require(Node = lobby_subcontainer(20.0, 100.0))]
-pub struct LobbyPlayerInfoContainer;
+#[derive(Component, Debug, Clone, Copy, Default)]
+pub struct LobbyPlayerInfoWell;
 
-#[derive(Component, Debug, Clone)]
-#[require(Node = character_selection_container(50.0, 100.0))]
-pub struct LobbyCharacterSelection {
-    pub buttons: HashMap<CharacterKind, Entity>,
+fn player_info_well() -> impl Scene {
+    bsn! {
+        #PlayerInfoWell
+        LobbyPlayerInfoWell
+        Node {
+            width: percent(15),
+            height: percent(100),
+            border: UiRect::all(px(10.0)),
+            flex_direction: FlexDirection::Column,
+            justify_content: JustifyContent::SpaceEvenly,
+            align_items: AlignItems::Center
+        }
+        BorderColor::all(Color::srgba(0.0, 0.0, 0.0, 1.0))
+    }
 }
 
-#[derive(Component, Debug, Clone, Serialize, Deserialize, Default, Reflect)]
-#[require(Node = char_sel_button(), Button = Button, Pickable = char_button_picking())]
+#[derive(Component, Debug, Clone, Default)]
+pub struct LobbyCharacterSelection;
+fn character_selection_well() -> impl Scene {
+    bsn! {
+        #CharacterSelectionWell
+        LobbyCharacterSelection
+        Node {
+            width: percent(50.0),
+            height: percent(100),
+            border: UiRect::all(px(10.0)),
+            flex_direction: FlexDirection::Column
+            justify_content: JustifyContent::Center,
+            align_items: AlignItems::Stretch
+        }
+        BorderColor::all(Color::srgba(0.0, 0.0, 0.0, 1.0))
+        Children[
+            char_button_container(),
+            (
+                #LobbyCharacterPreview
+                LobbyCharacterPreview {m_char: None}
+                BorderColor::all(Color::srgba(0.0, 0.0, 0.0, 1.0))
+                Node {
+                   height: percent(30)
+                   justify_content: JustifyContent::Center,
+                   border: UiRect::all(px(10.0))
+                   align_items: AlignItems::Center,
+                }
+            )
+        ]
+    }
+}
+
+#[derive(Component, Default, Debug, Clone, Copy)]
+pub struct CharacterSelectionButtonContainer;
+
+pub fn char_button_container() -> impl Scene {
+    bsn! {
+        #ButtonContainer
+        CharacterSelectionButtonContainer
+        BorderColor::all(Color::srgba(0.0, 0.0, 0.0, 1.0))
+        Node {
+            height: percent(70),
+            border: UiRect::all(px(10.0)),
+            justify_content: JustifyContent::SpaceAround,
+            align_items: AlignItems::Center,
+            flex_wrap: FlexWrap::Wrap
+        }
+        Children[
+            char_button(CharacterKind::Dewey),
+            char_button(CharacterKind::Matthew),
+            char_button(CharacterKind::Mark),
+            char_button(CharacterKind::Ryan),
+            char_button(CharacterKind::Shaunt),
+            char_button(CharacterKind::Gabe),
+            char_button(CharacterKind::Paul),
+            char_button(CharacterKind::Finn),
+        ]
+    }
+}
+
+#[derive(Component, Debug, Clone, Copy, Deserialize, Serialize, Default)]
 pub struct CharacterSelectionButton {
-    pub kind: CharacterKind,
-    selected_by: Vec<Entity>,
-}
-fn char_button_picking() -> Pickable {
-    Pickable {
-        should_block_lower: true,
-        is_hoverable: true,
-    }
-}
-
-fn char_sel_button() -> Node {
-    Node {
-        height: Val::Percent(30.0),
-        width: Val::Percent(20.0),
-        flex_direction: FlexDirection::Column,
-        justify_content: JustifyContent::SpaceEvenly,
-        align_items: AlignItems::Center,
-        ..default()
-    }
+    char: CharacterKind,
 }
 
 #[derive(Component, Debug, Clone, Serialize, Deserialize, Default)]
 pub struct CharacterSelectionIcon;
 
 #[derive(Component, Debug, Clone, Serialize, Deserialize, Default)]
-#[require(Text = Text::from("NO TEXT COMPONENT"))]
 pub struct CharacterSelectionText;
 
+fn char_button(c: CharacterKind) -> impl Scene {
+    let folder = AssetFolder::from(c);
+    let image = format!("{}/lobby_portrait.png", folder.0);
+    let name: String = c.into();
+
+    bsn! {
+        #CharacterButton
+        CharacterSelectionButton {char: c}
+        SelectedBy(vec![])
+        Button
+        Pickable {
+                should_block_lower: true,
+                is_hoverable: true,
+            }
+        Node {
+            width: px(125),
+            height: px(125),
+            border: UiRect::all(px(10.0))
+            flex_direction: FlexDirection::Column,
+            justify_content: JustifyContent::SpaceEvenly,
+            align_items: AlignItems::Stretch
+        }
+        BorderColor::all(Color::srgba(1.0, 1.0, 1.0, 0.5))
+        BackgroundColor(Color::srgba(0.2, 0.2, 0.2, 0.2))
+        on(hover_change_preview_character)
+        on(on_leave_remove_character_preview)
+        on(click_select_character)
+        Children[
+            (
+                #CharacterIcon
+                CharacterSelectionIcon
+                ImageNode {image}
+                Node {
+                    height: percent(80),
+                    border: UiRect::all(px(10.0))
+                }
+            ),
+            (
+                #CharacterText
+                CharacterSelectionText
+                Text::new(name)
+            )
+        ]
+    }
+}
+
+#[derive(Component, Debug, Clone, Default)]
+pub struct LobbyCharacterPreview {
+    m_char: Option<CharacterKind>,
+}
+
+fn change_preview_character(
+    commands: &mut Commands,
+    preview: &mut Single<(Entity, &mut LobbyCharacterPreview)>,
+    to: Option<CharacterKind>,
+) {
+    if let Some(old_character) = preview.1.m_char {
+        commands.entity(preview.0).despawn_children();
+    }
+    if let Some(c) = to {
+        commands.spawn_scene_list(lobby_character_preview(preview.0, c));
+    }
+    preview.1.m_char = to;
+}
+
+fn lobby_character_preview(on: Entity, c: CharacterKind) -> impl SceneList {
+    let folder = AssetFolder::from(c);
+    let description: String = c.into();
+    let image = format!("{}/lobby_portrait.png", folder.0);
+    bsn_list![
+        (
+            #Portrait
+            ChildOf(on)
+            LobbyCharacterPortrait
+            BorderColor::all(Color::srgba(0.0, 0.0, 0.0, 1.0))
+            ImageNode {image}
+            Node {
+                width: percent(20),
+                border: UiRect::all(px(10.0))
+            }
+        ),
+        (
+            #Description
+            ChildOf(on)
+            BorderColor::all(Color::srgba(0.0, 0.0, 0.0, 1.0))
+            LobbyCharacterDescription
+            Text::from(description)
+            Node {
+                width: percent(80),
+                border: UiRect::all(px(10.0))
+            }
+        )
+    ]
+}
+
+#[derive(Component, Debug, Clone, Copy, Default)]
+pub struct LobbyCharacterDescription;
+
+#[derive(Component, Debug, Clone, Copy, Default)]
+pub struct LobbyCharacterPortrait;
+
+fn hover_change_preview_character(
+    on: On<Pointer<Over>>,
+    mut commands: Commands,
+    q_hovered: Query<&CharacterSelectionButton>,
+    mut preview: Single<(Entity, &mut LobbyCharacterPreview)>,
+) {
+    info!("Hovered!");
+    if let Ok(button) = q_hovered.get(on.entity) {
+        change_preview_character(&mut commands, &mut preview, Some(button.char));
+    }
+}
+
+fn on_leave_remove_character_preview(
+    on: On<Pointer<Leave>>,
+    mut commands: Commands,
+    q_hovered: Query<(&CharacterSelectionButton, &SelectedBy)>,
+    mut preview: Single<(Entity, &mut LobbyCharacterPreview)>,
+    q_player: Query<
+        (),
+        (
+            With<PlayerInLobby>,
+            Or<(With<SinglePlayer>, With<Controlled>)>,
+        ),
+    >,
+) {
+    info!("Left!");
+    if let Ok((_button, selected)) = q_hovered.get(on.entity) {
+        let player_selected = selected.0.iter().any(|ent| q_player.get(*ent).is_ok());
+        if !player_selected {
+            change_preview_character(&mut commands, &mut preview, None);
+        }
+    }
+}
+
+fn click_select_character(
+    on: On<Pointer<Press>>,
+    mut local: MessageWriter<ClientChangeCharacterMessage>,
+    mut q_pressed: Query<(&CharacterSelectionButton, &mut SelectedBy)>,
+    player: Single<
+        Entity,
+        (
+            With<PlayerInLobby>,
+            Or<(With<Controlled>, With<SinglePlayer>)>,
+        ),
+    >,
+) {
+    if q_pressed.get(on.entity).is_err() {
+        return;
+    }
+    info!("Clicked!");
+
+    for (_button, mut selected) in &mut q_pressed {
+        selected.0.retain(|sel| *sel != *player)
+    }
+
+    let (button, mut selected) = q_pressed.get_mut(on.entity).unwrap();
+    selected.0.push(*player);
+    local.write(ClientChangeCharacterMessage { char: button.char });
+}
+
 #[derive(Component, Debug, Clone, Copy)]
-#[require(Node = lobby_subcontainer(20.0, 100.0))]
 pub struct LobbySettingsSection;
 
-fn character_selection_container(width: f32, height: f32) -> Node {
-    let mut base = lobby_subcontainer(width, height);
-    base.display = Display::Grid;
-    base.grid_template_rows = vec![RepeatedGridTrack::auto(2)];
-    base.grid_template_columns = vec![RepeatedGridTrack::auto(4)];
-    base
-}
-
-fn lobby_subcontainer(width: f32, height: f32) -> Node {
-    Node {
-        display: Display::Flex,
-        width: Val::Percent(width),
-        height: Val::Percent(height),
-        justify_content: JustifyContent::SpaceAround,
-        flex_direction: FlexDirection::Column,
-        ..default()
-    }
-}
-
 #[derive(Component, Debug, Clone, Copy)]
-#[require(Node = lobby_setting(100.0, 30.0))]
 pub struct LobbyDifficulty;
 
-fn lobby_setting(width: f32, height: f32) -> Node {
-    Node {
-        display: Display::Flex,
-        width: Val::Percent(width),
-        height: Val::Percent(height),
-        justify_content: JustifyContent::SpaceAround,
-        flex_direction: FlexDirection::Row,
-        ..default()
-    }
-}
 /// The node that contains a button to go back to the previous screen.
 /// We just store this as a holder because we want to selectively spawn this
 /// button depending on the environment (clients should have this, servers should not)
 #[derive(Component, Debug, Clone, Copy)]
-#[require(Node = Node::default())]
 pub struct ContainerLobbyBackButton;
 
-#[derive(Component, Debug, Clone, Copy)]
+#[derive(Component, Debug, Clone, Copy, Default)]
 pub struct LobbyBackButton;
 
 #[derive(Component)]
 pub struct ChangeGameSettingButton<F: GameRuleField>(F);
 
 fn make_lobby(mut commands: Commands, assets: Res<AssetServer>, _game_kind: Res<CurrentGameKind>) {
-    let lobby = commands
-        .spawn((LobbyScreen, DespawnOnExit(AppState::Lobby)))
-        .id();
-
-    // Lobby top rail
-    let lobby_top = commands.spawn((LobbyTopRail, ChildOf(lobby))).id();
-    commands.spawn((ChildOf(lobby_top), ContainerLobbyBackButton));
-
-    // Lobby Main Body
-    let lobby_main = commands.spawn((LobbyMainContainer, ChildOf(lobby))).id();
-
-    let _player_info = commands
-        .spawn((LobbyPlayerInfoContainer, ChildOf(lobby_main)))
-        .id();
-
-    let char_selection = commands.spawn_empty().id();
-    let mut button_map = HashMap::new();
-    for character in CharacterKind::iter() {
-        let sprite_path: AssetFolder = character.into();
-        let handle: Handle<Image> =
-            assets.load(format!("{}/{}", sprite_path.0, "lobby_portrait.png"));
-
-        let char_string: String = character.into();
-        let entity = commands
-            .spawn((
-                CharacterSelectionButton {
-                    kind: character,
-                    selected_by: vec![],
-                },
-                ChildOf(char_selection),
-            ))
-            .observe(character_selection_button_observer)
-            .with_children(|p| {
-                p.spawn((CharacterSelectionIcon, ImageNode::from(handle)));
-                p.spawn((CharacterSelectionText, Text::from(char_string)));
-            })
-            .id();
-        button_map.insert(character, entity);
-    }
-
-    commands.entity(char_selection).insert((
-        LobbyCharacterSelection {
-            buttons: button_map,
-        },
-        ChildOf(lobby_main),
-    ));
-
-    let settings_section = commands
-        .spawn((LobbySettingsSection, ChildOf(lobby_main)))
-        .id();
-
-    let diff_section = commands
-        .spawn((LobbyDifficulty, ChildOf(settings_section)))
-        .id();
-
-    // TODO: Change the callback to work regardless of the game type (single or multiplayer)
+    commands.spawn_scene(lobby());
+    /*
+        // TODO: Change the callback to work regardless of the game type (single or multiplayer)
     for diff in [Difficulty::Easy, Difficulty::Normal, Difficulty::Hard].iter() {
         let color = match *diff {
             Difficulty::Easy => Color::srgb(0.5, 0.5, 0.9),
@@ -248,6 +398,7 @@ fn make_lobby(mut commands: Commands, assets: Res<AssetServer>, _game_kind: Res<
             cb,
         ));
     }
+    */
 }
 
 fn trigger_game_change_message_callback<F: GameRuleField>(
@@ -281,62 +432,11 @@ pub fn spawn_lobby_back_button(
         .insert((ChildOf(trigger.entity), LobbyBackButton));
 }
 
-fn character_selection_button_observer(
-    trigger: On<Pointer<Release>>,
-    mut messages: MessageWriter<ClientChangeCharacterMessage>,
-    q_button_well: Single<&LobbyCharacterSelection>,
-    mut q_buttons: Query<&mut CharacterSelectionButton>,
-    mut q_player: Single<(Entity, &mut PlayerInLobby), Or<(With<SinglePlayer>, With<Client>)>>,
-) {
-    info!("System triggered");
-    if let Some(ref mut char) = q_player.1.selected_character {
-        // Get the previous button selected by this person to update the selection vector
-        let prev_ent = q_button_well.buttons.get(char).expect("Not Found!");
-        let mut prev_button = q_buttons.get_mut(*prev_ent).unwrap();
-        let pos = prev_button
-            .selected_by
-            .iter()
-            .position(|e| *e == q_player.0)
-            .unwrap();
-        prev_button.selected_by.remove(pos);
-    }
-
-    if let Ok(mut b) = q_buttons.get_mut(trigger.entity) {
-        q_player.1.selected_character = Some(b.kind);
-        b.selected_by.push(q_player.0);
-        messages.write(ClientChangeCharacterMessage { char: b.kind });
-    }
-}
-
 fn mp_propagate_client_change_character_message_to_server(
     mut reader: MessageReader<ClientChangeCharacterMessage>,
     mut q_client: Single<&mut MessageSender<ClientChangeCharacterMessage>>,
 ) {
     for e in reader.read() {
         q_client.send::<GameMainChannel>(*e);
-    }
-}
-
-/// This to be reworked extensively, later
-fn animate_character_button(
-    mut q_button: Query<(Entity, &mut BackgroundColor, &mut CharacterSelectionButton)>,
-    q_player: Query<&PlayerInLobby, Or<(With<SinglePlayer>, With<Client>)>>,
-) {
-    for (b_ent, mut b_color, mut button) in &mut q_button {
-        let mut to_rm = Vec::new();
-        for (i, p_ent) in button.selected_by.iter().enumerate() {
-            let color = if let Ok(player) = q_player.get(*p_ent) {
-                player.color
-            } else {
-                info!("Found invalid player {} selecting button {}", p_ent, b_ent);
-                to_rm.push(i);
-                continue;
-            };
-            b_color.0 = color;
-        }
-        to_rm.reverse();
-        for i in to_rm {
-            button.selected_by.remove(i);
-        }
     }
 }

@@ -8,7 +8,10 @@ use crate::{
         GameMainChannel,
         game_kinds::{is_single_player, *},
         game_rules::GameRules,
-        lobby::{ClientStartGameMessage, ServerStartLoadingGameMessage},
+        lobby::{
+            ClientChangeCharacterMessage, ClientStartGameMessage, PlayerInLobby,
+            ServerStartLoadingGameMessage,
+        },
         states::AppState,
     },
 };
@@ -26,11 +29,21 @@ impl Plugin for ClientGameLobbyPlugin {
                     .run_if(enter_pressed),
                 client_on_receive_start_loading_message.run_if(not(is_single_player)),
                 client_on_receive_start_game_message.run_if(is_single_player),
+                read_local_character_selection_messages.run_if(is_single_player),
             )
                 .run_if(in_state(AppState::Lobby)),
         )
         .add_observer(spawn_lobby_back_button)
         .add_observer(observe_lobby_back_button);
+    }
+}
+
+pub fn read_local_character_selection_messages(
+    mut reader: MessageReader<ClientChangeCharacterMessage>,
+    mut player: Single<&mut PlayerInLobby, DefaultClientFilter>,
+) {
+    for message in reader.read() {
+        player.selected_character = Some(message.char)
     }
 }
 

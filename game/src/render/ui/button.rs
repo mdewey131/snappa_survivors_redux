@@ -1,5 +1,27 @@
 use bevy::{ecs::system::SystemId, platform::collections::HashMap, prelude::*};
 
+/// We're sidestepping the current `GameButton` stuff to just supply a custom made bsn scene for buttons in the game
+pub fn game_button(label: &str, btn_color: Option<Color>, text_color: Option<Color>) -> impl Scene {
+    let btn_color = btn_color.unwrap_or_else(|| Color::WHITE);
+    let txt_color = text_color.unwrap_or_else(|| Color::BLACK);
+    bsn! {
+        #Button
+        Button
+        Node {
+            justify_content: JustifyContent::Center,
+            align_items: AlignItems::Center
+        }
+        BackgroundColor(btn_color)
+        Children [
+            (
+                Text(label)
+                TextColor(txt_color)
+                TextShadow
+            )
+        ]
+    }
+}
+
 #[derive(Resource, Default, Deref, DerefMut)]
 pub struct ButtonSystems(pub HashMap<String, SystemId>);
 
