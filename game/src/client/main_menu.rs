@@ -9,6 +9,7 @@ use crate::{
         screen_transition::{ScreenTransition, create_screen_transition},
     },
     shared::{
+        abilities::debug_launch_abilities_demo,
         despawn_timer::DespawnTimer,
         game_kinds::{self, CurrentGameKind},
         states::AppState,
@@ -76,7 +77,13 @@ fn button_well() -> impl Scene {
             ButtonSinglePlayerGame
             game_button("Single Player", None, None)
             on(on_press_move_to_single_player)
-        )]
+        ),
+        (
+            #Debug
+            game_button("DEBUG Abilities Demo", None, None)
+            on(on_press_launch_abilities_demo)
+        )
+       ]
     }
 }
 
@@ -120,4 +127,9 @@ fn on_press_move_to_single_player(
     game_kinds.0 = Some(game_kinds::GameKinds::SinglePlayer);
     let sys_on_transition = commands.register_system(set_app_state_to_lobby);
     commands.spawn_scene(create_screen_transition(Some(sys_on_transition)));
+}
+
+fn on_press_launch_abilities_demo(on: On<Pointer<Press>>, mut commands: Commands) {
+    let sys = commands.register_system(debug_launch_abilities_demo);
+    commands.spawn_scene(create_screen_transition(Some(sys)));
 }

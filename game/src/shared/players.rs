@@ -33,7 +33,7 @@ pub use spawning::*;
 /// if a client disconnects, we can still maintain
 /// state of the character while we wait for that person
 /// to come back
-#[derive(Component, Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Reflect)]
+#[derive(Component, Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Reflect, Default)]
 #[require(Name = Name::from("player"), CombatEntity = CombatEntity)]
 pub struct Player {
     pub client: Option<PeerId>,

@@ -52,6 +52,7 @@ use weapons::{SharedWeaponPlugin, WeaponProtocolPlugin};
 use crate::utils::zoo::ZooLevelPlugin;
 use crate::{
     shared::{
+        abilities::AbilityPlugin,
         interactables::SharedInteractablesPlugin,
         pickups::{PickupsProtocolPlugin, SharedPickupsPlugin},
         players::{Player, PlayerProtocolPlugin},
@@ -95,6 +96,7 @@ impl Plugin for GameSharedPlugin {
             SharedWeaponPlugin,
             SharedXPPlugin,
         ));
+        app.add_plugins(AbilityPlugin);
 
         #[cfg(feature = "dev")]
         app.add_plugins(ZooLevelPlugin);

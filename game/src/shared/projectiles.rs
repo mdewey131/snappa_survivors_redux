@@ -70,12 +70,12 @@ pub enum ProjectileMovement {
     },
 }
 
-pub fn projectile_movement<QF: QueryFilter>(
+pub fn projectile_movement(
     time: Res<Time<Fixed>>,
     q_target: Query<&Position, Without<Projectile>>,
     mut q_projectile: Query<
         (&mut Projectile, &mut LinearVelocity, &mut Position),
-        (With<Projectile>, QF),
+        (With<Projectile>),
     >,
 ) {
     for (mut proj, mut velo, mut proj_pos) in &mut q_projectile {

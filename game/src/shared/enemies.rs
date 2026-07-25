@@ -83,7 +83,11 @@ impl From<EnemyKind> for AssetFolder {
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Reflect)]
 pub enum EnemyState {
-    Spawning { rem_time: f32 },
+    Spawning {
+        rem_time: f32,
+    },
+    /// Holds unless told to move
+    StandStill,
     LookForTargets,
     MovingTo(Entity),
 }
@@ -134,6 +138,7 @@ pub fn enemy_state_machine<EnemyQF: QueryFilter, PlayerQF: QueryFilter>(
 ) {
     for (mut enemy, e_pos, mut e_lv) in &mut q_enemy {
         match enemy.state {
+            EnemyState::StandStill => {}
             EnemyState::Spawning { ref mut rem_time } => {
                 *rem_time -= time.delta_secs();
                 if *rem_time < 0.0 {
