@@ -10,6 +10,7 @@ use lightyear::{
     prelude::*,
 };
 
+pub mod abilities;
 pub mod colliders;
 pub mod combat;
 pub mod damage;
