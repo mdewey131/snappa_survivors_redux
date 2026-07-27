@@ -105,7 +105,7 @@ pub fn shifty_shot_deactivate<QF: QueryFilter>(
     }
 }
 
-pub fn update_shifty_shot_attack<QF: QueryFilter>(
+pub fn update_shifty_shot_attack(
     mut commands: Commands,
     mut q_attack: Query<
         (
@@ -120,7 +120,7 @@ pub fn update_shifty_shot_attack<QF: QueryFilter>(
             &CritDamage,
             Has<DespawnTimer>,
         ),
-        (QF, Without<Enemy>),
+        (Without<Enemy>),
     >,
     q_enemies: Query<(Entity, &Position), (With<Enemy>, CombatEntityActive)>,
     mut q_enemy_damage: Query<&mut HealthBuffer, With<Enemy>>,

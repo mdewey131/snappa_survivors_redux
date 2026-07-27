@@ -11,8 +11,8 @@ impl Plugin for ClientShiftyShotPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             FixedUpdate,
-            update_shifty_shot_attack::<DefaultClientFilter>
-                .run_if(in_state(InGameState::InGame).and_then(is_single_player))
+            update_shifty_shot_attack
+                .run_if(in_state(InGameState::InGame))
                 .in_set(CombatSystemSet::Combat),
         )
         .add_observer(shifty_shot_activate::<DefaultClientFilter>)

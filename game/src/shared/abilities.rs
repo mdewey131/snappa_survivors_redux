@@ -31,6 +31,7 @@ use crate::{
     shared::{
         colliders::{AppliesCollisionEffect, ApplyDamage, ColliderTypes},
         combat::{CombatSystemSet, Cooldown},
+        damage::HealthBuffer,
         enemies::Enemy,
         game_kinds::{self, CurrentGameKind, GameKinds::SinglePlayer, MultiPlayerComponentOptions},
         game_object_spawning::{SpawnGameObject, spawn_game_object},
@@ -66,6 +67,7 @@ pub enum AbilityKind {
     },
     PaddleBack,
     ShiftyShot,
+    BumpinTunes,
 }
 
 #[derive(Clone, Debug, Default, Reflect)]
@@ -271,23 +273,12 @@ fn generic_observer(t: On<ActivateAbility>) {
     info!("Ability Activated!")
 }
 
-fn debug_scene() -> impl SceneList {
-    bsn_list![
-        (
-        #DummyPlayer
-        Position
+fn dice_guard_demo(position: Vec2) -> impl SceneList {
+    let e_pos = position + Vec2::Y * 100.0;
+    bsn_list! [(
+        #DummyPlayer1
+        Position(position)
         HasAbilities [ (
-            #DummyAbility
-            Ability {
-                kind: AbilityKind::DiceGuard { dice: None },
-                activates: AbilityStart::Immediately,
-                while_active: WhileAbilityActive::DoNothing,
-                deactivates: AbilityDeactivation::Never
-            }
-            on(generic_observer)
-        ),
-        (
-
                 #DiceGuard
                 AttackRange(100.0)
                 EffectSize(50.0)
@@ -308,46 +299,108 @@ fn debug_scene() -> impl SceneList {
         )]
         ),
         (
-            #DummyPlayer
-            Player
-            Position(Vec2::new(400.0, 0.0))
-            Transform {translation: Vec3::new(400.0, 0.0, 0.0)}
-            HasAbilities [
-                #ShiftyShot
-                AttackRange(250.0)
-                ProjectileBounces(1.0)
-                ProjectileCount(3.0)
-                ProjectileSpeed(50.0)
-                CooldownRate(3.0)
-                CritChance(0.5)
-                CritDamage(0.5)
-                Damage(5.0)
-                Ability {
-                    kind: AbilityKind::ShiftyShot,
-                    activates: AbilityStart::EnemiesInRange,
-                    while_active: WhileAbilityActive::PulseActivations { pulse: Timer::from_seconds(0.5, TimerMode::Once) },
-                    deactivates: AbilityDeactivation::AfterActivations(3),
-                }
-                on(shifty_shot_activate)
-            ]
-        ),
-        (
-            #Enemy1
+            #DiceGuardEnemy
             Enemy
-            Position(Vec2::new(400.0, 200.0))
-            Transform {translation: Vec3::new(100.0, 100.0, 0.0)}
-            Sprite {image: "enemies/faceless/sprite.png"}
-            Health::new(9001.0)
-
-        ),
-        (
-            #Enemy2
-            Enemy
-            Position(Vec2::new(350.0, 250.0))
-            Transform {translation: Vec3::new(50.0, 100.0, 0.0)}
-            Sprite {image: "enemies/faceless/sprite.png"}
-            Health::new(42069.0)
+            Position(e_pos)
         )
+    ]
+}
+
+pub fn shifty_shot_demo(position: Vec2) -> impl SceneList {
+    let e1_pos = position + Vec2::Y * 250.0;
+    let e2_pos = position + Vec2::Y * 250.0 + Vec2::X * 100.0;
+    bsn_list! [(
+        #DummyPlayer
+        Player
+        Position(position)
+        Transform {translation: Vec3::new(400.0, 0.0, 0.0)}
+        HasAbilities [
+            #ShiftyShot
+            AttackRange(250.0)
+            ProjectileBounces(1.0)
+            ProjectileCount(3.0)
+            ProjectileSpeed(50.0)
+            CooldownRate(3.0)
+            CritChance(0.5)
+            CritDamage(0.5)
+            Damage(5.0)
+            Ability {
+                kind: AbilityKind::ShiftyShot,
+                activates: AbilityStart::EnemiesInRange,
+                while_active: WhileAbilityActive::PulseActivations { pulse: Timer::from_seconds(0.5, TimerMode::Once) },
+                deactivates: AbilityDeactivation::AfterActivations(3),
+            }
+            on(shifty_shot_activate)
+        ]
+    ),
+    (
+        #ShiftyShotEnemy1
+        Enemy
+        Position(e1_pos)
+        Sprite {image: "enemies/faceless/sprite.png"}
+        Health::new(9001.0)
+
+    ),
+    (
+        #ShiftyShotEnemy2
+        Enemy
+        Position(e2_pos)
+        Sprite {image: "enemies/faceless/sprite.png"}
+        Health::new(42069.0)
+        )
+        ]
+}
+
+fn bumpin_tunes_demo(position: Vec2) -> impl SceneList {
+    let e1_pos = position + Vec2::Y * 250.0;
+    let e2_pos = position + Vec2::X * 250.0;
+    let e3_pos = position + Vec2::NEG_Y * 250.0;
+    let e4_pos = position + Vec2::NEG_X * 250.0;
+    bsn_list! [(
+    #DummyPlayer
+    Player
+    Position(position)
+    HasAbilities [
+        #Tunes
+        EffectSize(350.0)
+        Damage(5.0)
+        Ability {
+            kind: AbilityKind::BumpinTunes,
+            activates: AbilityStart::Immediately,
+            while_active: WhileAbilityActive::PulseActivations { pulse: Timer::from_seconds(0.5, TimerMode::Once) },
+            deactivates: AbilityDeactivation::Never,
+        }
+        on(bumpin_tunes_activate)
+    ]
+    ),
+    (
+    #TunesEnemy1
+    Enemy
+    Position(e1_pos)
+    Sprite {image: "enemies/faceless/sprite.png"}
+    Health::new(42069.0)
+    ),
+    (
+    #TunesEnemy2
+    Enemy
+    Position(e2_pos)
+    Sprite {image: "enemies/faceless/sprite.png"}
+    Health::new(42069.0)
+    ),
+    (
+    #TunesEnemy3
+    Enemy
+    Position(e3_pos)
+    Sprite {image: "enemies/faceless/sprite.png"}
+    Health::new(42069.0)
+    ),
+    (
+    #TunesEnemy4
+    Enemy
+    Position(e4_pos)
+    Sprite {image: "enemies/faceless/sprite.png"}
+            Health::new(42069.0)
+    )
     ]
 }
 
@@ -362,7 +415,9 @@ pub fn debug_launch_abilities_demo(
     commands.entity(*q_main_menu_screen).despawn();
     app_state.set(AppState::InGame);
     game_state.set(InGameState::InGame);
-    commands.spawn_scene_list(debug_scene());
+    commands.spawn_scene_list(dice_guard_demo(Vec2::ZERO));
+    commands.spawn_scene_list(shifty_shot_demo(Vec2::new(400.0, 0.0)));
+    commands.spawn_scene_list(bumpin_tunes_demo(Vec2::new(800.0, 0.0)));
 }
 
 fn dice_guard_activate(
@@ -506,6 +561,24 @@ fn shifty_shot_activate(
                     *cd,
                     *cc,
                 ));
+            }
+        }
+    }
+}
+fn bumpin_tunes_activate(
+    trigger: On<ActivateAbility>,
+    q_holder: Query<&Position, Without<Enemy>>,
+    q_ability: Query<(&AbilityOf, &Damage, &EffectSize)>,
+    mut q_enemies: Query<(&Position, &mut HealthBuffer), With<Enemy>>,
+) {
+    if let Ok((ability_of, dam, size)) = q_ability.get(trigger.entity) {
+        info!("Firing bumpin tunes");
+        let player_loc = q_holder
+            .get(ability_of.0)
+            .expect("Player position not found!");
+        for (e_pos, mut buff) in &mut q_enemies {
+            if player_loc.0.distance(e_pos.0) <= size.0 {
+                buff.push_damage(trigger.entity, dam.0, None);
             }
         }
     }
