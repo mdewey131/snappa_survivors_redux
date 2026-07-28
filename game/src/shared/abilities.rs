@@ -23,8 +23,9 @@ use avian2d::{dynamics::rigid_body::LinearVelocity, physics_transform::Position}
 use bevy::{
     ecs::{event::Trigger, query::QueryFilter},
     prelude::*,
+    transform::commands,
 };
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     client::main_menu::MainMenuScreen,
@@ -46,6 +47,336 @@ use crate::{
     },
     utils::CreatedBy,
 };
+
+#[derive(Component, Debug, Clone, Default)]
+pub struct NewAbility {
+    /// When this doesn't have steps, it tracks its own state as it goes along
+    /// When it does have steps, it tracks them in sequence based on `HasAbilitySteps`
+    pub state: NewAbilityState,
+}
+#[derive(Component, Debug, Clone, Default)]
+#[relationship_target(relationship = AbilityStep)]
+pub struct HasAbilitySteps {
+    pub current: usize,
+    pub state: NewAbilityState,
+    pub cancels_entire_ability_on_self_cancel: bool,
+    #[relationship]
+    steps: Vec<Entity>,
+}
+
+#[derive(Component, Debug, Clone, Copy)]
+#[relationship(relationship_target = HasAbilitySteps)]
+pub struct AbilityStep {
+    #[relationship]
+    pub entity: Entity,
+    pub state: NewAbilityState,
+}
+
+#[derive(Component, Debug, Clone, Copy, Default)]
+pub enum NewAbilityState {
+    #[default]
+    Init,
+    Requested,
+    /// Held here for one frame in case a system needs to have an effect on start
+    Started,
+    /// This step is executing. Will want to think about how starting works
+    Executing,
+    /// Imagine a channeled ability gets cancelled, or a tether breaks, etc
+    Cancelled,
+    Completed,
+    /// This wasn't allowed to execute
+    Failure,
+}
+
+#[derive(Message, Component, Debug, Clone, Default)]
+pub enum AbilityFailureReason {
+    #[default]
+    Default,
+    FailedValidation {
+        validators: Vec<Entity>,
+    },
+    Cancelled,
+}
+
+#[derive(Component)]
+#[relationship(relationship_target = StartedBy)]
+pub struct ConditionStarts(Entity);
+
+/// Placed on an ability step to validate that the step is allowed to continue
+#[derive(Component)]
+#[relationship_target(relationship = ConditionStarts)]
+pub struct StartedBy(Vec<Entity>);
+
+#[derive(Component, Debug)]
+#[relationship(relationship_target = CancelledBy)]
+pub struct ConditionCancels(pub Entity);
+/// Holds a list of ability validators that, if triggered, cause this ability to be cancelled
+/// This implies `ConditionKind::AnyTrue`
+#[derive(Component, Debug)]
+#[relationship_target(relationship = ConditionCancels)]
+pub struct CancelledBy(Vec<Entity>);
+
+#[derive(Component, Debug, Default)]
+#[relationship_target(relationship = ConditionCompletes)]
+pub struct CompletedBy {
+    pub join: JoinCondition,
+    #[relationship]
+    ents: Vec<Entity>,
+}
+#[derive(Component, Debug)]
+#[relationship(relationship_target = CompletedBy)]
+pub struct ConditionCompletes(pub Entity);
+
+#[derive(Component, Debug, Default)]
+pub enum JoinCondition {
+    #[default]
+    Any,
+    All,
+}
+
+fn single_step_ability(
+    mut q_ability: Query<
+        (
+            &mut NewAbility,
+            Option<&StartedBy>,
+            Option<&CancelledBy>,
+            Option<&CompletedBy>,
+            Option<&AutoCast>,
+        ),
+        Without<HasAbilitySteps>,
+    >,
+    q_validators: Query<&AbilityValidator>,
+) {
+    for (mut ability, m_validators, m_cancels, m_completions, m_auto) in &mut q_ability {
+        let all_validations_true = if let Some(v) = m_validators {
+            v.iter()
+                .all(|ent| q_validators.get(ent).expect("Wat").value)
+        } else {
+            true
+        };
+        let any_cancels_true = if let Some(c) = m_cancels {
+            c.iter()
+                .any(|ent| q_validators.get(ent).expect("not found").value)
+        } else {
+            false
+        };
+        match ability.state {
+            NewAbilityState::Init => {
+                if m_auto.is_some() && all_validations_true {
+                    ability.state = NewAbilityState::Executing
+                } else if m_auto.is_some() {
+                    ability.state = NewAbilityState::Requested;
+                }
+            }
+            NewAbilityState::Requested => {
+                if all_validations_true {
+                    ability.state = NewAbilityState::Started
+                } else {
+                    ability.state = NewAbilityState::Failure
+                }
+            }
+            NewAbilityState::Started => {
+                if any_cancels_true {
+                    ability.state = NewAbilityState::Cancelled
+                } else {
+                    ability.state = NewAbilityState::Executing
+                }
+            }
+            NewAbilityState::Executing => {
+                let met_completion_conditions = if let Some(comps) = m_completions {
+                    match comps.join {
+                        JoinCondition::Any => comps
+                            .ents
+                            .iter()
+                            .any(|ent| q_validators.get(*ent).expect("?").value),
+                        JoinCondition::All => comps
+                            .ents
+                            .iter()
+                            .all(|ent| q_validators.get(*ent).expect("?").value),
+                    }
+                } else {
+                    false
+                };
+
+                if any_cancels_true {
+                    ability.state = NewAbilityState::Cancelled
+                } else if met_completion_conditions {
+                    ability.state = NewAbilityState::Completed
+                }
+            }
+            NewAbilityState::Completed => ability.state = NewAbilityState::Init,
+            NewAbilityState::Cancelled => ability.state = NewAbilityState::Init,
+            NewAbilityState::Failure => ability.state = NewAbilityState::Init,
+        }
+    }
+}
+
+fn multi_step_ability(
+    mut commands: Commands,
+    mut q_ability: Query<(&mut NewAbility, &mut HasAbilitySteps)>,
+    q_steps: Query<
+        (
+            &AbilityStep,
+            Option<&AutoCast>,
+            Option<&StartedBy>,
+            Option<&CancelledBy>,
+            Option<&CompletedBy>,
+        ),
+        Without<NewAbility>,
+    >,
+    q_validators: Query<&AbilityValidator>,
+) {
+    for (mut ability, mut steps) in q_ability {
+        match ability.state {
+            AbilityState::Init => {
+                if m_auto.is_some() {
+                    Abili
+                }
+            }
+        }
+    }
+}
+
+/// Recursively walks through the steps and figures out the machinery, making
+/// changes to the `HasActionSteps` component along the way.
+///
+/// This function returns the state that the overall calling ability shuold have
+pub fn recursive_ability_step_state_machine(
+    commands: &mut Commands,
+    steps: &mut HasAbilitySteps,
+    q_steps: &Query<
+        (
+            &AbilityStep,
+            Option<&AutoCast>,
+            Option<&StartedBy>,
+            Option<&CancelledBy>,
+            Option<&CompletedBy>,
+        ),
+        Without<NewAbility>,
+    >,
+    q_validators: &Query<&AbilityValidator>,
+) -> NewAbilityState {
+    if steps.current >= steps.steps.len() {
+        return NewAbilityState::Completed;
+    }
+    let c_ent = steps.steps[steps.current];
+    let (c_step, m_auto, m_starts, m_cancels, m_completes) =
+        q_steps.get(c_ent).expect("Where step");
+    let all_starting_conditions_met = if let Some(s) = m_starts {
+        s.0.iter().all(|e| q_validators.get(*e).unwrap().value)
+    } else {
+        true
+    };
+    let any_cancels = if let Some(c) = m_cancels {
+        c.0.iter().any(|e| q_validators.get(*e).unwrap().value)
+    } else {
+        false
+    };
+    let completion_conditions_met = if let Some(c) = m_completes {
+        match c.join {
+            JoinCondition::All => c.ents.iter().all(|e| q_validators.get(*e).unwrap().value),
+            JoinCondition::Any => c.ents.iter().any(|e| q_validators.get(*e).unwrap().value),
+        }
+    } else {
+        false
+    };
+    let step_next_state = match c_step.state {
+        NewAbilityState::Init => {
+            if m_auto.is_some() && all_starting_conditions_met {
+                NewAbilityState::Started
+            } else if m_auto.is_some() {
+                NewAbilityState::Requested
+            } else {
+                NewAbilityState::Init
+            }
+        }
+        NewAbilityState::Requested => {
+            if all_starting_conditions_met {
+                NewAbilityState::Started
+            } else {
+                NewAbilityState::Failure
+            }
+        }
+        NewAbilityState::Started => {
+            if any_cancels {
+                NewAbilityState::Cancelled
+            } else if completion_conditions_met {
+                NewAbilityState::Completed
+            } else {
+                NewAbilityState::Executing
+            }
+        }
+        NewAbilityState::Executing => {
+            if completion_conditions_met {
+                NewAbilityState::Completed
+            } else if any_cancels {
+                NewAbilityState::Cancelled
+            } else {
+                NewAbilityState::Executing
+            }
+        }
+        NewAbilityState::Cancelled => NewAbilityState::Init,
+        NewAbilityState::Failure => NewAbilityState::Init,
+    };
+}
+
+/*
+#[derive(Component, Debug)]
+#[relationship(relationship_target = NewAbility)]
+pub struct AbilityStep {
+    state: AbilityState,
+    #[relationship]
+    pub entity: Entity
+}
+
+
+
+
+/// Hi, I'm an ability
+#[derive(Component, Debug, Default)]
+#[relationship_target(relationship = AbilityStep)]
+pub struct NewAbility {
+    pub state: AbilityState,
+    pub current_step: usize,
+    #[relationship]
+    steps: Vec<Entity>,
+}
+
+impl NewAbility {
+    pub fn request_ability(&self, commands: &mut Commands) {
+
+    }
+}
+*/
+/// I will automatically move to ActionState::Requested if I'm not already in `Requested` or `Executing`
+#[derive(Component, Debug, Clone, Copy)]
+pub struct AutoCast;
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, Default)]
+pub enum AbilityState {
+    /// We're just been made
+    #[default]
+    Init,
+    /// We've been requested to start, which can be triggered by potentially many different ways.
+    ///
+    /// This will reach out to the validators that the ability has in order to make sure that this
+    /// is allowed to happen
+    Requested,
+    /// This ability has been started and is ongoing execution
+    Executing,
+    /// Something has happened that causes this to be cancelled
+    Cancelled,
+    /// This is not allowed to run for some reason
+    Failure,
+}
+
+/// An individual entity that is responsible for saying whether or not this ability can proceed.
+/// Validators run before systems that check whether or not something should be allowed to move from
+/// Requested to Executing
+#[derive(Component, Debug, Clone, Copy)]
+pub struct AbilityValidator {
+    pub value: bool,
+}
 
 #[derive(Component, Clone, Debug, Default, Reflect)]
 pub struct Ability {
