@@ -352,6 +352,242 @@ impl NewAbility {
 #[derive(Component, Debug, Clone, Copy)]
 pub struct AutoCast;
 
+#[derive(Component, Debug, Clone, Copy, Default)]
+#[require(AbilityValidator = AbilityValidator::default())]
+pub struct AbilityOffCooldown;
+
+fn check_cooldown_validator(
+    mut q_validator: Query<(&mut AbilityValidator, &ValidatorOf), With<AbilityOffCooldown>>,
+    q_abilities: Query<&mut NewAbility, Without<Cooldown>>,
+    q_step: Query<&StepOf>,
+) {
+    for (mut validator, holder) in &mut q_validator {
+        let off_cooldown = if q_abilities.get(holder.entity).is_ok() {
+            true
+        } else {
+            if let Ok(ability) = q_step.get(holder.entity) {
+                q_abilities.get(ability.0).is_ok()
+            } else {
+                false
+            }
+        };
+        validator.value = off_cooldown
+    }
+}
+
+/// A validator returning true if at least one entity with the filter type is in range
+}
+pub struct EnemyInAttackRange
+
+#[derive(Component, Debug, Clone, Copy, Default)]
+pub struct AddCooldownOnCompletion;
+fn add_cooldown_on_ability_completion(
+    mut commands: Commands,
+    q_ability: Query<(Entity, &NewAbility, &CooldownRate), Without<Cooldown>>,
+) {
+    for (a_ent, ability, cdr) in &q_ability {
+        match ability.state {
+            NewAbilityState::Completed => {
+                commands.entity(a_ent).insert(Cooldown::new(cdr.0));
+            }
+            _ => {}
+        }
+    }
+}
+
+#[derive(SystemSet, Hash, Eq, PartialEq, Debug, Clone, Copy, Default)]
+pub enum AbilitySystemSet {
+    #[default]
+    CheckValidators,
+    /// Handles movement of things from, e.g., "executing" to "completed"
+    CheckAbilities,
+    /// E.g. things like "add cooldown to entities that have completed"
+    StateCheckingSystems,
+    /// These systems reset things to their proper place using the state machinery of these abilities
+    ResolveAbilityState,
+}
+
+pub struct AbilityPlugin;
+impl Plugin for AbilityPlugin {
+    fn build(&self, app: &mut App) {
+        app.configure_sets(
+            FixedUpdate,
+            (
+                AbilitySystemSet::CheckValidators,
+                AbilitySystemSet::CheckAbilities,
+                AbilitySystemSet::StateCheckingSystems,
+                AbilitySystemSet::ResolveAbilityState,
+            )
+                .chain()
+                .in_set(CombatSystemSet::Combat),
+        )
+        .add_systems(
+            FixedUpdate,
+            (
+                (check_cooldown_validator).in_set(AbilitySystemSet::CheckValidators),
+                (active_for_timer, pulse_activation).in_set(AbilitySystemSet::CheckAbilities),
+                add_cooldown_on_ability_completion.in_set(AbilitySystemSet::StateCheckingSystems),
+                (single_step_ability, multi_step_ability)
+                    .in_set(AbilitySystemSet::ResolveAbilityState),
+            ),
+        );
+    }
+}
+
+// This will be active for the time in timer, then move to completed
+#[derive(Component, Debug, Clone, Default, Reflect)]
+pub struct ActiveForTime(Timer);
+
+fn active_for_timer(time: Res<Time>, mut q_ability: Query<(&mut NewAbility, &mut ActiveForTime)>) {
+    for (mut ability, mut timer) in &mut q_ability {
+        match ability.state {
+            NewAbilityState::Executing => {
+                timer.0.tick(time.delta());
+                if timer.0.just_finished() {
+                    ability.state = NewAbilityState::Completed;
+                }
+            }
+            NewAbilityState::Cancelled | NewAbilityState::Completed | NewAbilityState::Failure => {
+                timer.0.reset()
+            }
+            _ => {}
+        }
+    }
+}
+
+// This will be active for the entire duration, and send ActivateAbility messages
+// when the timer is up.
+#[derive(Component, Debug, Clone, Default, Reflect)]
+pub struct PulseActivation {
+    pub c_ticks: u8,
+    pub timer: Timer,
+}
+
+fn pulse_activation(
+    mut commands: Commands,
+    time: Res<Time>,
+    mut q_pulse: Query<(
+        Entity,
+        &mut NewAbility,
+        &mut PulseActivation,
+        &ProjectileCount,
+    )>,
+) {
+    for (a_ent, mut ability, mut pulse, p_count) in &mut q_pulse {
+        match ability.state {
+            NewAbilityState::Init => pulse.c_ticks = p_count.0 as u8,
+            NewAbilityState::Executing => {
+                pulse.timer.tick(time.delta());
+                if pulse.timer.just_finished() {
+                    if pulse.c_ticks == 0 {
+                        ability.state = NewAbilityState::Completed
+                    } else {
+                        pulse.c_ticks -= 1;
+                    }
+                    pulse.timer.reset();
+                    commands.trigger(ActivateAbility { entity: a_ent });
+                }
+            }
+            _ => {}
+        }
+    }
+}
+
+fn new_dice_guard_scene() -> impl SceneList {
+    bsn_list! [(
+        #DummyPlayer1
+        Position(Vec2::ZERO)
+        HasAbilities [ (
+                #DiceGuard
+                DiceGuard
+                AttackRange(100.0)
+                EffectSize(50.0)
+                EffectDuration(5.0)
+                ProjectileCount(3.0)
+                ProjectileSpeed(20.0)
+                CooldownRate(3.0)
+                Damage(5.0)
+                AutoCast
+                NewAbility
+                ActiveForTime(Timer::from_seconds(5.0, TimerMode::Once))
+                TriggerStartAbility
+                TriggerEndAbility
+                HasValidators [(
+                    #OffCDValidator
+                    AbilityOffCooldown
+                )
+                ]
+
+                on(generic_observer)
+                on(dice_guard_activate)
+                on(dice_guard_deactivate)
+        )]
+        ),
+        (
+            #DiceGuardEnemy
+            Enemy
+            Position(Vec2::new(0.0, 100.0))
+        )
+    ]
+}
+
+pub fn new_shifty_shot_scene(position: Vec2) -> impl SceneList {
+    let e1_pos = position + Vec2::Y * 250.0;
+    let e2_pos = position + Vec2::Y * 250.0 + Vec2::X * 100.0;
+    bsn_list! [(
+        #DummyPlayer
+        Player
+        Position(position)
+        Transform {translation: Vec3::new(400.0, 0.0, 0.0)}
+        HasAbilities [
+            #ShiftyShot
+            AttackRange(250.0)
+            ProjectileBounces(1.0)
+            ProjectileCount(3.0)
+            ProjectileSpeed(50.0)
+            CooldownRate(3.0)
+            CritChance(0.5)
+            CritDamage(0.5)
+            Damage(5.0)
+            NewAbility
+            AutoCast
+            TriggerStartAbility
+            PulseActivation {
+                c_ticks: 3,
+                timer: Timer::from_seconds(1.0, TimerMode::Repeating)
+            }
+            AddCooldownOnCompletion
+            on(shifty_shot_activate)
+            HasValidators[
+                (
+                    #ShiftyShotCDValidator
+                    AbilityOffCooldown
+                ),
+                (
+                    #ShiftyShotRangeValidator
+                    EnemyInAttackRange
+                )
+            ]
+        ]
+    ),
+    (
+        #ShiftyShotEnemy1
+        Enemy
+        Position(e1_pos)
+        Sprite {image: "enemies/faceless/sprite.png"}
+        Health::new(9001.0)
+
+    ),
+    (
+        #ShiftyShotEnemy2
+        Enemy
+        Position(e2_pos)
+        Sprite {image: "enemies/faceless/sprite.png"}
+        Health::new(42069.0)
+        )
+        ]
+}
+
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, Default)]
 pub enum AbilityState {
     /// We're just been made
