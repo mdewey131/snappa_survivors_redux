@@ -69,7 +69,7 @@ fn health_change_popup(
 fn spawn_popup(
     mut commands: Commands,
     mut messages: MessageReader<HealthChangeMessage>,
-    q_controlling_player: Query<(), (With<Player>, Or<(With<Controlled>, With<SinglePlayer>)>)>,
+    q_controlling_player: Query<(), (With<Player>)>,
     q_creator: Query<&CreatedBy>,
 ) {
     for m in messages.read() {
@@ -80,10 +80,9 @@ fn spawn_popup(
             m.source_entity
         };
         info!("Entity to credit: {:?}", entity_to_credit);
-        if q_controlling_player.get(entity_to_credit).is_ok() {
-            target = Some(m.receiving_entity)
-        }
-        if q_controlling_player.get(m.receiving_entity).is_ok() {
+        if q_controlling_player.get(entity_to_credit).is_ok()
+            || q_controlling_player.get(m.receiving_entity).is_ok()
+        {
             target = Some(m.receiving_entity)
         }
         info!("Target to spawn {:?}", target);

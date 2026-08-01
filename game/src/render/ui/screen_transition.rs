@@ -5,7 +5,7 @@ use bevy::{ecs::system::SystemId, prelude::*, ui::FocusPolicy};
 /// once it hits maximum fade, it will execute whatever you put in the
 /// callback field. This can be used to, e.g. , transition game
 /// state at the peak, so that underlying scene transition can happen
-/// while hidden from the user 
+/// while hidden from the user
 pub fn create_screen_transition(callback: Option<SystemId>) -> impl Scene {
     bsn! {
         #ScreenTransition
@@ -59,7 +59,6 @@ fn update(
         } else {
             transition.timer.fraction_remaining()
         };
-        info!("setting transition alpha to {}", to_set);
         bg.set_alpha(to_set);
 
         if transition.timer.just_finished() {

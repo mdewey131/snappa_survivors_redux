@@ -253,10 +253,10 @@ fn roll_critical(mut combat_manager: ResMut<CombatManager>, mut q_buff: Query<&m
             }
             let roll = combat_manager.rng.random_range(0.0..1.0);
             let is_crit = roll <= change.crit_chance;
-            info!("Roll: {:?}, Crit Chance: {:?}", roll, change.crit_chance);
+            trace!("Roll: {:?}, Crit Chance: {:?}", roll, change.crit_chance);
             if is_crit {
                 change.end = change.end * change.crit_multiplier;
-                info!("This is a crit");
+                trace!("This is a crit");
                 change.result = Some(HealthChangeResult::Crit);
             }
         }
@@ -315,11 +315,11 @@ fn apply_frame_changes(
             let to_apply = match change.result.unwrap() {
                 HealthChangeResult::Normal | HealthChangeResult::Crit => {
                     let res = change.end * mult;
-                    info!("Amount: {:?}", res);
+                    trace!("Amount: {:?}", res);
                     res
                 }
                 _ => {
-                    info!("Applying 0 damage");
+                    trace!("Applying 0 damage");
                     0.0
                 }
             };
@@ -329,19 +329,19 @@ fn apply_frame_changes(
                     change.result = Some(HealthChangeResult::DidNothing)
                 } else {
                     hp.current = (hp.current + to_apply).clamp(-1.0, hp.max());
-                    info!("Changed health to {:?}", hp.current);
+                    trace!("Changed health to {:?}", hp.current);
                 }
             } else if to_apply < 0.0 {
                 let health_to_sub = if has_shield && !shield_broken {
                     let mut s = m_shield.as_mut().unwrap();
-                    info!("Starting shield value {:?}", s.current);
+                    trace!("Starting shield value {:?}", s.current);
                     s.current += to_apply;
                     if s.current <= 0.0 {
                         shield_broken = true;
-                        info!("Ending shield value {:?}", s.current);
+                        trace!("Ending shield value {:?}", s.current);
                         (0.0 + s.current)
                     } else {
-                        info!("Ending shield value {:?}", s.current);
+                        trace!("Ending shield value {:?}", s.current);
                         0.0
                     }
                 } else {
@@ -349,14 +349,14 @@ fn apply_frame_changes(
                 };
 
                 hp.current = (hp.current + health_to_sub).clamp(-1.0, hp.max());
-                info!("Changed health to {:?}", hp.current);
+                trace!("Changed health to {:?}", hp.current);
                 if hp.current <= 0.0 && !dead {
                     killed_by = Some(change.source);
                     dead = true;
                 }
             }
 
-            info!("Got result: {:?}", change.result);
+            trace!("Got result: {:?}", change.result);
         }
         if shield_broken {
             commands.trigger(ShieldBroken { entity: ent })
