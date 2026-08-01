@@ -1,0 +1,115 @@
+use bevy::{image::TextureError::InvalidImageExtension, prelude::*};
+
+use super::*;
+/// An individual entity that is responsible for saying whether or not this ability can proceed.
+/// Validators run before systems that check whether or not something should be allowed to move from
+/// Requested to Executing
+#[derive(Component, Debug, Clone, Copy, Default, Reflect)]
+pub struct AbilityValidator {
+    pub value: bool,
+}
+
+#[derive(Component, Reflect, Default, Debug, Clone)]
+#[relationship_target(relationship = ValidatorOf)]
+pub struct HasValidators(Vec<Entity>);
+
+#[derive(Component, Reflect, Debug, Clone)]
+#[relationship(relationship_target = HasValidators)]
+pub struct ValidatorOf {
+    #[relationship]
+    entity: Entity,
+}
+
+#[derive(Component, Debug, Clone, Copy, Default)]
+#[require(AbilityValidator = AbilityValidator::default())]
+pub struct AbilityOffCooldown;
+
+pub fn check_cooldown_validator(
+    mut q_validator: Query<(&mut AbilityValidator, &ValidatorOf), With<AbilityOffCooldown>>,
+    q_abilities: Query<&mut Ability, Without<Cooldown>>,
+) {
+    for (mut validator, holder) in &mut q_validator {
+        let off_cooldown = if q_abilities.get(holder.entity).is_ok() {
+            true
+        } else {
+            false
+        };
+        validator.value = off_cooldown
+    }
+}
+
+/// A validator returning true if at least one enemy is in range
+#[derive(Component, Debug, Clone, Default)]
+#[require(AbilityValidator = AbilityValidator::default())]
+pub struct EnemyInAttackRange;
+pub fn enemy_in_attack_range(
+    mut q_validator: Query<(&mut AbilityValidator, &ValidatorOf), With<EnemyInAttackRange>>,
+    q_ability: Query<(
+        &Ability,
+        Option<&AbilityOf>,
+        Option<&AttackRange>,
+        Option<&AbilityStep>,
+    )>,
+    q_transforms: Query<(Entity, &Position, Option<&Enemy>)>,
+) {
+    // first, find the holder of this ability
+    for (mut validator, v_of) in &mut q_validator {
+        let validator_ability = q_ability.get(v_of.entity).expect("This should exist");
+        let (holder_ent, range) = if validator_ability.3.is_none() {
+            (validator_ability.1.unwrap(), validator_ability.2.unwrap())
+        } else {
+            let overall_ability = q_ability.get(validator_ability.3.unwrap().step_of).unwrap();
+            (overall_ability.1.unwrap(), overall_ability.2.unwrap())
+        };
+
+        let holder_pos = if let Ok((_, p, _)) = q_transforms.get(holder_ent.0) {
+            p.0
+        } else {
+            warn!("Holding entity not found");
+            validator.value = false;
+            continue;
+        };
+
+        let enemy_positions = q_transforms
+            .iter()
+            .filter_map(|(ent, pos, m_enemy)| m_enemy.map(|_| (ent, pos)))
+            .collect::<Vec<(Entity, &Position)>>();
+        let result = find_closest_in_list(1, holder_pos, &enemy_positions);
+        if let Some((close_ent, dist)) = result.first() {
+            if *dist <= range.0 {
+                validator.value = true;
+            } else {
+                validator.value = false;
+            }
+        } else {
+            validator.value = false;
+        }
+    }
+}
+
+#[derive(Component, Default, Debug, Clone, Copy)]
+#[require(AbilityValidator = AbilityValidator::default())]
+pub struct TargeterInAttackRange;
+
+pub fn attack_range_targeter(
+    mut q_validator: Query<(&mut AbilityValidator, &ValidatorOf), With<TargeterInAttackRange>>,
+    q_ability: Query<(
+        &Ability,
+        Option<&AbilityOf>,
+        Option<&AttackRange>,
+        Option<&AbilityStep>,
+    )>,
+    q_transforms: Query<(Entity, &Position, Option<&Enemy>)>,
+) {
+    for (mut validator, v_of) in &mut q_validator {
+        let validator_ability = q_ability.get(v_of.entity).expect("This should exist");
+        let (holder_ent, range) = if validator_ability.3.is_none() {
+            (validator_ability.1.unwrap(), validator_ability.2.unwrap())
+        } else {
+            let overall_ability = q_ability.get(validator_ability.3.unwrap().step_of).unwrap();
+            (overall_ability.1.unwrap(), overall_ability.2.unwrap())
+        };
+
+        validator.value = true;
+    }
+}
