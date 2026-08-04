@@ -198,11 +198,6 @@ fn multi_stepped_ability(
 ) {
     for (a_ent, mut state, mut steps) in &mut q_ability {
         // Getting sick of the recursive stuff breaking my brain. Changing the rules for how this works now
-
-
-
-
-
         let next_ability_state =
             inner_step_recurse(&mut commands, &mut steps, &mut q_steps, &q_validators);
         info!(
@@ -392,6 +387,77 @@ fn inner_step_recurse(
     } else {
         info!("Recurse!");
         return inner_step_recurse(commands, steps, q_steps, q_validators);
+    }
+}
+
+/// Steps over the inner steps of the AbilityStep process.
+/// It is expected that the caller of this function handles its own state based on
+/// its state when this is done. No outer state knowledge inside the recursion!
+fn alternate_inner_ability_recurse(
+    mut commands: &mut Commands,
+    mut steps: &mut HasAbilitySteps,
+    mut q_steps: &mut Query<(&mut AbilityState, &AbilityStep, Option<&HasValidators>)>,
+    q_validators: &Query<&AbilityValidator>,
+) {
+    let current = steps.current;
+    let current_step = steps.steps.get(current);
+    if current_step.is_none() {
+        return;
+    }
+    let step = current_step.unwrap();
+    let mut step_info = q_steps.get_mut(*step).expect("Where step?");
+    let current_state = *step_info.0;
+    let mut next_step_to_visit = None;
+    let mut check_prior_for_completed = false;
+    let mut failed = false;
+
+    match current_state {
+        AbilityState::Init => {}
+        AbilityState::Requested => {
+            let all_validators_true = if let Some(v) = step_info.2 {
+                v.iter().all(|ent| q_validators.get(ent).unwrap().value)
+            } else {
+                true
+            };
+            if all_validators_true {
+                commands.trigger(ActivateAbility { entity: *step });
+                *step_info.0 = AbilityState::Executing;
+                next_step_to_visit = Some(current + 1);
+            } else {
+                *step_info.0 = AbilityState::Failure;
+            }
+        }
+        AbilityState::Executing => {
+            check_prior_for_completed = true;
+            next_step_to_visit = Some(current + 1);
+        }
+        AbilityState::Cancelled => {
+            next_step_to_visit = Some(current + 1);
+        }
+        AbilityState::Completed => {
+            next_step_to_visit = Some(current + 1);
+        }
+        AbilityState::Failure => {
+            failed = true;
+        }
+    }
+    if failed {
+        return;
+    }
+
+    if check_prior_for_completed {
+        let prior_step = steps.steps.get(current - 1);
+        if let Some(p) = prior_step {
+            let mut step_info = q_steps.get_mut(*p).expect("No Step?");
+            *step_info.0 = AbilityState::Completed;
+        }
+    }
+
+    if let Some(c) = next_step_to_visit {
+        steps.current = c;
+        alternate_inner_ability_recurse(commands, steps, q_steps, q_validators);
+    } else {
+        return;
     }
 }
 
