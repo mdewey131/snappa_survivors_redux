@@ -22,11 +22,13 @@ use std::{marker::PhantomData, time::Duration};
 use avian2d::{dynamics::rigid_body::LinearVelocity, physics_transform::Position};
 use bevy::{
     ecs::{event::Trigger, query::QueryFilter},
-    input::mouse::MouseButtonInput,
+    input::{keyboard::KeyboardInput, mouse::MouseButtonInput},
     prelude::*,
     transform::commands,
     ui_widgets::Activate,
 };
+use bevy_egui::egui::{Key::A, epaint::text::cursor};
+use bevy_enhanced_input::action::events::Complete;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -35,7 +37,7 @@ use crate::{
         colliders::{AppliesCollisionEffect, ApplyDamage, ColliderTypes},
         combat::{CombatSystemSet, Cooldown},
         damage::HealthBuffer,
-        enemies::Enemy,
+        enemies::{Enemy, EnemyKind, spawn_enemy, spawner::EnemySpawnInstruction},
         game_kinds::{
             self, CurrentGameKind,
             GameKinds::{self, SinglePlayer},
@@ -93,17 +95,18 @@ impl Plugin for AbilityPlugin {
                     passive_ability,
                     active_for_timer,
                     request_on_click,
+                    request_on_input,
                     draw_targeter,
+                    draw_attack_range_radius,
+                    completes_instantly,
+                    spawn_enemies,
                 )
                     .in_set(AbilitySystemSet::CheckAbilities),
                 (set_auto_cast, add_cooldown_on_ability_completion)
                     .in_set(AbilitySystemSet::StateCheckingSystems),
                 // You have to run the `add_cd` system twice because the multi state ability does not hang
                 // around for one frame in the way that I'd need
-                (
-                    single_stepped_ability,
-                    (multi_stepped_ability, add_cooldown_on_ability_completion).chain(),
-                )
+                (single_stepped_ability, (multi_stepped_ability).chain())
                     .in_set(AbilitySystemSet::ResolveAbilityState),
             )
                 .run_if(in_state(InGameState::InGame)),
@@ -197,199 +200,82 @@ fn multi_stepped_ability(
     q_validators: Query<&AbilityValidator>,
 ) {
     for (a_ent, mut state, mut steps) in &mut q_ability {
-        // Getting sick of the recursive stuff breaking my brain. Changing the rules for how this works now
-        let next_ability_state =
-            inner_step_recurse(&mut commands, &mut steps, &mut q_steps, &q_validators);
-        info!(
-            "Prior step: {:?}, current step {:?}",
-            *state, next_ability_state
-        );
-        // This part ensures that we have at least one frame where we stay at failure/completion/cancellation
-        *state = match next_ability_state {
-            AbilityState::Cancelled | AbilityState::Failure | AbilityState::Completed => {
-                if next_ability_state == *state {
-                    info!("Deactivate!");
-                    commands.trigger(DeactivateAbility { entity: a_ent });
-                    // Reset all steps
-                    for s in &steps.steps {
-                        if let Ok((mut state, _step, _v)) = q_steps.get_mut(*s) {
-                            *state = AbilityState::Init
-                        }
+        let starting_step = steps.current;
+        let starting_state = *state;
+
+        // Step through the inner steps
+        alternate_inner_ability_recurse(&mut commands, &mut steps, &mut q_steps, &q_validators);
+
+        // test some logic about where we got to
+        if steps.current >= steps.len() {
+            let terminal_state = q_steps.get(*steps.steps.last().unwrap()).unwrap();
+            match *terminal_state.0 {
+                AbilityState::Executing => *state = AbilityState::Executing,
+                AbilityState::Completed => *state = AbilityState::Completed,
+                _ => {}
+            }
+        }
+        if matches!(starting_state, AbilityState::Completed)
+            && matches!(*state, AbilityState::Completed)
+        {
+            info!("Hi");
+            // This is the part where we're allowed to reset
+            steps.current = 0;
+            for step in &steps.steps {
+                let mut data = q_steps.get_mut(*step).unwrap();
+                *data.0 = AbilityState::Init;
+            }
+            *state = AbilityState::Init;
+        }
+        // What happened if we stepped back?
+        if steps.current < starting_step {
+            // Look at current step
+            let current_substate = steps.steps.get(steps.current).expect("Should exist");
+            let substate = q_steps.get(*current_substate).expect("Substate not found!");
+
+            let self_state = match *substate.0 {
+                AbilityState::Init => {
+                    if steps.current == 0 {
+                        AbilityState::Init
+                    } else {
+                        AbilityState::Executing
                     }
-                    steps.current = 0;
-                    AbilityState::Init
-                } else {
-                    next_ability_state
                 }
-            }
-            AbilityState::Executing => {
-                if *state != AbilityState::Executing {
-                    commands.trigger(ActivateAbility { entity: a_ent });
+                AbilityState::Requested => {
+                    if steps.current == 0 {
+                        AbilityState::Requested
+                    } else {
+                        AbilityState::Executing
+                    }
                 }
-                next_ability_state
+                AbilityState::Executing => AbilityState::Executing,
+                AbilityState::Cancelled => AbilityState::Cancelled,
+                AbilityState::Failure => AbilityState::Failure,
+                AbilityState::Completed => {
+                    warn!("Not sure what happened here");
+                    AbilityState::Completed
+                }
+            };
+
+            info!(
+                "We stepped back, your logic is probably borked somewhere. Prior: {}, Current: {}",
+                starting_step, steps.current
+            );
+        }
+
+        // In any case where the step we're currently on is not the end, we have to reset the stuff that comes after.
+        // This will prevent things from hanging in a `Requested` state
+        if steps.current < steps.steps.len() - 1 {
+            for step in ((steps.current + 1)..=steps.steps.len() - 1) {
+                let mut step_info = q_steps.get_mut(steps.steps[step]).expect("Step not found");
+                *step_info.0 = AbilityState::Init
             }
-            _ => next_ability_state,
-        };
+        }
     }
 }
 
 /// Returns the state for the calling ability with steps, and sets the states of individual steps, traversing the
 /// sequence until complete or cannot move further
-fn inner_step_recurse(
-    commands: &mut Commands,
-    mut steps: &mut HasAbilitySteps,
-    mut q_steps: &mut Query<(&mut AbilityState, &AbilityStep, Option<&HasValidators>)>,
-    q_validators: &Query<&AbilityValidator>,
-) -> AbilityState {
-    let current_step = steps.current;
-    let current_action_step = steps.steps[current_step];
-    let (mut current_state, step, m_valid) =
-        q_steps.get_mut(current_action_step).expect("Where step");
-    let c_state = *current_state;
-    let mut moved_to_executed = false;
-    let next_state_this_step = match c_state {
-        AbilityState::Init => {
-            info!("Came in as Init");
-            AbilityState::Init
-        }
-        AbilityState::Requested => {
-            let all_validators_true = if let Some(v) = m_valid {
-                v.iter().all(|ent| q_validators.get(ent).unwrap().value)
-            } else {
-                true
-            };
-
-            if all_validators_true {
-                commands.trigger(ActivateAbility {
-                    entity: current_action_step,
-                });
-                moved_to_executed = true;
-                AbilityState::Executing
-            } else {
-                info!("Hi, I'm init");
-                AbilityState::Init
-            }
-        }
-        AbilityState::Executing => AbilityState::Executing,
-        AbilityState::Completed => AbilityState::Completed,
-        AbilityState::Failure => AbilityState::Failure,
-        AbilityState::Cancelled => AbilityState::Cancelled,
-    };
-    info!("Set this step to {:?}", next_state_this_step);
-    let (next_step, early_return_value) = match next_state_this_step {
-        AbilityState::Init => {
-            if steps.current == 0 {
-                (None, Some(AbilityState::Init))
-            } else {
-                (None, Some(AbilityState::Executing))
-            }
-        }
-        AbilityState::Requested => {
-            if steps.current == 0 {
-                (None, Some(AbilityState::Requested))
-            } else {
-                (None, Some(AbilityState::Executing))
-            }
-        }
-        AbilityState::Executing => {
-            if !steps.prevent_recursion {
-                (Some(steps.current + 1), None)
-            } else {
-                (None, Some(AbilityState::Executing))
-            }
-        }
-        AbilityState::Cancelled => {
-            commands.trigger(DeactivateAbility {
-                entity: current_action_step,
-            });
-            if steps.cancel_all_on_cancel_any {
-                (Some(steps.current - 1), None)
-            } else {
-                (Some(0), Some(AbilityState::Cancelled))
-            }
-        }
-        AbilityState::Failure => {
-            commands.trigger(DeactivateAbility {
-                entity: current_action_step,
-            });
-            (Some(0), Some(AbilityState::Failure))
-        }
-        AbilityState::Completed => {
-            commands.trigger(DeactivateAbility {
-                entity: current_action_step,
-            });
-            if steps.current == (steps.steps.len() - 1) {
-                (Some(0), Some(AbilityState::Completed))
-            } else {
-                (Some(steps.current + 1), None)
-            }
-        }
-    };
-
-    info!(
-        "Next step to visit {:?}. Early return value {:?}",
-        next_step, early_return_value
-    );
-    *current_state = next_state_this_step;
-
-    // A fix to the prio value to set it to complete, in the event that this step is completed
-    if matches!(next_state_this_step, AbilityState::Completed) {
-        let (mut state, _step, _validators) = q_steps
-            .get_mut(*steps.steps.get(current_step - 1).expect("Out of range"))
-            .expect("Step not found?");
-        *state = AbilityState::Completed
-    }
-
-    if let Some(v) = next_step {
-        // If you're here, then you've reached the end of the line, but you need to see
-        // if the state of the terminal step is completed or executing to know whether or not to return
-        if v == steps.steps.len() {
-            match next_state_this_step {
-                AbilityState::Executing => return AbilityState::Executing,
-                AbilityState::Completed => return AbilityState::Completed,
-                _ => {}
-            }
-        } else {
-            // If we're moving back, we have to reset every step between here and there to Init
-            if steps.current > v {
-                for i in ((v + 1)..=(current_step)) {
-                    let (mut state, _step, _validators) = q_steps
-                        .get_mut(*steps.steps.get(i).expect("Out of range"))
-                        .expect("Step not found?");
-                    *state = AbilityState::Init;
-                }
-            }
-
-            steps.current = v;
-        }
-    }
-    // We just want to do some housekeeping on the prior ability in the event that this one is executing
-    if moved_to_executed {
-        info!("Moved to executed this frame, setting prior to 'Completed'");
-        let prior_step = current_step - 1;
-        if let Some(s) = steps.steps.get(prior_step) {
-            let (mut state, _, _) = q_steps.get_mut(*s).expect("Not found");
-            *state = AbilityState::Completed
-        }
-    }
-
-    // We have to reset what comes after, just in case
-    if next_step.is_none() {
-        for i in ((steps.current)..steps.steps.len()) {
-            let (mut state, _step, _val) = q_steps
-                .get_mut(*steps.steps.get(i).expect("Out of range"))
-                .expect("Step not found");
-            *state = AbilityState::Init;
-        }
-    }
-    if let Some(s) = early_return_value {
-        return s;
-    } else {
-        info!("Recurse!");
-        return inner_step_recurse(commands, steps, q_steps, q_validators);
-    }
-}
-
 /// Steps over the inner steps of the AbilityStep process.
 /// It is expected that the caller of this function handles its own state based on
 /// its state when this is done. No outer state knowledge inside the recursion!
@@ -432,13 +318,15 @@ fn alternate_inner_ability_recurse(
             next_step_to_visit = Some(current + 1);
         }
         AbilityState::Cancelled => {
-            next_step_to_visit = Some(current + 1);
+            next_step_to_visit = Some(current - 1);
         }
         AbilityState::Completed => {
+            check_prior_for_completed = true;
             next_step_to_visit = Some(current + 1);
         }
         AbilityState::Failure => {
             failed = true;
+            *step_info.0 = AbilityState::Init;
         }
     }
     if failed {
@@ -455,6 +343,9 @@ fn alternate_inner_ability_recurse(
 
     if let Some(c) = next_step_to_visit {
         steps.current = c;
+        if c < current {
+            info!("We stepped back, I bet there's a bug here!");
+        }
         alternate_inner_ability_recurse(commands, steps, q_steps, q_validators);
     } else {
         return;
@@ -469,8 +360,18 @@ pub struct TriggerStartAbility;
 #[derive(Component, Debug, Default, Clone, Copy)]
 pub struct TriggerEndAbility;
 
-#[derive(Component, Debug, Default)]
+#[derive(Component, Debug, Default, Clone, Copy)]
 pub struct CompletesInstantly;
+fn completes_instantly(mut q_ability: Query<&mut AbilityState, With<CompletesInstantly>>) {
+    for mut state in &mut q_ability {
+        match *state {
+            AbilityState::Executing => {
+                *state = AbilityState::Completed;
+            }
+            _ => {}
+        }
+    }
+}
 
 /// I will automatically move from Init -> Requested
 #[derive(Component, Debug, Clone, Copy, Default)]
@@ -506,6 +407,23 @@ fn add_cooldown_on_ability_completion(
                 commands.entity(a_ent).insert(Cooldown::new(cdr.0));
             }
             _ => {}
+        }
+    }
+}
+
+#[derive(Component, Debug, Clone, Copy, Default)]
+pub struct SpawnEnemies(pub EnemySpawnInstruction);
+fn spawn_enemies(
+    mut commands: Commands,
+    q_spawner: Query<(&SpawnEnemies, &AbilityState)>,
+    q_positions: Query<&Position, With<Player>>,
+) {
+    for (spawn, state) in &q_spawner {
+        if matches!(*state, AbilityState::Completed) {
+            let positions = spawn.0.pattern.to_positions(&q_positions);
+            for position in positions {
+                spawn_enemy(&mut commands, spawn.0.kind, position);
+            }
         }
     }
 }
@@ -615,10 +533,11 @@ fn activation_observer(
 #[derive(Component, Clone, Debug, Default)]
 pub struct DrawTargeterOnMouse;
 fn draw_targeter(
+    mut commands: Commands,
     mut gizmos: Gizmos,
     q_camera: Single<(&Camera, &GlobalTransform)>,
     q_window: Single<&Window>,
-    mut q_targeter: Query<&mut Position, With<Targeter>>,
+    mut q_targeter: Option<Single<&mut Position, With<Targeter>>>,
     q_ability: Query<&AbilityState, With<DrawTargeterOnMouse>>,
 ) {
     for state in q_ability {
@@ -632,10 +551,76 @@ fn draw_targeter(
                     && let Ok(viewport_check) = camera.world_to_viewport(camera_transform, world_pos.extend(0.0))
                     && let Ok(world_check) = camera.viewport_to_world_2d(camera_transform, viewport_check.xy())
             {
+                if q_targeter.is_none() {
+                    commands.spawn((Targeter, Position(cursor_position)));
+                } else if let Some(ref mut t_pos) = q_targeter {
+                    t_pos.0 = world_pos;
+                }
                 gizmos.circle_2d(world_pos, 10., bevy::color::palettes::basic::WHITE);
                 // Should be the same as world_pos
                 gizmos.circle_2d(world_check, 8., bevy::color::palettes::basic::RED);
             }
+        }
+    }
+}
+
+#[derive(Component, Clone, Debug, Default)]
+pub struct DrawAttackRangeRadius;
+fn draw_attack_range_radius(
+    mut gizmos: Gizmos,
+    q_ability: Query<
+        (
+            &AbilityState,
+            Option<&AbilityStep>,
+            Option<&AttackRange>,
+            Option<&AbilityOf>,
+        ),
+        With<DrawAttackRangeRadius>,
+    >,
+    q_outer_ent: Query<(&AttackRange, &AbilityOf), Without<DrawAttackRangeRadius>>,
+    q_positions: Query<&Position, With<HasAbilities>>,
+) {
+    for (state, m_step, m_range, m_holder) in q_ability {
+        let should_draw = matches!(*state, AbilityState::Executing);
+        if should_draw {
+            let (attack_range, holder_position) = {
+                if let Some(s) = m_step {
+                    let ar = q_outer_ent.get(s.step_of).expect("Should exist").0;
+                    let holder_ent = q_outer_ent.get(s.step_of).expect("Should exist").1;
+                    let holder = q_positions
+                        .get(holder_ent.0)
+                        .expect("Entity holding this ability does not have a Position");
+                    (ar, holder)
+                } else {
+                    let ar = m_range.expect("This ability does not have an attack range");
+                    let holder_ent = m_holder.expect("Ability does not have a holder");
+                    let holder = q_positions
+                        .get(holder_ent.0)
+                        .expect("Entity holding this ability does not have a Position");
+                    (ar, holder)
+                }
+            };
+
+            gizmos.circle_2d(
+                holder_position.0,
+                attack_range.0,
+                bevy::color::palettes::basic::WHITE,
+            );
+        }
+    }
+}
+
+// Works off of an input map, not yet created
+#[derive(Component, Clone, Debug, Default)]
+pub struct RequestOnInput(pub String);
+pub fn request_on_input(
+    input: Res<ButtonInput<KeyCode>>,
+    mut q_ability: Query<(&mut AbilityState, &RequestOnInput)>,
+) {
+    for (mut state, req) in &mut q_ability {
+        let run = matches!(*state, AbilityState::Init) & input.just_pressed(KeyCode::KeyE);
+        if run {
+            *state = AbilityState::Requested
         }
     }
 }

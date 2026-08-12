@@ -26,10 +26,16 @@ pub struct AbilityOffCooldown;
 
 pub fn check_cooldown_validator(
     mut q_validator: Query<(&mut AbilityValidator, &ValidatorOf), With<AbilityOffCooldown>>,
-    q_abilities: Query<&mut Ability, Without<Cooldown>>,
+    q_step: Query<&AbilityStep>,
+    q_stat_holder_abilities: Query<(), (With<Ability>, Without<Cooldown>)>,
 ) {
     for (mut validator, holder) in &mut q_validator {
-        let off_cooldown = if q_abilities.get(holder.entity).is_ok() {
+        let entity_to_check = if let Ok(step) = q_step.get(holder.entity) {
+            step.step_of
+        } else {
+            holder.entity
+        };
+        let off_cooldown = if q_stat_holder_abilities.get(entity_to_check).is_ok() {
             true
         } else {
             false
@@ -99,7 +105,8 @@ pub fn attack_range_targeter(
         Option<&AttackRange>,
         Option<&AbilityStep>,
     )>,
-    q_transforms: Query<(Entity, &Position, Option<&Enemy>)>,
+    q_holder: Query<&Position, Without<Targeter>>,
+    q_targeter: Single<&Position, With<Targeter>>,
 ) {
     for (mut validator, v_of) in &mut q_validator {
         let validator_ability = q_ability.get(v_of.entity).expect("This should exist");
@@ -109,7 +116,9 @@ pub fn attack_range_targeter(
             let overall_ability = q_ability.get(validator_ability.3.unwrap().step_of).unwrap();
             (overall_ability.1.unwrap(), overall_ability.2.unwrap())
         };
-
-        validator.value = true;
+        let holder_pos = q_holder
+            .get(holder_ent.0)
+            .expect("holder doesn't have a position?");
+        validator.value = holder_pos.0.distance(q_targeter.0) <= range.0;
     }
 }

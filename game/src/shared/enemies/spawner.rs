@@ -105,7 +105,7 @@ impl Default for EnemySpawnPattern {
 }
 
 impl EnemySpawnPattern {
-    fn to_positions(&self, q_positions: &Query<&Position, With<Player>>) -> Vec<Vec2> {
+    pub fn to_positions(&self, q_positions: &Query<&Position, With<Player>>) -> Vec<Vec2> {
         match *self {
             EnemySpawnPattern::SingleLocation(v) => {
                 vec![v]
@@ -214,7 +214,6 @@ pub fn add_enemy_spawner(
                 MapKind::DevZoo => None,
             };
             if let Some(s) = string {
-                
                 read_ron(s)
             } else {
                 EnemySpawnerList(vec![])
@@ -239,7 +238,7 @@ pub fn add_enemy_spawner(
 pub fn update_enemy_spawner(
     mut commands: Commands,
     mut q_spawner: Query<(Entity, &mut EnemySpawner)>,
-    q_player_positions: Query<&Position , With<Player>>,
+    q_player_positions: Query<&Position, With<Player>>,
     game_timer: Res<Time<Virtual>>,
     in_game_time: Res<InGameTime>,
 ) {
@@ -284,21 +283,19 @@ pub fn update_enemy_spawner(
                         tick_rate: _,
                         max_ticks: _,
                         ref mut c_ticks,
-                    }
-                        if finished => {
-                            *c_ticks -= 1;
-                            if *c_ticks == 0 {
-                                should_despawn_self = true
-                            }
+                    } if finished => {
+                        *c_ticks -= 1;
+                        if *c_ticks == 0 {
+                            should_despawn_self = true
                         }
+                    }
                     EnemySpawnerActivation::TimeLimit {
                         start_time: _,
                         end_time,
                         tick_rate: _,
+                    } if end_time < in_game_time.0.elapsed_secs() => {
+                        should_despawn_self = true;
                     }
-                        if end_time < in_game_time.0.elapsed_secs() => {
-                            should_despawn_self = true;
-                        }
                     _ => {}
                 }
             }
