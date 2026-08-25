@@ -128,15 +128,13 @@ pub fn attack_range_targeter(
 pub struct StepCompleted(pub Entity);
 pub fn check_step_completed(
     mut q_validator: Query<(&mut AbilityValidator, &ValidatorOf, &StepCompleted)>,
-    q_holder: Query<&HasAbilitySteps>,
     q_ability_state: Query<&AbilityState>,
 ) {
     for (mut validator, holder, check) in &mut q_validator {
         validator.value = false;
-        if let Ok(steps) = q_holder.get(holder.entity) {
-            if let Ok(state) = q_ability_state.get(check.0) {
-                validator.value = matches!(*state, AbilityState::Completed);
-            }
+        if let Ok(state) = q_ability_state.get(check.0) {
+            info!("Ability State: {:?}", state);
+            validator.value = matches!(*state, AbilityState::Completed);
         }
     }
 }

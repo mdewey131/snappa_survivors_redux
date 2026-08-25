@@ -102,7 +102,6 @@ impl Plugin for AbilityPlugin {
                         check_cooldown_validator,
                         enemy_in_attack_range,
                         attack_range_targeter,
-                        check_step_completed,
                     )
                         .in_set(AbilitySystemSet::CheckValidators),
                     (
@@ -117,7 +116,12 @@ impl Plugin for AbilityPlugin {
                         despawn_ability_on_completion,
                     )
                         .in_set(AbilitySystemSet::CheckAbilities),
-                    (set_auto_cast, add_cooldown_on_ability_completion)
+                    (
+                        set_auto_cast,
+                        add_cooldown_on_ability_completion,
+                        // This particular validator system has to run after the check abilities portion
+                        check_step_completed,
+                    )
                         .in_set(AbilitySystemSet::StateCheckingSystems),
                     // You have to run the `add_cd` system twice because the multi state ability does not hang
                     // around for one frame in the way that I'd need
@@ -338,7 +342,7 @@ fn alternate_inner_ability_recurse(
                 *step_info.0 = AbilityState::Executing;
                 next_step_to_visit = Some(current + 1);
             } else {
-                *step_info.0 = AbilityState::Failure;
+                *step_info.0 = AbilityState::Init;
             }
         }
         AbilityState::Executing => {

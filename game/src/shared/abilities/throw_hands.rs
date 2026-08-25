@@ -10,9 +10,9 @@ use bevy::{
 use lightyear::prelude::AppComponentExt;
 use serde::Serialize;
 
-const BASE_WINDUP_TIME: f32 = 0.5;
-const BASE_WINDDOWN_TIME: f32 = 0.5;
-const TIME_BETWEEN_THROW_HANDS_ATTACKS: f32 = 0.25;
+const BASE_WINDUP_TIME: f32 = 5.0;
+const BASE_WINDDOWN_TIME: f32 = 5.0;
+const TIME_BETWEEN_THROW_HANDS_ATTACKS: f32 = 0.15;
 
 pub struct ThrowHandsPlugin;
 impl Plugin for ThrowHandsPlugin {
