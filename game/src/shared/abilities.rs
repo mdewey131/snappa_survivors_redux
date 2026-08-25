@@ -441,7 +441,10 @@ fn passive_ability(mut q_ability: Query<&mut AbilityState, With<PassiveAbility>>
 pub struct AddCooldownOnCompletion;
 fn add_cooldown_on_ability_completion(
     mut commands: Commands,
-    q_ability: Query<(Entity, &AbilityState, &CooldownRate), Without<Cooldown>>,
+    q_ability: Query<
+        (Entity, &AbilityState, &CooldownRate),
+        (Without<Cooldown>, With<AddCooldownOnCompletion>),
+    >,
 ) {
     for (a_ent, state, cdr) in &q_ability {
         match state {
@@ -458,7 +461,7 @@ fn add_cooldown_on_ability_completion(
 pub struct DespawnOnCompletion;
 fn despawn_ability_on_completion(
     mut commands: Commands,
-    q_ability: Query<(Entity, &AbilityState, Option<&AbilityStep>)>,
+    q_ability: Query<(Entity, &AbilityState, Option<&AbilityStep>), With<DespawnOnCompletion>>,
 ) {
     for (ent, state, m_step) in &q_ability {
         let to_despawn = if let Some(ab) = m_step {
@@ -961,11 +964,13 @@ pub fn debug_launch_abilities_demo(
     game_state.set(InGameState::InGame);
     game_kind.0 = Some(GameKinds::SinglePlayer);
     #[cfg(feature = "dev")]
-    //commands.spawn_scene_list(dice_guard_demo(500.0 * Vec2::NEG_X));
+    commands.spawn_scene_list(dice_guard_demo(500.0 * Vec2::NEG_X));
+    /*
     #[cfg(feature = "dev")]
     //commands.spawn_scene_list(targeting_step_ability_demo(Vec2::ZERO));
     #[cfg(feature = "dev")]
-    //commands.spawn_scene_list(bump_tunes_demo(500.0 * Vec2::X));
+    commands.spawn_scene_list(bump_tunes_demo(500.0 * Vec2::X));
+    */
     #[cfg(feature = "dev")]
     commands.spawn_scene_list(throw_hands_demo(500.0 * Vec2::Y));
     /*

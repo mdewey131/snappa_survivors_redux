@@ -4,7 +4,7 @@ use lightyear::prelude::*;
 use rand::{SeedableRng, rngs::SmallRng};
 use serde::{Deserialize, Serialize};
 
-use crate::shared::damage::DeathState;
+use crate::shared::{damage::DeathState, states::InGameState};
 pub type EntityIncapacitated = With<DeathState>;
 pub type CombatEntityActive = Without<DeathState>;
 
@@ -67,7 +67,10 @@ impl Plugin for CombatPlugin {
                 )
                     .chain(),
             )
-            .add_systems(FixedPreUpdate, tick_cooldown);
+            .add_systems(
+                FixedPreUpdate,
+                tick_cooldown.run_if(in_state(InGameState::InGame)),
+            );
     }
 }
 

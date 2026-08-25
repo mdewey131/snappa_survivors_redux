@@ -3,7 +3,7 @@ use crate::{shared::game_kinds::SinglePlayer, utils::SpawnedBy};
 use super::*;
 use bevy::prelude::*;
 
-#[derive(Component, Default, Clone)]
+#[derive(Component, Default, Clone, Reflect)]
 pub struct DiceGuard {
     pub dice: Option<Vec<Entity>>,
 }

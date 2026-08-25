@@ -43,11 +43,18 @@ pub fn throw_hands<C: Component>() -> impl Scene {
         AttackRange(500.0)
         Damage(4.0)
         CooldownRate(5.0)
+        Cooldown::new(20.0)
         CritChance(0.15)
         CritDamage(1.5)
         HasValidators [
-            AbilityOffCooldown,
-            EnemyInAttackRange
+            (
+                #HandsOffCDValidator
+                AbilityOffCooldown
+            ),
+            (
+                #HandsRangeValidator
+                EnemyInAttackRange
+            )
         ]
         on(throw_hands_activate::<C>)
         on(throw_hands_deactivate)
@@ -124,6 +131,7 @@ pub fn throw_hands_attack(target: Entity, pos: Vec2, damage: f32, cc: f32, cd: f
         Ability
         Position(attack_pos)
         RenderYtoZ::new(10.0)
+        DespawnOnCompletion
         HasAbilitySteps [
             (
                 #ThrowHandsWindupStep
@@ -149,7 +157,6 @@ pub fn throw_hands_attack(target: Entity, pos: Vec2, damage: f32, cc: f32, cd: f
                 HasValidators [
                     StepCompleted(#ThrowHandsAttackStep)
                 ]
-                DespawnOnCompletion
             ),
 
         ]
