@@ -1,7 +1,7 @@
 ([
     (
         kind: AttackRange,
-        val: 100.0,
+        val: 50.0,
     ),
     (
         kind: CDR,
@@ -9,11 +9,11 @@
     ),
     (
         kind: Damage,
-        val: 5.0,
+        val: 8.0,
     ),
     (
         kind: EffSize,
-        val: 30.0,
+        val: 20.0,
     ),
     (
         kind: EffDuration,
@@ -21,10 +21,10 @@
     ),
     (
         kind: ProjCount,
-        val: 5.0,
+        val: 2.0,
     ),
     (
         kind: ProjSpeed,
-        val: 50.0,
+        val: 20.0,
     ),
 ])

@@ -4,6 +4,7 @@ use lightyear::prelude::Controlled;
 
 use crate::{
     shared::{
+        abilities::{Ability, AbilityOf},
         combat::CombatEntity,
         damage::{HealthChange, HealthChangeMessage, HealthChangeResult},
         despawn_timer::DespawnTimer,
@@ -70,11 +71,14 @@ fn spawn_popup(
     mut commands: Commands,
     mut messages: MessageReader<HealthChangeMessage>,
     q_controlling_player: Query<(), (With<Player>)>,
+    q_ability: Query<&AbilityOf, With<Ability>>,
     q_creator: Query<&CreatedBy>,
 ) {
     for m in messages.read() {
         let mut target = None;
         let entity_to_credit = if let Ok(e) = q_creator.get(m.source_entity) {
+            e.0
+        } else if let Ok(e) = q_ability.get(m.source_entity) {
             e.0
         } else {
             m.source_entity

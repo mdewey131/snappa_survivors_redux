@@ -80,7 +80,7 @@ impl Plugin for CombatProtocolPlugin {
 }
 
 /// To be used anytime something is on cooldown (duh)
-#[derive(Component, Clone, Deref, DerefMut)]
+#[derive(Component, Clone, Deref, DerefMut, Default)]
 pub struct Cooldown(Timer);
 impl Cooldown {
     pub fn new(time: f32) -> Self {

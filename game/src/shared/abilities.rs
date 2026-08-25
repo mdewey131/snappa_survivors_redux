@@ -61,8 +61,17 @@ pub mod demo;
 #[cfg(feature = "dev")]
 use demo::*;
 
-pub mod targeter;
-use targeter::Targeter;
+mod bumpin_tunes;
+pub use bumpin_tunes::*;
+
+mod dice_guard;
+pub use dice_guard::*;
+
+mod targeter;
+pub use targeter::Targeter;
+
+mod throw_hands;
+pub use throw_hands::*;
 
 pub mod validators;
 use validators::*;
@@ -70,48 +79,54 @@ use validators::*;
 pub struct AbilityPlugin;
 impl Plugin for AbilityPlugin {
     fn build(&self, app: &mut App) {
-        app.configure_sets(
-            FixedUpdate,
-            (
-                AbilitySystemSet::CheckValidators,
-                AbilitySystemSet::CheckAbilities,
-                AbilitySystemSet::StateCheckingSystems,
-                AbilitySystemSet::ResolveAbilityState,
-            )
-                .chain()
-                .in_set(CombatSystemSet::Combat),
-        )
-        .add_systems(
-            FixedUpdate,
-            (
+        app.add_plugins(BumpTunesPlugin)
+            .configure_sets(
+                FixedUpdate,
                 (
-                    check_cooldown_validator,
-                    enemy_in_attack_range,
-                    attack_range_targeter,
+                    AbilitySystemSet::CheckValidators,
+                    AbilitySystemSet::CheckAbilities,
+                    AbilitySystemSet::StateCheckingSystems,
+                    AbilitySystemSet::ResolveAbilityState,
                 )
-                    .in_set(AbilitySystemSet::CheckValidators),
-                (
-                    pulse_activation,
-                    passive_ability,
-                    active_for_timer,
-                    request_on_click,
-                    request_on_input,
-                    draw_targeter,
-                    draw_attack_range_radius,
-                    completes_instantly,
-                    spawn_enemies,
-                )
-                    .in_set(AbilitySystemSet::CheckAbilities),
-                (set_auto_cast, add_cooldown_on_ability_completion)
-                    .in_set(AbilitySystemSet::StateCheckingSystems),
-                // You have to run the `add_cd` system twice because the multi state ability does not hang
-                // around for one frame in the way that I'd need
-                (single_stepped_ability, (multi_stepped_ability).chain())
-                    .in_set(AbilitySystemSet::ResolveAbilityState),
+                    .chain()
+                    .in_set(CombatSystemSet::Combat),
             )
-                .run_if(in_state(InGameState::InGame)),
-        )
-        .add_observer(activation_observer);
+            .add_systems(
+                Update,
+                (draw_targeter, draw_attack_range_radius, render_bump_tunes),
+            )
+            .add_systems(
+                FixedUpdate,
+                (
+                    (
+                        check_cooldown_validator,
+                        enemy_in_attack_range,
+                        attack_range_targeter,
+                        check_step_completed,
+                    )
+                        .in_set(AbilitySystemSet::CheckValidators),
+                    (
+                        pulse_activation,
+                        passive_ability,
+                        active_for_timer,
+                        request_on_click,
+                        request_on_input,
+                        completes_instantly,
+                        spawn_enemies,
+                        (completes_instantly, damage_targets_on_completion).chain(),
+                        despawn_ability_on_completion,
+                    )
+                        .in_set(AbilitySystemSet::CheckAbilities),
+                    (set_auto_cast, add_cooldown_on_ability_completion)
+                        .in_set(AbilitySystemSet::StateCheckingSystems),
+                    // You have to run the `add_cd` system twice because the multi state ability does not hang
+                    // around for one frame in the way that I'd need
+                    (single_stepped_ability, (multi_stepped_ability).chain())
+                        .in_set(AbilitySystemSet::ResolveAbilityState),
+                )
+                    .run_if(in_state(InGameState::InGame)),
+            )
+            .add_observer(activation_observer);
     }
 }
 
@@ -135,7 +150,7 @@ pub enum AbilityState {
 pub struct Ability;
 
 #[derive(Component, Debug, Clone, Reflect, Default)]
-#[relationship_target(relationship = AbilityStep)]
+#[relationship_target(relationship = AbilityStep, linked_spawn)]
 #[require(Ability = Ability)]
 pub struct HasAbilitySteps {
     pub current: usize,
@@ -204,7 +219,13 @@ fn multi_stepped_ability(
         let starting_state = *state;
 
         // Step through the inner steps
-        alternate_inner_ability_recurse(&mut commands, &mut steps, &mut q_steps, &q_validators);
+        alternate_inner_ability_recurse(
+            &starting_step,
+            &mut commands,
+            &mut steps,
+            &mut q_steps,
+            &q_validators,
+        );
 
         // test some logic about where we got to
         if steps.current >= steps.len() {
@@ -279,7 +300,9 @@ fn multi_stepped_ability(
 /// Steps over the inner steps of the AbilityStep process.
 /// It is expected that the caller of this function handles its own state based on
 /// its state when this is done. No outer state knowledge inside the recursion!
+
 fn alternate_inner_ability_recurse(
+    from: &usize,
     mut commands: &mut Commands,
     mut steps: &mut HasAbilitySteps,
     mut q_steps: &mut Query<(&mut AbilityState, &AbilityStep, Option<&HasValidators>)>,
@@ -295,8 +318,13 @@ fn alternate_inner_ability_recurse(
     let current_state = *step_info.0;
     let mut next_step_to_visit = None;
     let mut check_prior_for_completed = false;
+    let mut deactivate = false;
     let mut failed = false;
 
+    info!(
+        "Checking: {:?} with current state {:?}",
+        steps.current, current_state
+    );
     match current_state {
         AbilityState::Init => {}
         AbilityState::Requested => {
@@ -318,16 +346,26 @@ fn alternate_inner_ability_recurse(
             next_step_to_visit = Some(current + 1);
         }
         AbilityState::Cancelled => {
+            deactivate = current == *from;
             next_step_to_visit = Some(current - 1);
         }
         AbilityState::Completed => {
+            deactivate = current == *from;
             check_prior_for_completed = true;
             next_step_to_visit = Some(current + 1);
         }
         AbilityState::Failure => {
+            deactivate = current == *from;
             failed = true;
             *step_info.0 = AbilityState::Init;
         }
+    }
+    info!(
+        "Result: State {:?}, Failed: {:?}, Deactivated: {:?}",
+        step_info.0, failed, deactivate
+    );
+    if deactivate {
+        commands.trigger(DeactivateAbility { entity: *step });
     }
     if failed {
         return;
@@ -346,7 +384,7 @@ fn alternate_inner_ability_recurse(
         if c < current {
             info!("We stepped back, I bet there's a bug here!");
         }
-        alternate_inner_ability_recurse(commands, steps, q_steps, q_validators);
+        alternate_inner_ability_recurse(&current, commands, steps, q_steps, q_validators);
     } else {
         return;
     }
@@ -411,6 +449,65 @@ fn add_cooldown_on_ability_completion(
     }
 }
 
+/// If this ability is complete, use the ability's CDR to make a Cooldown Component
+#[derive(Component, Debug, Clone, Copy, Default)]
+pub struct DespawnOnCompletion;
+fn despawn_ability_on_completion(
+    mut commands: Commands,
+    q_ability: Query<(Entity, &AbilityState, Option<&AbilityStep>)>,
+) {
+    for (ent, state, m_step) in &q_ability {
+        let to_despawn = if let Some(ab) = m_step {
+            ab.step_of
+        } else {
+            ent
+        };
+        match state {
+            AbilityState::Completed => {
+                commands.entity(to_despawn).despawn();
+            }
+            _ => {}
+        }
+    }
+}
+
+#[derive(Component, Debug, Clone, Default)]
+pub struct DamageTargetsOnCompletion(pub Vec<Entity>);
+
+fn damage_targets_on_completion(
+    q_triggering_ent: Query<(
+        Entity,
+        &AbilityState,
+        Option<&AbilityStep>,
+        &DamageTargetsOnCompletion,
+    )>,
+    q_attack: Query<(&Damage, &CritChance, &CritDamage)>,
+    mut q_target: Query<&mut HealthBuffer>,
+) {
+    for (ability_ent, state, m_step, targets) in q_triggering_ent {
+        match *state {
+            AbilityState::Completed => {
+                info!("Ability Completed");
+                let stat_entity = if let Some(step) = m_step {
+                    step.step_of
+                } else {
+                    ability_ent
+                };
+                if let Ok((dam, cc, cd)) = q_attack.get(stat_entity) {
+                    for t in &targets.0 {
+                        let mut hp = q_target
+                            .get_mut(*t)
+                            .expect("Targeting an entity without a health buffer");
+                        info!("Pushing damage to {:?}", t);
+                        hp.push_damage(stat_entity, dam.0, Some((cc.0, cd.0)));
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+}
+
 #[derive(Component, Debug, Clone, Copy, Default)]
 pub struct SpawnEnemies(pub EnemySpawnInstruction);
 fn spawn_enemies(
@@ -453,7 +550,7 @@ fn active_for_timer(
             AbilityState::Executing => {
                 timer.0.tick(time.delta());
                 if timer.0.just_finished() {
-                    info!("Timer finished!");
+                    trace!("Timer finished!");
                     *state = AbilityState::Completed;
                 }
             }
@@ -520,7 +617,7 @@ fn activation_observer(
     mut q_activations: Query<(&mut Activations, &mut AbilityState)>,
 ) {
     if let Ok((mut activations, mut state)) = q_activations.get_mut(trigger.entity) {
-        info!("Incrementing Activation for {}", trigger.entity);
+        trace!("Incrementing Activation for {}", trigger.entity);
         activations.current += 1;
         if let Some(m) = activations.max {
             if m == activations.current {
@@ -780,12 +877,12 @@ pub struct DeactivateAbility {
 }
 
 #[derive(Component, Debug, Clone, Reflect)]
-#[relationship_target(relationship = AbilityOf)]
+#[relationship_target(relationship = AbilityOf, linked_spawn)]
 pub struct HasAbilities(Vec<Entity>);
 
 #[derive(Component, Debug, Clone, Reflect)]
 #[relationship(relationship_target = HasAbilities)]
-pub struct AbilityOf(Entity);
+pub struct AbilityOf(pub Entity);
 
 fn generic_observer(t: On<ActivateAbility>) {
     info!("Ability Activated!")
@@ -860,7 +957,13 @@ pub fn debug_launch_abilities_demo(
     game_state.set(InGameState::InGame);
     game_kind.0 = Some(GameKinds::SinglePlayer);
     #[cfg(feature = "dev")]
-    commands.spawn_scene_list(targeting_step_ability_demo());
+    //commands.spawn_scene_list(dice_guard_demo(500.0 * Vec2::NEG_X));
+    #[cfg(feature = "dev")]
+    //commands.spawn_scene_list(targeting_step_ability_demo(Vec2::ZERO));
+    #[cfg(feature = "dev")]
+    //commands.spawn_scene_list(bump_tunes_demo(500.0 * Vec2::X));
+    #[cfg(feature = "dev")]
+    commands.spawn_scene_list(throw_hands_demo(500.0 * Vec2::Y));
     /*
     commands.spawn_scene_list(new_dice_guard_scene());
     commands.spawn_scene_list(new_shifty_shot_scene(Vec2::X * 500.0));
@@ -873,87 +976,6 @@ pub fn debug_launch_abilities_demo(
      */
 }
 
-#[derive(Component, Clone, Debug, Default)]
-pub struct DiceGuard {
-    pub dice: Option<Vec<Entity>>,
-}
-fn dice_guard_activate(
-    on: On<ActivateAbility>,
-    mut commands: Commands,
-    game_kind: Res<CurrentGameKind>,
-    mut q_dice_guard: Query<(
-        &mut DiceGuard,
-        &AbilityOf,
-        &ProjectileCount,
-        &EffectSize,
-        &ProjectileSpeed,
-        &Damage,
-    )>,
-    q_holder: Query<&Position>,
-) {
-    if let Ok((mut dg, holder, p_count, eff_size, proj_speed, dam)) =
-        q_dice_guard.get_mut(on.entity)
-    {
-        let mut projectiles = vec![];
-        info!("Dice guard activated!");
-        let holder_pos = q_holder.get(holder.0).unwrap();
-
-        let iters = p_count.0.floor() as usize;
-
-        for i in 0..iters {
-            // Shorhand for now
-            let r = eff_size.0 * 4.0;
-            //spawn_positions.positions_2d().into_iter().enumerate() {
-            let angle = std::f32::consts::TAU * (i as f32 / p_count.0);
-            let proj = Projectile {
-                movement: ProjectileMovement::Orbital {
-                    around: holder.0,
-                    speed: proj_speed.0,
-                    c_angle: angle,
-                    radius: r,
-                },
-            };
-            let pos = holder_pos.0 + Vec2::from_angle(angle) * r;
-            trace!("Found angle to be {angle}, position is {:?}", pos);
-            let ent = spawn_game_object(
-                &mut commands,
-                game_kinds::GameKinds::SinglePlayer,
-                //game_kind.0.unwrap(),
-                None::<()>,
-                MultiPlayerComponentOptions::from(proj),
-                (
-                    proj,
-                    DiceGuardProjectile,
-                    Position(pos),
-                    CreatedBy(holder.0),
-                    *dam,
-                    *eff_size,
-                    AppliesCollisionEffect::new(
-                        [ColliderTypes::Enemy].into(),
-                        ApplyDamage::default(),
-                    ),
-                ),
-            );
-            projectiles.push(ent);
-        }
-        dg.dice = Some(projectiles)
-    }
-}
-
-fn dice_guard_deactivate(
-    on: On<DeactivateAbility>,
-    mut commands: Commands,
-    mut q_ability: Query<&mut DiceGuard>,
-) {
-    if let Ok(mut dg) = q_ability.get_mut(on.entity) {
-        if let Some(ref list) = dg.dice {
-            for projectile in list.iter() {
-                commands.entity(*projectile).despawn();
-            }
-        }
-        dg.dice = None;
-    }
-}
 /// If I see a click, I'm going to move my state to `Requested`.
 #[derive(Component, Default, Debug, Clone, Copy)]
 pub struct RequestOnClick;

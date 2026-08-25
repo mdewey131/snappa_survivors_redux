@@ -56,6 +56,23 @@ impl MapEntities for CreatedBy {
     }
 }
 
+/// Used to track the thing that is immediately responsible for spawning this thing (e.g. a dice guard ability to its projectile).
+/// For the entity that
+/// gets ultimate credit for the entity (e.g, a player's relationship to a dice guard projectile), use `CreatedBy`
+#[derive(Component, Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Reflect)]
+#[relationship(relationship_target = SpawnerOf)]
+pub struct SpawnedBy(pub Entity);
+
+#[derive(Component, Debug, Reflect)]
+#[relationship_target(relationship = SpawnedBy)]
+pub struct SpawnerOf(Vec<Entity>);
+
+impl MapEntities for SpawnedBy {
+    fn map_entities<E: EntityMapper>(&mut self, entity_mapper: &mut E) {
+        self.0 = entity_mapper.get_mapped(self.0);
+    }
+}
+
 /// Describes how to spawn a group of things, returning the positions at which to spawn them.
 /// Because this is a utility for spawning groups, there is no single option
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, Reflect)]

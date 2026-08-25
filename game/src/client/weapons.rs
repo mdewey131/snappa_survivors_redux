@@ -18,7 +18,7 @@ impl Plugin for ClientWeaponsPlugin {
         app.add_plugins((
             ClientBouncingDicePlugin,
             ClientBumpinTunesPlugin,
-            ClientDiceGuardPlugin,
+            //ClientDiceGuardPlugin,
             ClientThrowHandsPlugin,
             ClientShiftyShotPlugin,
         ));

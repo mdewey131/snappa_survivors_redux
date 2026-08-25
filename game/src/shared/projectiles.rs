@@ -18,7 +18,7 @@ impl Plugin for ProjectileProtocolPlugin {
         app.component::<Projectile>().predict();
     }
 }
-#[derive(Component, Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[derive(Component, Debug, Clone, Copy, PartialEq, Serialize, Deserialize, Default)]
 #[require(Name = Name::from("Projectile"), CombatEntity = CombatEntity)]
 pub struct Projectile {
     pub movement: ProjectileMovement,
@@ -68,6 +68,11 @@ pub enum ProjectileMovement {
         radius: f32,
         c_angle: f32,
     },
+}
+impl Default for ProjectileMovement {
+    fn default() -> Self {
+        Self::Linear(Vec2::ZERO)
+    }
 }
 
 pub fn projectile_movement(

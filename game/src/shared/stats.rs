@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 
 const MOVESPEED_CAP: f32 = 600.0;
 
+pub mod asset_loader;
 pub mod components;
 pub mod editor;
 pub mod plugins;

@@ -32,6 +32,7 @@ use map::MapRenderPlugin;
 use menus::lobby::LobbyMenuPlugin;
 use pickups::*;
 use player::SharedPlayerRenderPlugin;
+use serde::{Deserialize, Serialize};
 use shrines::SharedShrinesRenderPlugin;
 use ui::SharedUIPlugin;
 use upgrades::UpgradeRenderPlugin;
@@ -100,13 +101,13 @@ pub struct LevelRenderAssets {
 /// That allows for proper sprite layering in theory,
 /// with the allotment for some things to offset themselves in cases where they need to be drawn ahead/behind of nearby things
 /// (e.g. when trying to show something in the air)
-#[derive(Component, Default)]
+#[derive(Component, Default, Clone, Copy, Serialize, Deserialize)]
 pub struct RenderYtoZ {
     offset: f32,
 }
 
 impl RenderYtoZ {
-    fn new(offset: f32) -> Self {
+    pub fn new(offset: f32) -> Self {
         Self { offset }
     }
 }

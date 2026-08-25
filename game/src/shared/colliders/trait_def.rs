@@ -2,6 +2,8 @@ use avian2d::prelude::*;
 use bevy::prelude::*;
 use lightyear::prediction::SyncComponent;
 use serde::{Deserialize, Serialize};
+
+use crate::shared::colliders::ColliderTypes;
 /// There are many things that we may want to have happen upon collision betweeen two units:
 ///     1. Apply Damage
 ///     2. Apply Status Effects
@@ -31,6 +33,15 @@ pub struct AppliesCollisionEffect<E> {
     pub to: LayerMask,
     #[reflect(ignore)]
     pub eff: E,
+}
+
+impl<E: Default> Default for AppliesCollisionEffect<E> {
+    fn default() -> Self {
+        Self {
+            to: [ColliderTypes::SolidObject].into(),
+            eff: E::default(),
+        }
+    }
 }
 
 impl<E: CollisionEffect> AppliesCollisionEffect<E> {

@@ -10,7 +10,7 @@ pub struct AbilityValidator {
 }
 
 #[derive(Component, Reflect, Default, Debug, Clone)]
-#[relationship_target(relationship = ValidatorOf)]
+#[relationship_target(relationship = ValidatorOf, linked_spawn)]
 pub struct HasValidators(Vec<Entity>);
 
 #[derive(Component, Reflect, Debug, Clone)]
@@ -120,5 +120,23 @@ pub fn attack_range_targeter(
             .get(holder_ent.0)
             .expect("holder doesn't have a position?");
         validator.value = holder_pos.0.distance(q_targeter.0) <= range.0;
+    }
+}
+
+#[derive(Component, Debug, Clone, Copy, FromTemplate)]
+#[require(AbilityValidator = AbilityValidator::default())]
+pub struct StepCompleted(pub Entity);
+pub fn check_step_completed(
+    mut q_validator: Query<(&mut AbilityValidator, &ValidatorOf, &StepCompleted)>,
+    q_holder: Query<&HasAbilitySteps>,
+    q_ability_state: Query<&AbilityState>,
+) {
+    for (mut validator, holder, check) in &mut q_validator {
+        validator.value = false;
+        if let Ok(steps) = q_holder.get(holder.entity) {
+            if let Ok(state) = q_ability_state.get(check.0) {
+                validator.value = matches!(*state, AbilityState::Completed);
+            }
+        }
     }
 }
