@@ -7,6 +7,7 @@ use bevy::{
     ecs::{
         entity::MapEntities,
         system::{SystemId, SystemInput},
+        template::EntityTemplate,
     },
     prelude::*,
 };
@@ -42,7 +43,9 @@ impl From<()> for AssetFolder {
     }
 }
 
-#[derive(Component, Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Reflect)]
+#[derive(
+    Component, Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Reflect, FromTemplate,
+)]
 #[relationship(relationship_target = CreatorOf)]
 pub struct CreatedBy(pub Entity);
 

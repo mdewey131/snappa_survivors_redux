@@ -10,8 +10,8 @@ use bevy::{
 use lightyear::prelude::AppComponentExt;
 use serde::Serialize;
 
-const BASE_WINDUP_TIME: f32 = 5.0;
-const BASE_WINDDOWN_TIME: f32 = 5.0;
+const BASE_WINDUP_TIME: f32 = 0.5;
+const BASE_WINDDOWN_TIME: f32 = 0.3;
 const TIME_BETWEEN_THROW_HANDS_ATTACKS: f32 = 0.15;
 
 pub struct ThrowHandsPlugin;
@@ -43,7 +43,7 @@ pub fn throw_hands<C: Component>() -> impl Scene {
         AttackRange(500.0)
         Damage(4.0)
         CooldownRate(5.0)
-        Cooldown::new(20.0)
+        Cooldown::new(1.0)
         CritChance(0.15)
         CritDamage(1.5)
         HasValidators [
@@ -79,8 +79,11 @@ fn throw_hands_activate<T: Component>(
     q_holder: Query<&Position, Without<T>>,
     q_targets: Query<(Entity, &Position), (With<T>, CombatEntityActive)>,
 ) {
-    if let Ok((holder, mut throw, damage, range, p_count, cc, cd)) = q_hands.get_mut(on.entity) {
-        let holder = q_holder.get(holder.0).expect("This player should exist");
+    if let Ok((holder_ent, mut throw, damage, range, p_count, cc, cd)) = q_hands.get_mut(on.entity)
+    {
+        let holder = q_holder
+            .get(holder_ent.0)
+            .expect("This player should exist");
         let target_vec = q_targets.iter().collect::<Vec<(Entity, &Position)>>();
         if throw.targets.is_none() {
             let targets = find_closest_in_list(p_count.0 as u8, holder.0, &target_vec);
@@ -107,7 +110,14 @@ fn throw_hands_activate<T: Component>(
 
         throw.current += 1;
         let t_pos = q_targets.get(target).unwrap().1;
-        commands.spawn_scene(throw_hands_attack(target, t_pos.0, damage.0, cc.0, cd.0));
+        commands.spawn_scene(throw_hands_attack(
+            holder_ent.0,
+            target,
+            t_pos.0,
+            damage.0,
+            cc.0,
+            cd.0,
+        ));
     }
 }
 
@@ -118,12 +128,20 @@ fn throw_hands_deactivate(on: On<DeactivateAbility>, mut q_throw_hands: Query<&m
     }
 }
 
-pub fn throw_hands_attack(target: Entity, pos: Vec2, damage: f32, cc: f32, cd: f32) -> impl Scene {
+pub fn throw_hands_attack(
+    creator: Entity,
+    target: Entity,
+    pos: Vec2,
+    damage: f32,
+    cc: f32,
+    cd: f32,
+) -> impl Scene {
     let attack_pos = pos + (Vec2::Y * 10.0);
     bsn! {
         #ThrowHandsAttack
         ThrowHandsAttack {target}
         Damage(damage)
+        CreatedBy(creator)
         CritChance(cc)
         CritDamage(cd)
         Damage(5.0)
@@ -143,7 +161,7 @@ pub fn throw_hands_attack(target: Entity, pos: Vec2, damage: f32, cc: f32, cd: f
                 #ThrowHandsAttackStep
                 Ability
                 AutoCast
-                DamageTargetsOnCompletion(vec![target])
+                DamageTargetsOnActivation(vec![target])
                 CompletesInstantly
                 HasValidators [
                     StepCompleted(#ThrowHandsWindupStep)

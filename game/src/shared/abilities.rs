@@ -112,7 +112,7 @@ impl Plugin for AbilityPlugin {
                         request_on_input,
                         completes_instantly,
                         spawn_enemies,
-                        (completes_instantly, damage_targets_on_completion).chain(),
+                        (completes_instantly).chain(),
                         despawn_ability_on_completion,
                     )
                         .in_set(AbilitySystemSet::CheckAbilities),
@@ -130,7 +130,8 @@ impl Plugin for AbilityPlugin {
                 )
                     .run_if(in_state(InGameState::InGame)),
             )
-            .add_observer(activation_observer);
+            .add_observer(activation_observer)
+            .add_observer(damage_targets_on_activation);
     }
 }
 
@@ -479,38 +480,34 @@ fn despawn_ability_on_completion(
 }
 
 #[derive(Component, Debug, Clone, Default)]
-pub struct DamageTargetsOnCompletion(pub Vec<Entity>);
+pub struct DamageTargetsOnActivation(pub Vec<Entity>);
 
-fn damage_targets_on_completion(
+fn damage_targets_on_activation(
+    observer: On<ActivateAbility>,
     q_triggering_ent: Query<(
         Entity,
         &AbilityState,
         Option<&AbilityStep>,
-        &DamageTargetsOnCompletion,
+        &DamageTargetsOnActivation,
     )>,
     q_attack: Query<(&Damage, &CritChance, &CritDamage)>,
     mut q_target: Query<&mut HealthBuffer>,
 ) {
-    for (ability_ent, state, m_step, targets) in q_triggering_ent {
-        match *state {
-            AbilityState::Completed => {
-                info!("Ability Completed");
-                let stat_entity = if let Some(step) = m_step {
-                    step.step_of
-                } else {
-                    ability_ent
-                };
-                if let Ok((dam, cc, cd)) = q_attack.get(stat_entity) {
-                    for t in &targets.0 {
-                        let mut hp = q_target
-                            .get_mut(*t)
-                            .expect("Targeting an entity without a health buffer");
-                        info!("Pushing damage to {:?}", t);
-                        hp.push_damage(stat_entity, dam.0, Some((cc.0, cd.0)));
-                    }
-                }
+    if let Ok((ability_ent, state, m_step, targets)) = q_triggering_ent.get(observer.entity) {
+        info!("Made it here");
+        let stat_entity = if let Some(step) = m_step {
+            step.step_of
+        } else {
+            ability_ent
+        };
+        if let Ok((dam, cc, cd)) = q_attack.get(stat_entity) {
+            for t in &targets.0 {
+                let mut hp = q_target
+                    .get_mut(*t)
+                    .expect("Targeting an entity without a health buffer");
+                info!("Pushing damage to {:?}", t);
+                hp.push_damage(stat_entity, dam.0, Some((cc.0, cd.0)));
             }
-            _ => {}
         }
     }
 }
