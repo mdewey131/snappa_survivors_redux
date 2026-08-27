@@ -86,10 +86,17 @@ impl Plugin for AbilityPlugin {
                     AbilitySystemSet::CheckValidators,
                     AbilitySystemSet::CheckAbilities,
                     AbilitySystemSet::StateCheckingSystems,
-                    AbilitySystemSet::ResolveAbilityState,
                 )
                     .chain()
                     .in_set(CombatSystemSet::Combat),
+            )
+            .configure_sets(
+                FixedPostUpdate,
+                (
+                    (AbilitySystemSet::CheckDamageValidators,)
+                        .in_set(CombatSystemSet::PostPhysicsSet),
+                    (AbilitySystemSet::ResolveAbilityState).in_set(CombatSystemSet::Cleanup),
+                ),
             )
             .add_systems(
                 Update,
@@ -537,6 +544,7 @@ pub enum AbilitySystemSet {
     CheckAbilities,
     /// E.g. things like "add cooldown to entities that have completed"
     StateCheckingSystems,
+    CheckDamageValidators,
     /// These systems reset things to their proper place using the state machinery of these abilities
     ResolveAbilityState,
 }
