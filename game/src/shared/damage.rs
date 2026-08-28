@@ -38,6 +38,18 @@ pub struct HealthBuffer {
 pub struct TimeSinceLastDamage(pub Stopwatch);
 
 impl HealthBuffer {
+    pub fn get_damage(&self) -> Vec<HealthChangeInstance> {
+        self.buff
+            .iter()
+            .filter_map(|hci| {
+                if matches!(hci.kind, HealthChange::Damage) {
+                    Some(*hci)
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<HealthChangeInstance>>()
+    }
     pub fn push_damage(&mut self, from: Entity, dam: f32, crit_info: Option<(f32, f32)>) {
         let mut inst = HealthChangeInstance {
             source: from,

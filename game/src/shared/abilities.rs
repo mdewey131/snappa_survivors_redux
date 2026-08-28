@@ -67,6 +67,8 @@ pub use bumpin_tunes::*;
 mod dice_guard;
 pub use dice_guard::*;
 
+mod paddle_back;
+pub use paddle_back::*;
 mod targeter;
 pub use targeter::Targeter;
 
@@ -92,11 +94,12 @@ impl Plugin for AbilityPlugin {
             )
             .configure_sets(
                 FixedPostUpdate,
-                (
-                    (AbilitySystemSet::CheckDamageValidators,)
-                        .in_set(CombatSystemSet::PostPhysicsSet),
-                    (AbilitySystemSet::ResolveAbilityState).in_set(CombatSystemSet::Cleanup),
-                ),
+                ((
+                    AbilitySystemSet::CheckDamageValidators,
+                    AbilitySystemSet::ResolveAbilityState,
+                )
+                    .chain()
+                    .in_set(CombatSystemSet::PostPhysicsSet),),
             )
             .add_systems(
                 Update,
@@ -132,10 +135,16 @@ impl Plugin for AbilityPlugin {
                         .in_set(AbilitySystemSet::StateCheckingSystems),
                     // You have to run the `add_cd` system twice because the multi state ability does not hang
                     // around for one frame in the way that I'd need
-                    (single_stepped_ability, (multi_stepped_ability).chain())
-                        .in_set(AbilitySystemSet::ResolveAbilityState),
                 )
                     .run_if(in_state(InGameState::InGame)),
+            )
+            .add_systems(
+                FixedPostUpdate,
+                (
+                    ability_holder_has_damage.in_set(AbilitySystemSet::CheckDamageValidators),
+                    (single_stepped_ability, (multi_stepped_ability).chain())
+                        .in_set(AbilitySystemSet::ResolveAbilityState),
+                ),
             )
             .add_observer(activation_observer)
             .add_observer(damage_targets_on_activation);
@@ -546,6 +555,9 @@ pub enum AbilitySystemSet {
     StateCheckingSystems,
     CheckDamageValidators,
     /// These systems reset things to their proper place using the state machinery of these abilities
+    /// Note: becuase effects include writing damage, these have to run before any health checking systems.
+    /// Otherwise, you create a condition where damage can get written to the health buffer while other systems are working
+    /// on that buffer, which is a no-no
     ResolveAbilityState,
 }
 
@@ -970,12 +982,10 @@ pub fn debug_launch_abilities_demo(
     game_kind.0 = Some(GameKinds::SinglePlayer);
     #[cfg(feature = "dev")]
     commands.spawn_scene_list(dice_guard_demo(500.0 * Vec2::NEG_X));
-    /*
-    #[cfg(feature = "dev")]
+    //#[cfg(feature = "dev")]
     //commands.spawn_scene_list(targeting_step_ability_demo(Vec2::ZERO));
     #[cfg(feature = "dev")]
     commands.spawn_scene_list(bump_tunes_demo(500.0 * Vec2::X));
-    */
     #[cfg(feature = "dev")]
     commands.spawn_scene_list(throw_hands_demo(500.0 * Vec2::Y));
     /*
