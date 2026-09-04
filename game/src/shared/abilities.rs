@@ -28,11 +28,12 @@ use bevy::{
     ui_widgets::Activate,
 };
 use bevy_egui::egui::{Key::A, epaint::text::cursor};
-use bevy_enhanced_input::action::events::Complete;
+use bevy_enhanced_input::{action::events::Complete, condition::hold_and_release::HoldAndRelease};
 use serde::{Deserialize, Serialize};
 
 use crate::{
     client::main_menu::MainMenuScreen,
+    render::animation::animate,
     shared::{
         colliders::{AppliesCollisionEffect, ApplyDamage, ColliderTypes},
         combat::{CombatSystemSet, Cooldown},
@@ -99,11 +100,16 @@ impl Plugin for AbilityPlugin {
                     AbilitySystemSet::ResolveAbilityState,
                 )
                     .chain()
-                    .in_set(CombatSystemSet::PostPhysicsSet),),
+                    .in_set(CombatSystemSet::ResolveAbilities),),
             )
             .add_systems(
                 Update,
-                (draw_targeter, draw_attack_range_radius, render_bump_tunes),
+                (
+                    draw_targeter,
+                    draw_attack_range_radius,
+                    render_bump_tunes,
+                    animate::<PaddleBackDamageCone>,
+                ),
             )
             .add_systems(
                 FixedUpdate,
@@ -112,6 +118,7 @@ impl Plugin for AbilityPlugin {
                         check_cooldown_validator,
                         enemy_in_attack_range,
                         attack_range_targeter,
+                        check_has_charges,
                     )
                         .in_set(AbilitySystemSet::CheckValidators),
                     (
@@ -121,11 +128,13 @@ impl Plugin for AbilityPlugin {
                         request_on_click,
                         request_on_input,
                         completes_instantly,
+                        charge_timer,
                         spawn_enemies,
                         (completes_instantly).chain(),
                         despawn_ability_on_completion,
                     )
                         .in_set(AbilitySystemSet::CheckAbilities),
+                    (debug_tick_invuln_timer).in_set(CombatSystemSet::Combat),
                     (
                         set_auto_cast,
                         add_cooldown_on_ability_completion,
@@ -147,6 +156,7 @@ impl Plugin for AbilityPlugin {
                 ),
             )
             .add_observer(activation_observer)
+            .add_observer(remove_charge)
             .add_observer(damage_targets_on_activation);
     }
 }
@@ -451,6 +461,69 @@ fn passive_ability(mut q_ability: Query<&mut AbilityState, With<PassiveAbility>>
     for mut state in &mut q_ability {
         *state = AbilityState::Executing
     }
+}
+
+/// Tracks how many "charges" this thing currently has
+///
+/// Assumes the Cooldown rate should be used for understanding the charge rate
+#[derive(Component, Debug, Clone, Default, Reflect)]
+pub struct HoldsCharges {
+    max: u8,
+    current: u8,
+    timer: Timer,
+}
+impl HoldsCharges {
+    fn new(max: u8, duration: f32) -> Self {
+        Self {
+            max,
+            current: 0,
+            timer: Timer::from_seconds(duration, TimerMode::Once),
+        }
+    }
+}
+
+pub fn charge_timer(
+    time: Res<Time<Virtual>>,
+    mut q_charges: Query<(Entity, &mut HoldsCharges, Option<&AbilityStep>)>,
+    q_cooldown_rates: Query<&CooldownRate>,
+) {
+    for (ent, mut charges, m_step) in &mut q_charges {
+        if charges.current == charges.max {
+            continue;
+        }
+        charges.timer.tick(time.delta());
+        if charges.timer.just_finished() {
+            charges.current += 1;
+            let cdr_ent = if let Some(s) = m_step { s.step_of } else { ent };
+            let cdr = q_cooldown_rates.get(cdr_ent).expect("Should exist");
+            charges.timer.set_duration(Duration::from_secs_f32(cdr.0));
+            charges.timer.reset()
+        }
+    }
+}
+
+#[derive(Component, Debug, Clone, Default)]
+pub struct RemoveChargeOnActivation;
+fn remove_charge(
+    on: On<ActivateAbility>,
+    q_step: Query<&AbilityStep, With<RemoveChargeOnActivation>>,
+    mut q_charges: Query<(&mut HoldsCharges, Option<&RemoveChargeOnActivation>)>,
+) {
+    let mut charges = if let Ok(step) = q_step.get(on.entity) {
+        let (mut c, _) = q_charges
+            .get_mut(step.step_of)
+            .expect("Activated ability is a step of somehting without charges");
+        c
+    } else if let Ok((mut c, m_c)) = q_charges.get_mut(on.entity) {
+        if m_c.is_none() {
+            warn!("This thing doesn't have instruction to remove charges, but holds them?");
+            return;
+        }
+        c
+    } else {
+        return;
+    };
+    charges.current -= 1;
 }
 
 /// If this ability is complete, use the ability's CDR to make a Cooldown Component
@@ -980,6 +1053,7 @@ pub fn debug_launch_abilities_demo(
     app_state.set(AppState::InGame);
     game_state.set(InGameState::InGame);
     game_kind.0 = Some(GameKinds::SinglePlayer);
+    /*
     #[cfg(feature = "dev")]
     commands.spawn_scene_list(dice_guard_demo(500.0 * Vec2::NEG_X));
     //#[cfg(feature = "dev")]
@@ -988,6 +1062,9 @@ pub fn debug_launch_abilities_demo(
     commands.spawn_scene_list(bump_tunes_demo(500.0 * Vec2::X));
     #[cfg(feature = "dev")]
     commands.spawn_scene_list(throw_hands_demo(500.0 * Vec2::Y));
+    */
+    #[cfg(feature = "dev")]
+    commands.spawn_scene_list(paddle_back_demo(500.0 * Vec2::NEG_Y));
     /*
     commands.spawn_scene_list(new_dice_guard_scene());
     commands.spawn_scene_list(new_shifty_shot_scene(Vec2::X * 500.0));

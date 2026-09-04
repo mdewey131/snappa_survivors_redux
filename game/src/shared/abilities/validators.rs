@@ -138,3 +138,25 @@ pub fn check_step_completed(
         }
     }
 }
+
+#[derive(Component, Debug, Clone, Copy, FromTemplate)]
+#[require(AbilityValidator = AbilityValidator::default())]
+pub struct HasCharges;
+pub fn check_has_charges(
+    mut q_validator: Query<(&mut AbilityValidator, &ValidatorOf), With<HasCharges>>,
+    q_step: Query<&AbilityStep>,
+    q_ability: Query<&HoldsCharges>,
+) {
+    for (mut validator, v_of) in &mut q_validator {
+        let ent_to_check = if let Ok(step) = q_step.get(v_of.entity) {
+            step.step_of
+        } else {
+            v_of.entity
+        };
+
+        let charges = q_ability
+            .get(ent_to_check)
+            .expect("Check the wrong entity?");
+        validator.value = charges.current > 0;
+    }
+}

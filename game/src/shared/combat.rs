@@ -18,6 +18,11 @@ pub enum CombatSystemSet {
     PostCombatUpdate,
     /// Runs things like updating collider positions and checking for damage, in `FixedPostUpdate`
     PostPhysicsSet,
+    /// The final step in the ability system runs here, to ensure its after collision but before Health gets taken
+    ///
+    /// This allows systems to intervene in damage on the same frame, which is essential for abilities like paddling
+    /// back
+    ResolveAbilities,
     /// Finally resovles the HealthBuffer
     Cleanup,
     Last,
@@ -62,6 +67,7 @@ impl Plugin for CombatPlugin {
                 FixedPostUpdate,
                 (
                     CombatSystemSet::PostPhysicsSet,
+                    CombatSystemSet::ResolveAbilities,
                     CombatSystemSet::Cleanup,
                     CombatSystemSet::Last,
                 )

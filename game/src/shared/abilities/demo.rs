@@ -1,5 +1,9 @@
 //! Code related to the setup of the gym, aka demo, area
-use crate::shared::enemies::spawner::EnemySpawnPattern;
+use crate::shared::{
+    CommonColliderBundle, RecentlyCollided, enemies::spawner::EnemySpawnPattern,
+    game_kinds::SinglePlayer, players::CharacterKind,
+};
+use avian2d::prelude::*;
 use bevy::prelude::*;
 
 use super::*;
@@ -148,5 +152,61 @@ pub fn throw_hands_demo(position: Vec2) -> impl SceneList {
             Sprite {image: "enemies/faceless/sprite.png" }
             Position(e_pos_4)
         )
+    ]
+}
+
+pub fn paddle_back_demo(position: Vec2) -> impl SceneList {
+    let e_pos = position + Vec2::X * 300.0;
+    bsn_list! [(
+            #PaddleBackPlayer
+            Player
+            Position(position)
+            Health::new(50.0)
+            RecentlyCollided::default()
+            RigidBody
+            Collider::capsule(20.0, 20.0)
+            LockedAxes::ROTATION_LOCKED
+            Mass(100.0)
+            SinglePlayer
+            CollisionLayers::new(
+                [ColliderTypes::Player],
+                [
+                    ColliderTypes::Enemy,
+                    ColliderTypes::StaticPickup,
+                    ColliderTypes::RemotePickup,
+                    ColliderTypes::SolidObject,
+                ]
+            )
+            CollisionEventsEnabled
+            HasAbilities [
+                paddle_back()
+            ]
+        ),
+        (
+            #PaddleEnemy
+            Enemy
+            Health::new(50.0)
+            Sprite {image: "enemies/faceless/sprite.png" }
+            AppliesCollisionEffect::<ApplyDamage>::new([ColliderTypes::Player].into(), ApplyDamage::default())
+            Collider::capsule(20.0, 20.0)
+            RigidBody
+            LockedAxes::ROTATION_LOCKED
+            Mass(1.0)
+            Damage(5.0)
+            CritChance(0.2)
+            CritDamage(1.5)
+            CollisionLayers::new(
+                [ColliderTypes::Enemy],
+                [
+                    ColliderTypes::Player,
+                    ColliderTypes::SolidObject,
+                ]
+            )
+            CollisionEventsEnabled
+            Position(e_pos)
+            // This is bad, but you need Single player so that the state machinery can work.
+            // I don't like that this is currently the only reason that the enemy state machine doesn't work
+            SinglePlayer
+        ),
     ]
 }

@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     build::TICKRATE,
     shared::{
+        abilities::InvulnMarker,
         combat::{CombatEntityActive, CombatManager, CombatSystemSet},
         enemies::Enemy,
         players::Player,
@@ -231,9 +232,16 @@ fn apply_health_regen(
 
 /// Allows us to short-circuit this process, so to speak, because we know that the result of all damage for this
 /// entity is going to be "yeah you can't do that"
-///
-/// As of right now, I don't have any invulnerable conditions, so this is a no op
-fn check_invulnerability_conditions(q_damage: Query<&HealthBuffer>) {}
+fn check_invulnerability_conditions(mut q_damage: Query<&mut HealthBuffer, With<InvulnMarker>>) {
+    for mut buff in &mut q_damage {
+        for mut modif in &mut buff.buff {
+            match modif.kind {
+                HealthChange::Damage => modif.result = Some(HealthChangeResult::Invulnerable),
+                HealthChange::Heal => {}
+            }
+        }
+    }
+}
 
 /// Evades all damage in the frame
 fn check_evasion(

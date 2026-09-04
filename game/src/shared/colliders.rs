@@ -147,6 +147,19 @@ fn collision_damage_system(
             } else {
                 contacts.collider1
             };
+            let applies_effect = if let Ok(e) = q_applies_damage.get(applying_entity) {
+                e
+            } else {
+                continue;
+            };
+
+            info!(
+                "Ent to damage {:?} is touching applying entity {:?}. Overlap: {:?}, Entity not in collided list? {:?}",
+                ent_to_damage,
+                applying_entity,
+                (layers.memberships.0 & applies_effect.to.0) != 0,
+                recent_collided.with.get(&applying_entity).is_none()
+            );
             if let Ok(applies_effect) = q_applies_damage.get(applying_entity)
                 && (layers.memberships.0 & applies_effect.to.0) != 0
                 && recent_collided.with.get(&applying_entity).is_none()
@@ -175,6 +188,10 @@ fn tick_rec_collided(
             }
         }
         for ent in to_rm {
+            info!(
+                "removing element for {:?} from RecentlyCollided on {:?}",
+                ent, _ent
+            );
             recent.with.remove(&ent);
         }
     }
@@ -185,7 +202,7 @@ fn tick_rec_collided(
 /// This is predicted over the network, which may be a decision that I want to revisit in the future.
 /// But, that is the most surefire way to synchronize the client and the server in terms of when collisions
 /// should trigger damage effects, so we keep it for now
-#[derive(Component, Default, Serialize, Deserialize, PartialEq, Clone, Debug)]
+#[derive(Component, Default, Serialize, Deserialize, PartialEq, Clone, Debug, Reflect)]
 pub struct RecentlyCollided {
     pub with: HashMap<Entity, CollisionDamageTimer>,
 }
@@ -208,7 +225,7 @@ impl MapEntities for RecentlyCollided {
     }
 }
 
-#[derive(Debug, Deref, DerefMut, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Deref, DerefMut, Clone, Serialize, Deserialize, PartialEq, Reflect)]
 pub struct CollisionDamageTimer(pub Timer);
 impl Default for CollisionDamageTimer {
     fn default() -> Self {

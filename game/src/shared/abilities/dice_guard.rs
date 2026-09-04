@@ -23,6 +23,7 @@ pub fn dice_guard() -> impl Scene {
         EffectSize(20.0)
         ProjectileCount(2.0)
         ProjectileSpeed(30.0)
+        SinglePlayer
         HasValidators [
             #OffCD
             AbilityOffCooldown
